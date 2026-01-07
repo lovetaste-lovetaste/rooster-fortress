@@ -495,6 +495,40 @@ void GameDLLInit()
 		return;
 	}
 
+	g_engfuncs.pfnAddServerCommand("sv_addbot", []()
+		{
+			if (CMD_ARGC() != 2)
+			{
+				g_engfuncs.pfnServerPrint("Usage: sv_addbot <bot_name>");
+			}
+
+			const char* name = CMD_ARGV(1);
+
+			// The engine will validate the name and change it to "unnamed" if it's not valid.
+			// Any duplicates will be disambiguated by prepending a (%d) where %d is a number.
+			const auto fakeClient = g_engfuncs.pfnCreateFakeClient(name);
+
+			if (!fakeClient)
+			{
+				return;
+			}
+
+			// Use the netname variable here in case the engine changed it for some reason (usually duplicate names).
+			// Use localhost as the IP address.
+			char reject[128];
+			if (0 == ClientConnect(fakeClient, STRING(fakeClient->v.netname), "127.0.0.1", reject))
+			{
+				// Bot was refused connection, kick it from the server to free the slot.
+				SERVER_COMMAND(UTIL_VarArgs("kick %s\n", STRING(fakeClient->v.netname)));
+				return;
+			}
+
+			// Finish connecting, create player.
+			ClientPutInServer(fakeClient);
+
+			// Do remaining logic at least one frame later to avoid race conditions.
+		});
+
 	CVAR_REGISTER(&displaysoundlist);
 	CVAR_REGISTER(&allow_spectators);
 

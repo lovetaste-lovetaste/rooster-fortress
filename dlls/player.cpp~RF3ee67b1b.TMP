@@ -3156,10 +3156,9 @@ void CBasePlayer::RenewItems()
 
 void CBasePlayer::SpawnClassWeapons()
 {
-	//GiveNamedItem("weapon_rpg");
+	GiveNamedItem("weapon_rpg");
 	GiveNamedItem("weapon_shotgun");
-	GiveNamedItem("weapon_crowbar");
-	// GiveNamedItem("weapon_hornetgun");
+	GiveNamedItem("weapon_shovel");
 }
 
 bool CBasePlayer::Restore(CRestore& restore)

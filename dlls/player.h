@@ -82,6 +82,16 @@ enum sbar_data
 	SBAR_END,
 };
 
+#define CLASS_SCOUT 1
+#define CLASS_HEAVY 2
+#define CLASS_SOLDIER 3
+#define CLASS_PYRO 4
+#define CLASS_SNIPER 5
+#define CLASS_MEDIC 6
+#define CLASS_ENGINEER 7
+#define CLASS_DEMOMAN 8
+#define CLASS_SPY 9
+
 #define CHAT_INTERVAL 1.0f
 
 class CBasePlayer : public CBaseMonster
@@ -101,6 +111,7 @@ public:
 
 	int random_seed; // See that is shared between client & server for shared weapons code
 
+	int m_iClass;			// tf2 class
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.
 	int m_iWeaponVolume;	// how loud the player's weapon is right now.
@@ -205,6 +216,10 @@ public:
 
 	char m_szTeamName[TEAM_NAME_LENGTH];
 
+	int m_iTeam;
+
+	void SetPlayerModel();
+
 	void Spawn() override;
 	void Pain();
 
@@ -226,13 +241,15 @@ public:
 	bool ShouldFadeOnDeath() override { return false; }
 	bool IsPlayer() override { return true; } // Spectators should return false for this, they aren't "players" as far as game logic is concerned
 
-	bool IsNetClient() override { return true; } // Bots should return false for this, they can't receive NET messages
+	bool IsNetClient() override { return (pev->flags & FL_FAKECLIENT) == 0; }
+	// Bots should return false for this, they can't receive NET messages
 												 // Spectators should return true for this
 	const char* TeamID() override;
 
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 	void RenewItems();
+	void SpawnClassWeapons();
 	void PackDeadPlayerItems();
 	void RemoveAllItems(bool removeSuit);
 	bool SwitchWeapon(CBasePlayerItem* pWeapon);
@@ -356,7 +373,15 @@ public:
 
 	//True if the player is currently spawning.
 	bool m_bIsSpawning = false;
+
+	/**
+	 *    @brief True if the player is currently connected to the server.
+	 *    Should only be false in multiplayer games, for players that have disconnected.
+	 */
+	bool m_bIsConnected = true;
+
 };
+
 
 inline void CBasePlayer::SetWeaponBit(int id)
 {

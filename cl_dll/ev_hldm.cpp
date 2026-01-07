@@ -573,7 +573,7 @@ void EV_FireShotGunDouble(event_args_t* args)
 	{
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_FIRE2, 0);
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_SHOOT, 0);
 		V_PunchAxis(0, -10.0);
 	}
 
@@ -625,7 +625,7 @@ void EV_FireShotGunSingle(event_args_t* args)
 	{
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_FIRE, 0);
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_SHOOT, 0);
 
 		V_PunchAxis(0, -5.0);
 	}
@@ -1284,7 +1284,7 @@ void EV_FireRpg(event_args_t* args)
 	//Only play the weapon anims if I shot it.
 	if (EV_IsLocal(idx))
 	{
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(RPG_FIRE2, 0);
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(ROCKETLAUNCHER_SHOOT, 0);
 
 		V_PunchAxis(0, -5.0);
 	}
@@ -1676,3 +1676,41 @@ bool EV_TFC_IsAllyTeam(int iTeam1, int iTeam2)
 {
 	return false;
 }
+
+//======================
+//	   SHOVEL START
+//======================
+int g_iSwings;
+
+// Only predict the miss sounds, hit sounds are still played
+// server side, so players don't get the wrong idea.
+void EV_Shovel(event_args_t* args)
+{
+	int idx;
+	Vector origin;
+
+	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+
+	// Play Swing sound
+	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+
+	if (EV_IsLocal(idx))
+	{
+		switch ((g_iSwings++) % 3)
+		{
+		case 0:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH1, 0);
+			break;
+		case 1:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH1, 0);
+			break;
+		case 2:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH2, 0);
+			break;
+		}
+	}
+}
+//======================
+//	   Shovel END
+//======================

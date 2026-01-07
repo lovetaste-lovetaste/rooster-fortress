@@ -148,6 +148,8 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 
 LINK_ENTITY_TO_CLASS(player, CBasePlayer);
 
+int gmsgWeaponAnimEx = 0;
+
 void CBasePlayer::Pain()
 {
 	float flRndSound; //sound randomizer
@@ -361,7 +363,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	flBonus = ARMOR_BONUS;
 	flRatio = ARMOR_RATIO;
 
-	if ((bitsDamageType & DMG_BLAST) != 0)
+	if ((bitsDamageType & DMG_BLAST) != 0 && g_pGameRules->IsMultiplayer())
 	{
 		// blasts damage armor more.
 		flBonus *= 2;
@@ -2912,93 +2914,6 @@ ReturnSpot:
 	return pSpot->edict();
 }
 
-int GetClassMaxHealth(int iClass)
-{
-	switch (iClass)
-	{
-	case CLASS_SCOUT:
-	case CLASS_SNIPER:
-	case CLASS_SPY:
-	case CLASS_ENGINEER: return 125;
-	case CLASS_HEAVY: return 300;
-	case CLASS_SOLDIER: return 200;
-	case CLASS_PYRO:
-	case CLASS_DEMOMAN: return 175;
-	case CLASS_MEDIC: return 150;
-	}
-	return 125;
-}
-
-float GetClassMaxSpeed(int iClass)
-{
-	float speed = 300; // base speed
-	// for some reason the values were all fucked up in the original version
-	// not too different though, so i just added base tf2 values
-	// i also left the variable above so unlocks will be easier
-	switch (iClass)
-	{
-	case CLASS_SCOUT: speed * 1.33;
-	case CLASS_HEAVY: speed * 0.77;
-	case CLASS_SOLDIER: speed * 0.8;
-	case CLASS_PYRO: speed * 1.0;
-	case CLASS_SNIPER: speed * 1.0;
-	case CLASS_MEDIC: speed * 1.07;
-	case CLASS_ENGINEER: speed * 1.0;
-	case CLASS_DEMOMAN: speed * 0.93;
-	case CLASS_SPY: speed * 1.07;
-	}
-	return speed;
-}
-
-void CBasePlayer::SetPlayerModel()
-{
-	char* model;
-
-	switch (m_iClass)
-	{
-	default: return;
-	case CLASS_SCOUT: model = "scout"; break;
-	case CLASS_HEAVY: model = "hvyweapon"; break;
-	case CLASS_SOLDIER: model = "soldier"; break;
-	case CLASS_PYRO: model = "pyro"; break;
-	case CLASS_SNIPER: model = "sniper"; break;
-	case CLASS_MEDIC: model = "medic"; break;
-	case CLASS_ENGINEER: model = "engineer"; break;
-	case CLASS_DEMOMAN: model = "demo"; break;
-	case CLASS_SPY: model = "spy"; break;
-	}
-
-	char* color;
-
-	if (m_iTeam == TEAM_CT)
-	{
-		color = COLOR_BLU;
-	}
-	else if (m_iTeam == TEAM_TERRORIST)
-	{
-		color = COLOR_RED;
-	}
-	else
-		color = "90";
-
-	char* infobuffer = g_engfuncs.pfnGetInfoKeyBuffer(edict());
-	char* curmodel = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
-	char* curcolor = g_engfuncs.pfnInfoKeyValue(infobuffer, "topcolor");
-	if (strcmp(curmodel, model))
-		g_engfuncs.pfnSetClientKeyValue(entindex(), infobuffer, "model", model);
-	if (strcmp(curcolor, color))
-	{
-		g_engfuncs.pfnSetClientKeyValue(entindex(), infobuffer, "topcolor", color);
-		g_engfuncs.pfnSetClientKeyValue(entindex(), infobuffer, "bottomcolor", color);
-	}
-
-	static char szModelPath[64];
-	sprintf(szModelPath, "models/rooster_fortress/player/%s/%s.mdl", model, model);
-	SET_MODEL(ENT(pev), szModelPath);
-	// m_ulModelIndexPlayer = g_sModelIndexPlayerClass[m_iClass - 1];
-	// pev->modelindex = m_ulModelIndexPlayer;
-}
-
 void CBasePlayer::Spawn()
 {
 	m_flStartCharge = gpGlobals->time;
@@ -3012,10 +2927,7 @@ void CBasePlayer::Spawn()
 		}};
 
 	pev->classname = MAKE_STRING("player");
-
-	m_iClass = CLASS_SOLDIER;
-
-	pev->health = GetClassMaxHealth(m_iClass);
+	pev->health = 100;
 	pev->armorvalue = 0;
 	pev->takedamage = DAMAGE_AIM;
 	pev->solid = SOLID_SLIDEBOX;
@@ -3066,9 +2978,7 @@ void CBasePlayer::Spawn()
 	g_pGameRules->SetDefaultPlayerTeam(this);
 	g_pGameRules->GetPlayerSpawnSpot(this);
 
-	// SET_MODEL(ENT(pev), "models/player.mdl");
-	SetPlayerModel();
-
+	SET_MODEL(ENT(pev), "models/player.mdl");
 	g_ulModelIndexPlayer = pev->modelindex;
 	pev->sequence = LookupActivity(ACT_IDLE);
 
@@ -3154,13 +3064,6 @@ void CBasePlayer::RenewItems()
 {
 }
 
-void CBasePlayer::SpawnClassWeapons()
-{
-	//GiveNamedItem("weapon_rpg");
-	GiveNamedItem("weapon_shotgun");
-	GiveNamedItem("weapon_crowbar");
-	// GiveNamedItem("weapon_hornetgun");
-}
 
 bool CBasePlayer::Restore(CRestore& restore)
 {

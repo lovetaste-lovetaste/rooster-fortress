@@ -58,6 +58,7 @@ enum WeaponId
 	WEAPON_TRIPMINE,
 	WEAPON_SATCHEL,
 	WEAPON_SNARK,
+	WEAPON_SHOVEL,
 
 	WEAPON_SUIT = 31
 };
@@ -159,6 +160,27 @@ enum WeaponId
 #define itbd_SlowBurn 6
 #define itbd_SlowFreeze 7
 #define CDMG_TIMEBASED 8
+
+#define TEAM_UNASSIGNED 0
+#define TEAM_TERRORIST 1
+#define TEAM_CT 2
+#define TEAM_RED 1
+#define TEAM_BLU 2
+#define TEAM_BLUE 2
+#define TEAM_SPECTATOR 3
+
+#define CLASS_SCOUT 1
+#define CLASS_HEAVY 2
+#define CLASS_SOLDIER 3
+#define CLASS_PYRO 4
+#define CLASS_SNIPER 5
+#define CLASS_MEDIC 6
+#define CLASS_ENGINEER 7
+#define CLASS_DEMOMAN 8
+#define CLASS_SPY 9
+
+#define COLOR_RED "1"
+#define COLOR_BLU "140"
 
 constexpr Vector VEC_HULL_MIN(-16, -16, -36);
 constexpr Vector VEC_HULL_MAX(16, 16, 36);

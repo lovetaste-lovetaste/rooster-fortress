@@ -283,13 +283,13 @@ void CBarney::SetYawSpeed()
 		ys = 70;
 		break;
 	case ACT_WALK:
-		ys = 70;
+		ys = 180;
 		break;
 	case ACT_RUN:
-		ys = 90;
+		ys = 180;
 		break;
 	default:
-		ys = 70;
+		ys = 180;
 		break;
 	}
 
@@ -312,12 +312,12 @@ bool CBarney::CheckRangeAttack1(float flDot, float flDist)
 			CBaseEntity* pEnemy = m_hEnemy;
 			Vector shootTarget = ((pEnemy->BodyTarget(shootOrigin) - pEnemy->pev->origin) + m_vecEnemyLKP);
 			UTIL_TraceLine(shootOrigin, shootTarget, dont_ignore_monsters, ENT(pev), &tr);
-			m_checkAttackTime = gpGlobals->time + 1;
+			m_checkAttackTime = gpGlobals->time + 0.1;
 			if (tr.flFraction == 1.0 || (tr.pHit != NULL && CBaseEntity::Instance(tr.pHit) == pEnemy))
 				m_lastAttackCheck = true;
 			else
 				m_lastAttackCheck = false;
-			m_checkAttackTime = gpGlobals->time + 1.5;
+			m_checkAttackTime = gpGlobals->time + 0.2;
 		}
 		return m_lastAttackCheck;
 	}

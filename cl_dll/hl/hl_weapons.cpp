@@ -52,6 +52,7 @@ Vector previousorigin;
 // HLDM Weapon placeholder entities.
 CGlock g_Glock;
 CCrowbar g_Crowbar;
+CShovel g_Shovel;
 CPython g_Python;
 CMP5 g_Mp5;
 CCrossbow g_Crossbow;
@@ -172,6 +173,28 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	g_irunninggausspred = false;
 	m_pPlayer->m_flNextAttack = 0.5;
 	m_flTimeWeaponIdle = 1.0;
+	return true;
+}
+
+bool CBasePlayerWeapon::GroupDeploy(char* szViewModel, char* szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, char* szAnimExt, int iWpnBody)
+{
+	if (!CanDeploy())
+		return false;
+	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
+	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
+	m_pPlayer->pev->scale = iWpnBody;
+	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
+	
+	SendWeaponAnim(iViewAnim, iViewBody);
+
+	m_pPlayer->m_flNextAttack = 0.5;
+	//m_pPlayer->m_iFOV = m_pPlayer->m_iDefaultFOV;
+	m_pPlayer->SetAnimation(PLAYER_IDLE);
+	//m_pPlayer->ResetMaxSpeed();
+
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
+	//m_flDecreaseShotsFired = UTIL_WeaponTimeBase();
+	//m_bMeleeAttack = FALSE;
 	return true;
 }
 
@@ -464,6 +487,7 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_Satchel, &player);
 	HUD_PrepEntity(&g_Tripmine, &player);
 	HUD_PrepEntity(&g_Snark, &player);
+	HUD_PrepEntity(&g_Shovel, &player);
 }
 
 /*
@@ -533,6 +557,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	{
 	case WEAPON_CROWBAR:
 		pWeapon = &g_Crowbar;
+		break;
+
+	case WEAPON_SHOVEL:
+		pWeapon = &g_Shovel;
 		break;
 
 	case WEAPON_GLOCK:

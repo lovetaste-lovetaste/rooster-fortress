@@ -496,8 +496,12 @@ void CHalfLifeMultiplay::PlayerSpawn(CBasePlayer* pPlayer)
 
 	if (addDefault)
 	{
-		pPlayer->GiveNamedItem("weapon_crowbar");
-		pPlayer->GiveNamedItem("weapon_9mmhandgun");
+		pPlayer->SpawnClassWeapons();
+
+		// pPlayer->GiveNamedItem("weapon_crowbar");
+		// pPlayer->GiveNamedItem("weapon_9mmhandgun");
+		// half life 1 default multiplayer spawns
+
 		pPlayer->GiveAmmo(68, "9mm", _9MM_MAX_CARRY); // 4 full reloads
 	}
 

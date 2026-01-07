@@ -118,8 +118,8 @@ void CRpgRocket::Spawn()
 	// motor
 	pev->movetype = MOVETYPE_BOUNCE;
 	pev->solid = SOLID_BBOX;
-
-	SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
+	
+	SET_MODEL(ENT(pev), "models/rooster_fortress/w_rocket.mdl");
 	UTIL_SetSize(pev, Vector(0, 0, 0), Vector(0, 0, 0));
 	UTIL_SetOrigin(pev, pev->origin);
 
@@ -128,16 +128,12 @@ void CRpgRocket::Spawn()
 	SetThink(&CRpgRocket::IgniteThink);
 	SetTouch(&CRpgRocket::ExplodeTouch);
 
-	pev->angles.x -= 30;
-	UTIL_MakeVectors(pev->angles);
-	pev->angles.x = -(pev->angles.x + 30);
+	pev->velocity = gpGlobals->v_forward * 1100;
+	pev->gravity = 0.000001;
 
-	pev->velocity = gpGlobals->v_forward * 250;
-	pev->gravity = 0.5;
+	pev->nextthink = gpGlobals->time + 0.1;
 
-	pev->nextthink = gpGlobals->time + 0.4;
-
-	pev->dmg = gSkillData.plrDmgRPG;
+	pev->dmg = 110.0;
 }
 
 //=========================================================
@@ -152,7 +148,7 @@ void CRpgRocket::RocketTouch(CBaseEntity* pOther)
 //=========================================================
 void CRpgRocket::Precache()
 {
-	PRECACHE_MODEL("models/rpgrocket.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/w_rocket.mdl");
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
 	PRECACHE_SOUND("weapons/rocket1.wav");
 }
@@ -204,97 +200,32 @@ void CRpgRocket::FollowThink()
 	CBaseEntity* pOther = NULL;
 	Vector vecTarget;
 	Vector vecDir;
-	float flDist, flMax, flDot;
 	TraceResult tr;
 
 	UTIL_MakeAimVectors(pev->angles);
 
 	vecTarget = gpGlobals->v_forward;
-	flMax = 4096;
 
-	// Examine all entities within a reasonable radius
-	while ((pOther = UTIL_FindEntityByClassname(pOther, "laser_spot")) != NULL)
-	{
-		Vector vSpotLocation = pOther->pev->origin;
-
-		/*if (UTIL_PointContents(vSpotLocation) == CONTENTS_SKY)
-		{
-			ALERT(at_console, "laser spot is in the sky...\n");
-		}*/
-
-		UTIL_TraceLine(pev->origin, vSpotLocation, dont_ignore_monsters, ENT(pev), &tr);
-		//ALERT(at_console, "fraction: %f\n", tr.flFraction);
-
-		if (tr.flFraction >= 0.90)
-		{
-			vecDir = pOther->pev->origin - pev->origin;
-			flDist = vecDir.Length();
-			vecDir = vecDir.Normalize();
-			flDot = DotProduct(gpGlobals->v_forward, vecDir);
-			if ((flDot > 0) && (flDist * (1 - flDot) < flMax))
-			{
-				flMax = flDist * (1 - flDot);
-				vecTarget = vecDir;
-			}
-		}
-	}
-
-	pev->angles = UTIL_VecToAngles(vecTarget);
-
-	// this acceleration and turning math is totally wrong, but it seems to respond well so don't change it.
 	float flSpeed = pev->velocity.Length();
-	if (gpGlobals->time - m_flIgniteTime < 1.0)
+	if ((pev->effects & EF_LIGHT) != 0)
 	{
-		pev->velocity = pev->velocity * 0.2 + vecTarget * (flSpeed * 0.8 + 400);
-		if (pev->waterlevel == 3)
-		{
-			// go slow underwater
-			if (pev->velocity.Length() > 300)
-			{
-				pev->velocity = pev->velocity.Normalize() * 300;
-			}
-			UTIL_BubbleTrail(pev->origin - pev->velocity * 0.1, pev->origin, 4);
-		}
-		else
-		{
-			if (pev->velocity.Length() > 2000)
-			{
-				pev->velocity = pev->velocity.Normalize() * 2000;
-			}
-		}
+		pev->effects = 0;
+		STOP_SOUND(ENT(pev), CHAN_VOICE, "weapons/rocket1.wav");
 	}
-	else
-	{
-		if ((pev->effects & EF_LIGHT) != 0)
-		{
-			pev->effects = 0;
-			STOP_SOUND(ENT(pev), CHAN_VOICE, "weapons/rocket1.wav");
-		}
-		pev->velocity = pev->velocity * 0.2 + vecTarget * flSpeed * 0.798;
-		if (pev->waterlevel == 0 && pev->velocity.Length() < 1500)
-		{
-			Detonate();
-		}
-	}
-
 	if (GetLauncher())
 	{
 		float flDistance = (pev->origin - GetLauncher()->pev->origin).Length();
 
 		// if we've travelled more than max distance the player can send a spot, stop tracking the original launcher (allow it to reload)
-		if (flDistance > 8192.0f || gpGlobals->time - m_flIgniteTime > 6.0f)
+		if (flDistance > 0.0)
 		{
-			// ALERT(at_console, "RPG too far (%f)!\n", flDistance);
 			GetLauncher()->m_cActiveRockets--;
 			m_hLauncher = NULL;
 		}
-
-		//ALERT(at_console, "%.0f, m_pLauncher: %u, flDistance: %f\n", flSpeed, GetLauncher(), flDistance);
 	}
 
 	if ((UTIL_PointContents(pev->origin) == CONTENTS_SKY))
 	{
-		//ALERT( at_console, "Rocket is in the sky, detonating...\n");
 		Detonate();
 	}
 
@@ -308,50 +239,57 @@ void CRpg::Reload()
 {
 	//ALERT(at_console, "RPG Reload, m_cActiveRockets: %d, m_fSpotActive: %d\n", m_cActiveRockets, m_fSpotActive);
 
-	if (m_iClip == 1)
+	if (m_iClip >= 4)
 	{
 		// don't bother with any of this if don't need to reload.
 		return;
 	}
 
-	if (m_pPlayer->ammo_rockets <= 0)
+	if (m_pPlayer->ammo_rockets < 1)
 		return;
 
-	// because the RPG waits to autoreload when no missiles are active while  the LTD is on, the
-	// weapons code is constantly calling into this function, but is often denied because
-	// a) missiles are in flight, but the LTD is on
-	// or
-	// b) player is totally out of ammo and has nothing to switch to, and should be allowed to
-	//    shine the designator around
-	//
-	// Set the next attack time into the future so that WeaponIdle will get called more often
-	// than reload, allowing the RPG LTD to be updated
+	// don't reload until recoil is done
+	if (m_flNextPrimaryAttack > UTIL_WeaponTimeBase())
+		return;
 
 	m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
 
-	if (0 != m_cActiveRockets && m_fSpotActive)
+	if (m_fInSpecialReload == 0)
 	{
-		//ALERT(at_console, "RPG reload failed, m_cActiveRockets: %d, m_fSpotActive: %d\n", m_cActiveRockets, m_fSpotActive);
-
-		// no reloading when there are active missiles tracking the designator.
-		// ward off future autoreload attempts by setting next attack time into the future for a bit.
+		SendWeaponAnim(ROCKETLAUNCHER_START_RELOAD);
+		m_fInSpecialReload = 1;
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.50;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.50);
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.50;
 		return;
 	}
-
-#ifndef CLIENT_DLL
-	if (m_pSpot && m_fSpotActive)
+	else if (m_fInSpecialReload == 1)
 	{
-		m_pSpot->Suspend(2.1);
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 2.1;
+		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+			return;
+
+		SendWeaponAnim(ROCKETLAUNCHER_RELOAD);
+		
+		m_fInSpecialReload = 2;
+
+		if (RANDOM_LONG(0, 1))
+			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
+		else
+			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
+
+		// too long, shorten to match reload anim to make it smoother
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.70);
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
 	}
-#endif
-
-	if (m_iClip == 0)
+	else
 	{
-		const bool iResult = DefaultReload(RPG_MAX_CLIP, RPG_RELOAD, 2);
-
-		if (iResult)
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+		// Add them to the clip
+		m_iClip += 1;
+		m_pPlayer->ammo_rockets -= 1;
+		m_fInSpecialReload = 1;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
 	}
 }
 
@@ -360,7 +298,8 @@ void CRpg::Spawn()
 	Precache();
 	m_iId = WEAPON_RPG;
 
-	SET_MODEL(ENT(pev), "models/w_rpg.mdl");
+	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 1;
 	m_fSpotActive = true;
 
 #ifdef CLIENT_DLL
@@ -383,9 +322,9 @@ void CRpg::Spawn()
 
 void CRpg::Precache()
 {
-	PRECACHE_MODEL("models/w_rpg.mdl");
-	PRECACHE_MODEL("models/v_rpg.mdl");
-	PRECACHE_MODEL("models/p_rpg.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl");
+	// PRECACHE_MODEL("models/p_rpg.mdl");
 
 	PRECACHE_SOUND("items/9mmclip1.wav");
 
@@ -420,10 +359,10 @@ bool CRpg::Deploy()
 {
 	if (m_iClip == 0)
 	{
-		return DefaultDeploy("models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg");
+		return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 	}
 
-	return DefaultDeploy("models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW1, "rpg");
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 }
 
 
@@ -444,7 +383,7 @@ void CRpg::Holster()
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 
-	SendWeaponAnim(RPG_HOLSTER1);
+	SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 
 #ifndef CLIENT_DLL
 	if (m_pSpot)
@@ -459,7 +398,7 @@ void CRpg::Holster()
 
 void CRpg::PrimaryAttack()
 {
-	if (0 != m_iClip)
+	if (m_iClip >= 1)
 	{
 		m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
 		m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
@@ -469,7 +408,7 @@ void CRpg::PrimaryAttack()
 		m_pPlayer->SetAnimation(PLAYER_ATTACK1);
 
 		UTIL_MakeVectors(m_pPlayer->pev->v_angle);
-		Vector vecSrc = m_pPlayer->GetGunPosition() + gpGlobals->v_forward * 16 + gpGlobals->v_right * 8 + gpGlobals->v_up * -8;
+		Vector vecSrc = m_pPlayer->GetGunPosition() + gpGlobals->v_forward * 16 + gpGlobals->v_right * 8 + gpGlobals->v_up * -2;
 
 		CRpgRocket* pRocket = CRpgRocket::CreateRpgRocket(vecSrc, m_pPlayer->pev->v_angle, m_pPlayer, this);
 
@@ -491,8 +430,10 @@ void CRpg::PrimaryAttack()
 
 		m_iClip--;
 
-		m_flNextPrimaryAttack = GetNextAttackDelay(1.5);
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.8);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.8;
+
+		m_fInSpecialReload = 0;
 
 		ResetEmptySound();
 	}
@@ -506,17 +447,6 @@ void CRpg::PrimaryAttack()
 
 void CRpg::SecondaryAttack()
 {
-	m_fSpotActive = !m_fSpotActive;
-
-#ifndef CLIENT_DLL
-	if (!m_fSpotActive && m_pSpot)
-	{
-		m_pSpot->Killed(NULL, GIB_NORMAL);
-		m_pSpot = NULL;
-	}
-#endif
-
-	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.2;
 }
 
 
@@ -527,35 +457,30 @@ void CRpg::WeaponIdle()
 	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
 		return;
 
-	if (0 != m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	if (m_iClip == 0 && m_fInSpecialReload == 0 && m_pPlayer->ammo_rockets > 0)
 	{
-		int iAnim;
-		float flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
-		if (flRand <= 0.75 || m_fSpotActive)
+		Reload();
+	}
+	else if (m_fInSpecialReload != 0)
+	{
+		if (m_iClip < 4 && m_pPlayer->ammo_rockets > 0)
 		{
-			if (m_iClip == 0)
-				iAnim = RPG_IDLE_UL;
-			else
-				iAnim = RPG_IDLE;
-
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 90.0 / 15.0;
+			Reload();
 		}
 		else
 		{
-			if (m_iClip == 0)
-				iAnim = RPG_FIDGET_UL;
-			else
-				iAnim = RPG_FIDGET;
+			// done reloading
+			SendWeaponAnim(ROCKETLAUNCHER_AFTER_RELOAD);
 
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 6.1;
+			m_fInSpecialReload = 0;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.8;
+			m_flNextPrimaryAttack = GetNextAttackDelay(0.8);
 		}
-
-		ResetEmptySound();
-		SendWeaponAnim(iAnim);
 	}
 	else
 	{
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (20.0 / 9.0);
+		SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 	}
 }
 
@@ -614,7 +539,7 @@ class CRpgAmmo : public CBasePlayerAmmo
 #endif
 		{
 			// hand out more ammo per rocket in multiplayer.
-			iGive = AMMO_RPGCLIP_GIVE * 2;
+			iGive = AMMO_RPGCLIP_GIVE * 4;
 		}
 		else
 		{

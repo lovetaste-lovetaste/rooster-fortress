@@ -136,14 +136,13 @@ void CZombie::SetYawSpeed()
 
 bool CZombie::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
-	// Take 30% damage from bullets
 	if (bitsDamageType == DMG_BULLET)
 	{
 		Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
 		vecDir = vecDir.Normalize();
 		float flForce = DamageForce(flDamage);
 		pev->velocity = pev->velocity + vecDir * flForce;
-		flDamage *= 0.3;
+		flDamage *= 1.0;
 	}
 
 	// HACK HACK -- until we fix this.
@@ -156,8 +155,8 @@ void CZombie::PainSound()
 {
 	int pitch = 95 + RANDOM_LONG(0, 9);
 
-	if (RANDOM_LONG(0, 5) < 2)
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch);
+	// if (RANDOM_LONG(0, 5) < 2)
+	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch);
 }
 
 void CZombie::AlertSound()

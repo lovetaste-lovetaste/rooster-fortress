@@ -71,7 +71,9 @@ public:
 
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
+
 #define CROWBAR_WEIGHT 0
+#define SHOVEL_WEIGHT 10
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -111,7 +113,7 @@ public:
 #define MP5_DEFAULT_AMMO 25
 #define SHOTGUN_MAX_CLIP 8
 #define CROSSBOW_MAX_CLIP 5
-#define RPG_MAX_CLIP 1
+#define RPG_MAX_CLIP 4
 #define GAUSS_MAX_CLIP WEAPON_NOCLIP
 #define EGON_MAX_CLIP WEAPON_NOCLIP
 #define HORNETGUN_MAX_CLIP WEAPON_NOCLIP
@@ -129,7 +131,7 @@ public:
 #define MP5_M203_DEFAULT_GIVE 0
 #define SHOTGUN_DEFAULT_GIVE 12
 #define CROSSBOW_DEFAULT_GIVE 5
-#define RPG_DEFAULT_GIVE 1
+#define RPG_DEFAULT_GIVE 8
 #define GAUSS_DEFAULT_GIVE 20
 #define EGON_DEFAULT_GIVE 20
 #define HANDGRENADE_DEFAULT_GIVE 5
@@ -266,6 +268,7 @@ public:
 	CBasePlayer* m_pPlayer;
 	CBasePlayerItem* m_pNext;
 	int m_iId; // WEAPON_???
+	bool m_bIsPrimary;
 
 	virtual int iItemSlot() { return 0; } // return 0 to MAX_ITEMS_SLOTS, used in hud
 
@@ -320,6 +323,7 @@ public:
 	bool CanDeploy() override;
 	virtual bool IsUseable();
 	bool DefaultDeploy(const char* szViewModel, const char* szWeaponModel, int iAnim, const char* szAnimExt, int body = 0);
+	bool GroupDeploy(char* szViewModel, char* szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, char* szAnimExt, int iWpnBody);
 	bool DefaultReload(int iClipSize, int iAnim, float fDelay, int body = 0);
 
 	void ItemPostFrame() override; // called each frame by the player PostThink
@@ -696,15 +700,11 @@ private:
 enum shotgun_e
 {
 	SHOTGUN_IDLE = 0,
-	SHOTGUN_FIRE,
-	SHOTGUN_FIRE2,
+	SHOTGUN_START_RELOAD,
 	SHOTGUN_RELOAD,
 	SHOTGUN_PUMP,
-	SHOTGUN_START_RELOAD,
 	SHOTGUN_DRAW,
-	SHOTGUN_HOLSTER,
-	SHOTGUN_IDLE4,
-	SHOTGUN_IDLE_DEEP
+	SHOTGUN_SHOOT
 };
 
 class CShotgun : public CBasePlayerWeapon
@@ -725,6 +725,11 @@ public:
 	void PrimaryAttack() override;
 	void SecondaryAttack() override;
 	bool Deploy() override;
+	int iSlot(void);
+	int iBody(void);
+	int iWeight(void);
+
+
 	void Reload() override;
 	void WeaponIdle() override;
 	void ItemPostFrame() override;
@@ -762,17 +767,14 @@ public:
 
 enum rpg_e
 {
-	RPG_IDLE = 0,
-	RPG_FIDGET,
-	RPG_RELOAD,	   // to reload
-	RPG_FIRE2,	   // to empty
-	RPG_HOLSTER1,  // loaded
-	RPG_DRAW1,	   // loaded
-	RPG_HOLSTER2,  // unloaded
-	RPG_DRAW_UL,   // unloaded
-	RPG_IDLE_UL,   // unloaded idle
-	RPG_FIDGET_UL, // unloaded fidget
+	ROCKETLAUNCHER_IDLE = 0,
+	ROCKETLAUNCHER_START_RELOAD,
+	ROCKETLAUNCHER_RELOAD,
+	ROCKETLAUNCHER_AFTER_RELOAD,
+	ROCKETLAUNCHER_DRAW,
+	ROCKETLAUNCHER_SHOOT
 };
+
 
 class CRpg : public CBasePlayerWeapon
 {
@@ -802,6 +804,8 @@ public:
 
 	CLaserSpot* m_pSpot;
 	bool m_fSpotActive;
+	float m_flNextReload;
+	// int m_fInSpecialReload;
 	int m_cActiveRockets; // how many missiles in flight from this launcher right now?
 
 	bool UseDecrement() override
@@ -1224,4 +1228,46 @@ public:
 
 private:
 	unsigned short m_usSnarkFire;
+};
+
+enum shovel_e
+{
+	SHOVEL_IDLE,
+	SHOVEL_IDLE1,
+	SHOVEL_IDLE2,
+	SHOVEL_DRAW,
+	SHOVEL_IDLE3,
+	SHOVEL_IDLE4,
+	SHOVEL_SLASH1,
+	SHOVEL_SLASH2
+};
+
+class CShovel : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	void EXPORT SwingAgain();
+	void EXPORT Smack();
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	bool Swing(bool fFirst);
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usShovel;
 };
