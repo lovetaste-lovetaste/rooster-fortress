@@ -32,7 +32,7 @@ void CShovel::Spawn()
 	pev->classname = MAKE_STRING("weapon_shovel");
 	Precache();
 	m_iId = WEAPON_SHOVEL;
-	SET_MODEL(ENT(pev), "models/rooster_fortress/w_shovel.mdl");
+	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
 	m_iClip = -1;
 
 	FallInit(); // get ready to fall down.
@@ -42,8 +42,9 @@ void CShovel::Spawn()
 void CShovel::Precache()
 {
 	PRECACHE_MODEL("models/chicken_fortress_3/v_shovel.mdl");
-	PRECACHE_MODEL("models/rooster_fortress/w_shovel.mdl");
-
+	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
+	// PRECACHE_MODEL("models/rooster_fortress/w_shovel.mdl");
+	
 	// PRECACHE_MODEL("models/p_crowbar.mdl");
 
 	PRECACHE_SOUND("weapons/cbar_hit1.wav");
@@ -74,15 +75,15 @@ bool CShovel::GetItemInfo(ItemInfo* p)
 
 bool CShovel::Deploy()
 {
-	return DefaultDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/w_shovel.mdl", SHOVEL_DRAW, "shovel");
+	return GroupDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "shovel", 0);
+	// return DefaultDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/w_shovel.mdl", SHOVEL_DRAW, "shovel");
 }
 
 void CShovel::Holster()
 {
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.05;
-	SendWeaponAnim(SHOVEL_IDLE);
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.001;
+	SendWeaponAnim(SHOVEL_DRAW);
 }
-
 
 void FindHullIntersection2(const Vector& vecSrc, TraceResult& tr, const Vector& mins, const Vector& maxs, edict_t* pEntity)
 {

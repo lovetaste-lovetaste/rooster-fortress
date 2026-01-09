@@ -37,6 +37,7 @@
 
 extern bool IsBustingGame();
 extern bool IsPlayerBusting(CBaseEntity* pPlayer);
+extern int gmsgWeaponAnimEx;
 
 //=========================================================
 // MaxAmmoCarry - pass in a name and this function will tell
@@ -739,6 +740,22 @@ void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body)
 	MESSAGE_END();
 }
 
+void CBasePlayerWeapon::SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int skiplocal)
+{
+	m_pPlayer->pev->weaponanim = iAnim;
+
+#ifdef CLIENT_WEAPONS
+	if (skiplocal == 1 && ENGINE_CANSKIP(ENT(m_pPlayer->pev)))
+		return;
+#endif
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgWeaponAnimEx, NULL, m_pPlayer->pev);
+	WRITE_BYTE(iAnim);
+	WRITE_BYTE(iBody);
+	WRITE_BYTE(iSkin);
+	MESSAGE_END();
+}
+
 bool CBasePlayerWeapon::AddPrimaryAmmo(CBasePlayerWeapon* origin, int iCount, char* szName, int iMaxClip, int iMaxCarry)
 {
 	int iIdAmmo;
@@ -850,6 +867,29 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 	m_flLastFireTime = 0.0;
 
+	return true;
+}
+
+bool CBasePlayerWeapon::GroupDeploy(char* szViewModel, char* szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, char* szAnimExt, int iWpnBody)
+{
+	if (!CanDeploy())
+		return false;
+
+	m_pPlayer->TabulateAmmo();
+	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
+	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
+	m_pPlayer->pev->scale = iWpnBody;
+	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
+
+	if (!iViewBody)
+		SendWeaponAnim(iViewAnim, UseDecrement() != false);
+	else
+		SendWeaponAnimEx(iViewAnim, iViewBody, iViewSkin, UseDecrement() != false);
+
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+	m_pPlayer->SetAnimation(PLAYER_IDLE);
+
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 	return true;
 }
 

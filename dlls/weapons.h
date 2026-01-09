@@ -320,6 +320,8 @@ public:
 
 	virtual void SendWeaponAnim(int iAnim, int body = 0);
 
+	void SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int skiplocal);
+
 	bool CanDeploy() override;
 	virtual bool IsUseable();
 	bool DefaultDeploy(const char* szViewModel, const char* szWeaponModel, int iAnim, const char* szAnimExt, int body = 0);

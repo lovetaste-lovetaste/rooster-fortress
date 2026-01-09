@@ -18,6 +18,7 @@
 #include "monsters.h"
 #include "weapons.h"
 #include "player.h"
+#include "UserMessages.h"
 
 #include "usercmd.h"
 #include "entity_state.h"
@@ -180,21 +181,15 @@ bool CBasePlayerWeapon::GroupDeploy(char* szViewModel, char* szWeaponModel, int 
 {
 	if (!CanDeploy())
 		return false;
-	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
-	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
-	m_pPlayer->pev->scale = iWpnBody;
-	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
-	
+
+	gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
+
 	SendWeaponAnim(iViewAnim, iViewBody);
+	// SendWeaponAnimEx(iViewAnim, iViewBody, iViewSkin, UseDecrement() != false);
 
+	g_irunninggausspred = false;
 	m_pPlayer->m_flNextAttack = 0.5;
-	//m_pPlayer->m_iFOV = m_pPlayer->m_iDefaultFOV;
-	m_pPlayer->SetAnimation(PLAYER_IDLE);
-	//m_pPlayer->ResetMaxSpeed();
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
-	//m_flDecreaseShotsFired = UTIL_WeaponTimeBase();
-	//m_bMeleeAttack = FALSE;
+	m_flTimeWeaponIdle = 1.0;
 	return true;
 }
 

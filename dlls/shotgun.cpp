@@ -99,8 +99,8 @@ int CShotgun::iWeight(void)
 bool CShotgun::Deploy()
 {
 	//
-	//return GroupDeploy("models/CKF_III/v_shotgunall.mdl", "models/CKF_III/wp_group_rf.mdl", SHOTGUN_DRAW, 0, 0, "shotgun", 3);
-	return DefaultDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", iBody());
+	return GroupDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, iBody(), 0, "shotgun", 3);
+	// return DefaultDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", iBody());
 }
 
 int CShotgun::iBody(void)

@@ -2979,7 +2979,7 @@ void CBasePlayer::SetPlayerModel()
 		color = COLOR_RED;
 	}
 	else
-		color = "90";
+		color = "1";
 
 	char* infobuffer = g_engfuncs.pfnGetInfoKeyBuffer(edict());
 	char* curmodel = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
