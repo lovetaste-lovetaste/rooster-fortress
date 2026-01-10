@@ -5,7 +5,9 @@ this may or may not be my own tf2 port, depending on how much time i have and wh
 feel free to help :)
 
 Timeline / Plans:
+
   Make the classes functional
+  
     - Soldier
       - the basic class stuff + both of his weapons are already in hl ( rpg, shotgun, melee with some changes )
     - Scout
