@@ -261,6 +261,10 @@ public:
 
 	int random_seed; // See that is shared between client & server for shared weapons code
 
+	int m_iTeam;
+	int GetTeamNumber();
+	void SetTeamNumber(int newTeam);
+
 	int m_iClass;			// tf2 class
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.
@@ -365,8 +369,6 @@ public:
 	float m_flNextDecalTime;  // next time this player can spray a decal
 
 	char m_szTeamName[TEAM_NAME_LENGTH];
-
-	int m_iTeam;
 
 	void SetPlayerModel();
 

@@ -148,3 +148,17 @@ enum ETFCond
 
 	TF_COND_LAST
 };
+
+const char* GetTFConditionName(ETFCond eCond);
+ETFCond GetTFConditionFromName(const char* pszCondName);
+inline ETFCond TFCondIndexToEnum(int nCond)
+{
+	if (nCond >= TF_COND_AIMING && nCond < TF_COND_LAST)
+		return (ETFCond)nCond;
+
+	return TF_COND_INVALID;
+}
+
+// If you want your condition to expire faster under healing,
+// add it to this function in tf_shareddefs.cpp
+bool ConditionExpiresFast(ETFCond eCond);

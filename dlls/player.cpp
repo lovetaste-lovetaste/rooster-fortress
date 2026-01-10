@@ -4778,6 +4778,17 @@ int CBasePlayer::GetCustomDecalFrames()
 	return m_nCustomSprayFrames;
 }
 
+// Returns the team number LOLOL
+int CBasePlayer::GetTeamNumber()
+{
+	return m_iTeam;
+}
+
+// Sets the team number
+void CBasePlayer::SetTeamNumber(int newTeam)
+{
+	m_iTeam = newTeam;
+}
 
 //=========================================================
 // DropPlayerItem - drop the named item, or if no name,

@@ -161,14 +161,8 @@ enum WeaponId
 #define itbd_SlowFreeze 7
 #define CDMG_TIMEBASED 8
 
-#define TEAM_UNASSIGNED 0
-#define TEAM_TERRORIST 1
-#define TEAM_CT 2
-#define TEAM_RED 1
-#define TEAM_BLU 2
-#define TEAM_BLUE 2
-#define TEAM_SPECTATOR 3
-
+#define CLASS_UNDEFINED 0
+#define CLASS_UNKNOWN 0
 #define CLASS_SCOUT 1
 #define CLASS_HEAVY 2
 #define CLASS_SOLDIER 3
@@ -178,6 +172,12 @@ enum WeaponId
 #define CLASS_ENGINEER 7
 #define CLASS_DEMOMAN 8
 #define CLASS_SPY 9
+
+#define TEAM_UNASSIGNED 0
+#define TEAM_RED 1
+#define TEAM_BLU 2
+#define TEAM_BLUE 2
+#define TEAM_SPECTATOR 3
 
 #define COLOR_RED "1"
 #define COLOR_BLU "140"
