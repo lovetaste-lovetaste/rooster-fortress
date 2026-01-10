@@ -4,10 +4,14 @@ this may or may not be my own tf2 port, depending on how much time i have and wh
 
 feel free to help :)
 
-Timeline / Plans:
+chicken fortress 3 code is annoying to work with ( nothing really wrong with the code but its so outdated that it just pisses me off )
 
-  Make the classes functional
-  
+this may or may not be my own tf2 port, depending on how much time i have and whether or not i will get bored LOL
+
+feel free to help :)
+
+## Timeline / Plans:
+  ### Make the classes functional<br/>
     - Soldier
       - the basic class stuff + both of his weapons are already in hl ( rpg, shotgun, melee with some changes )
     - Scout
@@ -37,9 +41,9 @@ Timeline / Plans:
       - seperate entities that have a bunch of properties, their own damage stuff, and needs to be networked to all clients constantly :))))
       - ugh
       - saved for last bcuz this is going to be Retarded As Fuck
-  Class selection stuff
+  ### Class selection stuff<br/>
     - the reason why this is after the actual class stuff is bcuz i plan on ensuring bots stay compatible
-  Gamemodes
+  ### Gamemodes<br/>
     - Control Points
       - this is for compatibility with existing Chicken Fortress 3 maps
       - Medieval Mode
