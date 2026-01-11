@@ -17,9 +17,9 @@
 
 /*
 
-===== client.cpp ========================================================
+===== tf_bot.cpp ========================================================
 
-  client/server game specific stuff
+  bot stuff :O
 
 */
 
@@ -47,27 +47,43 @@
 #include "pm_shared.h"
 #include "pm_defs.h"
 #include "UserMessages.h"
+#include "tf_bot.h"
 
 // CODE GRABBED FROM THE TF2SDK
 
-inline bool isTempBot(CBasePlayer* pPlayer)
+static float g_LastBotUpdateTime[34];
+static CBaseEntity* enemy[40];
+
+inline bool isTempBot(int client)
 {
-	return (pPlayer && (pPlayer->pev->flags & FL_FAKECLIENT) != 0);
+	auto pPlayer = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	return (pPlayer && pPlayer->m_bIsConnected && (pPlayer->pev->flags & FL_FAKECLIENT) != 0);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Run this Bot's AI for one frame.
 //-----------------------------------------------------------------------------
-void Bot_Think(CBasePlayer* pBot)
+void Bot_Think(int client)
 {
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
 	// Make sure we stay being a bot
 	if ((pBot->pev->flags & FL_FAKECLIENT) != 0)
 		pBot->pev->flags |= FL_FAKECLIENT;
 
-	pBot->pev->view_ofs;
+	float frametime = gpGlobals->time - g_LastBotUpdateTime[client];
+
+	if (frametime > 0.25f || frametime < 0)
+	{
+		frametime = 0;
+	}
+
+	const byte msec = byte(frametime * 1000);
+
+	// pBot->pev->view_ofs;
 	Vector vecMove(0, 0, 0);
 	byte impulse = 0;
-	float frametime = gpGlobals->frametime;
 	Vector vecViewAngles = pBot->pev->angles;
 	pBot->pev->button = 0;
 
@@ -81,15 +97,15 @@ void Bot_Think(CBasePlayer* pBot)
 	else if (pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->m_iClass == CLASS_UNDEFINED)
 	{
 		// on team but havent chosen a class
-
+		pBot->m_iClass = CLASS_SOLDIER;
 	}
 	else if (pBot->IsAlive())
 	{
-		botdata->Bot_AliveThink(&vecViewAngles, &vecMove);
+		Bot_AliveThink(client, vecViewAngles, vecMove);
 	}
 	else
 	{
-		botdata->Bot_DeadThink(&vecViewAngles, &vecMove);
+		Bot_DeadThink(client, vecViewAngles, vecMove);
 	}
 	g_engfuncs.pfnRunPlayerMove(pBot->edict(), vecViewAngles, vecMove[0], vecMove[1], vecMove[2], pBot->pev->button, pBot->pev->impulse, msec);
 }
@@ -101,11 +117,9 @@ void Bot_RunAll(void)
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		auto pPlayer = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(i));
-
-		if (isTempBot(pPlayer))
+		if (isTempBot(i))
 		{
-			Bot_Think(pPlayer);
+			Bot_Think(i);
 		}
 	}
 }
@@ -113,9 +127,10 @@ void Bot_RunAll(void)
 //-----------------------------------------------------------------------------
 // Purpose: Handle the Bot AI for a live bot
 //-----------------------------------------------------------------------------
-void Bot_AliveThink(CBasePlayer* pBot, Vector vecAngles, Vector vecMove)
+void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
 {
-	trace_t trace;
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+	// trace_t trace;
 
 	// m_bWasDead = false;
 
@@ -127,10 +142,50 @@ void Bot_AliveThink(CBasePlayer* pBot, Vector vecAngles, Vector vecMove)
 	//	return;
 	//}
 
-	// NOT DONE PORTING
+	if (g_LastBotUpdateTime[client] < gpGlobals->time)
+	{
+		g_LastBotUpdateTime[client] = gpGlobals->time + 0.025;
+		enemy[client] = FindNearestEnemy(client, 4096);
+	}
 
-	Bot_AliveMovementThink(pBot, vecAngles, vecMove);
-	Bot_AliveWeaponThink(pBot, vecAngles, vecMove);
+	if (!IsTargetVisible(client, enemy[client]))
+		enemy[client] = NULL;
+
+	if (enemy[client] != NULL)
+	{
+		// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
+		AimAtTarget(client, enemy[client]);
+		CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)pBot->m_pActiveItem;
+
+		if (pWeapon)
+		{
+			int clipSize = pWeapon->m_iClip;
+			if (clipSize != -1)
+			{
+				if (clipSize > 0)
+				{
+					ALERT(at_console, "Botthink: I have ammo / COULD have ammo, fire!\n");
+					pBot->pev->button |= IN_ATTACK;
+				}
+				else
+				{
+					ALERT(at_console, "Botthink: I have ammo but need to reload!\n");
+					pBot->pev->button |= IN_RELOAD;
+				}
+			}
+			else
+			{
+				ALERT(at_console, "Botthink: No Ammo on this weapon!\n");
+			}
+		}
+	}
+	else
+	{
+		// ALERT(at_console, "Botthink: Couldn't get player!\n");
+	}
+
+	Bot_AliveMovementThink(client, vecAngles, vecMove);
+	// Bot_AliveWeaponThink(pBot, vecAngles, vecMove);
 
 	// Miscellaneous
 	//if (bot_saveme.GetInt() > 0)
@@ -138,4 +193,46 @@ void Bot_AliveThink(CBasePlayer* pBot, Vector vecAngles, Vector vecMove)
 		//m_hBot->SaveMe();
 		//bot_saveme.SetValue(bot_saveme.GetInt() - 1);
 	//}
+}
+
+void Bot_AliveMovementThink(int client, Vector vecAngles, Vector vecMove)
+{
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+	//if (bot_jump.GetBool() && m_hBot->GetFlags() & FL_ONGROUND)
+	//{
+	//	buttons |= IN_JUMP;
+	//}
+
+	//if (bot_crouch.GetBool())
+	//{
+	//	buttons |= IN_DUCK;
+	//}
+	// gotta port the commands over from tf2
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Handle the Bot AI for a dead bot
+//-----------------------------------------------------------------------------
+void Bot_DeadThink(int client, Vector vecAngles, Vector vecMove)
+{
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+	// Wait for Reinforcement wave
+	if (!pBot->IsAlive())
+	{
+		// if (m_bWasDead)
+		// {
+			// Wait for a few seconds before respawning.
+			// if (gpGlobals->curtime - m_flDeadTime > 3)
+			// {
+				// Respawn the bot
+				// buttons |= IN_JUMP;
+			// }
+		// }
+		// else
+		// {
+			// Start a timer to respawn them in a few seconds.
+			// m_bWasDead = true;
+			// m_flDeadTime = gpGlobals->curtime;
+		// }
+	}
 }

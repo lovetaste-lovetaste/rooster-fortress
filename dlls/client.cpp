@@ -47,6 +47,7 @@
 #include "pm_shared.h"
 #include "pm_defs.h"
 #include "UserMessages.h"
+#include "tf_bot.h"
 
 DLL_GLOBAL unsigned int g_ulFrameCount;
 
@@ -885,8 +886,6 @@ void InitMapLoadingUtils()
 
 static bool g_LastAllowBunnyHoppingState = false;
 
-static float g_LastBotUpdateTime[40];
-static CBaseEntity* enemy[40];
 	//
 // GLOBALS ASSUMED SET:  g_ulFrameCount
 //
@@ -904,81 +903,10 @@ void StartFrame()
 
 	// Handle level changes and other problematic time changes.
 
-	for (int i = 1; i <= gpGlobals->maxClients; ++i)
-	{
-		float frametime = gpGlobals->time - g_LastBotUpdateTime[i];
-
-		if (frametime > 0.25f || frametime < 0)
-		{
-			frametime = 0;
-		}
-
-		const byte msec = byte(frametime * 1000);
-
-		auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(i));
-
-		if (!player)
-		{
-			continue;
-		}
-
-		if (!player->m_bIsConnected)
-		{
-			continue;
-		}
-
-		if ((player->pev->flags & FL_FAKECLIENT) == 0)
-		{
-			continue;
-		}
-
-		// If bot is newly created finish setup here.
-
-		// Run bot think here.
-
-		if (g_LastBotUpdateTime[i] < gpGlobals->time)
-		{
-			g_LastBotUpdateTime[i] = gpGlobals->time + 0.025;
-			enemy[i] = FindNearestEnemy(i, 4096);
-		}
-
-		if (!IsTargetVisible(i, enemy[i]))
-			enemy[i] = NULL;
-
-		if (enemy[i] != NULL)
-		{
-			// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
-			AimAtTarget(i, enemy[i]);
-			CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)player->m_pActiveItem;
-			
-			if (pWeapon)
-			{
-				int clipSize = pWeapon->m_iClip;
-				if (clipSize != -1)
-				{
-					ALERT(at_console, "Botthink: I have ammo / COULD have ammo, fire!\n");
-					player->pev->button |= IN_ATTACK;
-				}
-				else
-				{
-					ALERT(at_console, "Botthink: No Ammo!\n");
-					player->pev->button |= IN_RELOAD;
-				}	
-			}
-		}
-		else
-		{
-			// ALERT(at_console, "Botthink: Couldn't get player!\n");
-		}
-		
-		// sv_addbot TopGooner; sv_addbot skelebro; sv_addbot bonerman; sv_addbot cheeseWizard; sv_addbot wanker;
-
-		// Now update the bot.
-		g_engfuncs.pfnRunPlayerMove(player->edict(), player->pev->angles, 0, 0, 0, player->pev->button, player->pev->impulse, msec);
-		// player->Think();
-	}
-
 	const bool allowBunnyHopping = sv_allowbunnyhopping.value != 0;
+
+	Bot_RunAll();
+	// bot stuff is in tf_bot.cpp
 
 	if (allowBunnyHopping != g_LastAllowBunnyHoppingState)
 	{

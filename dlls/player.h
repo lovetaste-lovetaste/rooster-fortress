@@ -519,6 +519,8 @@ public:
 
 	void SetPrefsFromUserinfo(char* infobuffer);
 
+	bool IsFakeClient(void);
+
 	int m_iAutoWepSwitch;
 
 	bool m_bRestored;

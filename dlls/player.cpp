@@ -1331,7 +1331,7 @@ void CBasePlayer::PlayerDeathThink()
 	pev->button = 0;
 	m_flRespawnTimer = 0.0f;
 
-	//ALERT(at_console, "Respawn\n");
+	ALERT(at_console, "Respawn\n");
 
 	respawn(pev, (m_afPhysicsFlags & PFLAG_OBSERVER) == 0); // don't copy a corpse if we're in deathcam.
 	pev->nextthink = -1;
@@ -1832,14 +1832,6 @@ void CBasePlayer::UpdateStatusBar()
 		}
 	}
 }
-
-
-
-
-
-
-
-
 
 #define CLIMB_SHAKE_FREQUENCY 22 // how many frames in between screen shakes when climbing
 #define MAX_CLIMB_SPEED 200		 // fastest vertical climbing speed possible
@@ -2970,11 +2962,11 @@ void CBasePlayer::SetPlayerModel()
 
 	char* color;
 
-	if (m_iTeam == TEAM_CT)
+	if (m_iTeam == TEAM_BLUE)
 	{
 		color = COLOR_BLU;
 	}
-	else if (m_iTeam == TEAM_TERRORIST)
+	else if (m_iTeam == TEAM_RED)
 	{
 		color = COLOR_RED;
 	}
@@ -5019,6 +5011,11 @@ void CBasePlayer::SetPrefsFromUserinfo(char* infobuffer)
 	{
 		m_iAutoWepSwitch = 1;
 	}
+}
+
+bool CBasePlayer::IsFakeClient(void)
+{
+	return !IsNetClient();
 }
 
 //=========================================================
