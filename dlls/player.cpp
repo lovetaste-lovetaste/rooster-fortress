@@ -3148,9 +3148,17 @@ void CBasePlayer::RenewItems()
 
 void CBasePlayer::SpawnClassWeapons()
 {
-	//GiveNamedItem("weapon_rpg");
-	GiveNamedItem("weapon_shotgun");
-	GiveNamedItem("weapon_crowbar");
+	switch( m_iClass )
+	{
+		case CLASS_SOLDIER:
+		{
+			GiveNamedItem("weapon_rpg");
+			GiveNamedItem("weapon_shotgun");
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Soldier!\n");
+		}
+	}
+	
 	// GiveNamedItem("weapon_hornetgun");
 }
 

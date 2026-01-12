@@ -357,7 +357,7 @@ void CHalfLifeTeamplay::DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, en
 	if (m_DisableDeathMessages)
 		return;
 
-	if (pVictim && pKiller && (pKiller->flags & FL_CLIENT) != 0)
+	if (pVictim && pKiller)
 	{
 		CBasePlayer* pk = (CBasePlayer*)CBaseEntity::Instance(pKiller);
 
