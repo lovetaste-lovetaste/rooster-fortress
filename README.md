@@ -37,6 +37,8 @@ feel free to help :)
       - saved for last bcuz this is going to be Retarded As Fuck
   ### Class selection stuff<br/>
     - the reason why this is after the actual class stuff is bcuz i plan on ensuring bots stay compatible
+  ### Team selection stiff<br/>
+    - theres already a type of teamplay in hl but it works differently, so this is to make sure it works
   ### Gamemodes<br/>
     - Control Points
       - this is for compatibility with existing Chicken Fortress 3 maps
@@ -49,3 +51,5 @@ feel free to help :)
     - Payload
     - Zombie Infection
       - this is just to bait counter strike players into playing this LOLOLOL
+   ### 9-way animation blending <br/>
+    - This is primarily so it is easier to port the TF2 models directly over to this. This may be un-needed.
