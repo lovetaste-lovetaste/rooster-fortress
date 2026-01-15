@@ -94,6 +94,13 @@ void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker)
 
 	if (!gMultiDamage.pEntity)
 		return;
+	
+	//float distanceFalloff = 1.0;
+	//float damage = gMultiDamage.amount;
+	float flDist = (pevAttacker->origin - pevInflictor->origin).Length();
+	//distanceFalloff = (625 / 3221225472) * ((int)flDist ^ 3) - (625 / 2097152) * ((int)flDist ^ 2) + (25 / 6144) * (int)flDist + 150;
+
+	ALERT(at_console, "MultiDamage distance should be %f \n", flDist);
 
 	gMultiDamage.pEntity->TakeDamage(pevInflictor, pevAttacker, gMultiDamage.amount, gMultiDamage.type);
 }

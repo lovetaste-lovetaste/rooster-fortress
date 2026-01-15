@@ -52,4 +52,4 @@ feel free to help :)
     - Zombie Infection
       - this is just to bait counter strike players into playing this LOLOLOL
    ### 9-way animation blending <br/>
-    - This is primarily so it is easier to port the TF2 models directly over to this. This may be un-needed.
+    - This is primarily so it is easier to port the TF2 models directly over to this. This may not be needed.

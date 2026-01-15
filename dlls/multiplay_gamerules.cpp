@@ -13,7 +13,7 @@
 *
 ****/
 //
-// teamplay_gamerules.cpp
+// multiplay_gamerules.cpp
 //
 #include "extdll.h"
 #include "util.h"
@@ -1047,7 +1047,28 @@ edict_t* CHalfLifeMultiplay::GetPlayerSpawnSpot(CBasePlayer* pPlayer)
 int CHalfLifeMultiplay::PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget)
 {
 	// half life deathmatch has only enemies
+	// however, this is tf2 :)
+	// this is copied from teamaplay_gamerules LOLOL
+	// note: i should probably just include teamplay_gamerules.h here for that anyway
+
+	if (!pPlayer || !pTarget || !pTarget->IsPlayer())
+		return GR_NOTTEAMMATE;
+
+	if ((*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp(GetTeamID(pPlayer), GetTeamID(pTarget)))
+	{
+		return GR_TEAMMATE;
+	}
+
 	return GR_NOTTEAMMATE;
+}
+
+const char* CHalfLifeMultiplay::GetTeamID(CBaseEntity* pEntity)
+{
+	if (pEntity == NULL || pEntity->pev == NULL)
+		return "";
+
+	// return their team name
+	return pEntity->TeamID();
 }
 
 bool CHalfLifeMultiplay::PlayFootstepSounds(CBasePlayer* pl, float fvol)

@@ -1700,13 +1700,13 @@ void EV_Shovel(event_args_t* args)
 		switch ((g_iSwings++) % 3)
 		{
 		case 0:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH1, 0);
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SWING_A, 0);
 			break;
 		case 1:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH1, 0);
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SWING_B, 0);
 			break;
 		case 2:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SLASH2, 0);
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOVEL_SWING_C, 0);
 			break;
 		}
 	}

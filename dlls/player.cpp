@@ -3154,9 +3154,17 @@ void CBasePlayer::SpawnClassWeapons()
 		{
 			GiveNamedItem("weapon_rpg");
 			GiveNamedItem("weapon_shotgun");
+			// GiveNamedItem("weapon_glock");
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Soldier!\n");
 		}
+		/// default:
+		// {
+			// GiveNamedItem("weapon_glock");
+			// GiveNamedItem("weapon_crowbar");
+			// ALERT(at_console, "Player spawned as a invalid class, giving default HL loadout.\n");
+		// }
+		// not needed lolololololol
 	}
 	
 	// GiveNamedItem("weapon_hornetgun");
@@ -3363,11 +3371,25 @@ void CBasePlayer::SelectPrevItem(int iItem)
 
 const char* CBasePlayer::TeamID()
 {
-	if (pev == NULL) // Not fully connected yet
+	if (pev == NULL || GetTeamNumber() == TEAM_UNASSIGNED) // Not fully connected yet / not assigned to a proper team
 		return "";
 
 	// return their team name
-	return m_szTeamName;
+	// forces this based off of their tf2 team, not their model
+
+	if (GetTeamNumber() != TEAM_RED && GetTeamNumber() != TEAM_BLUE)
+		return "halflife";
+	// not in a tf2 based team, set to a universal Half Life team
+
+	if (GetTeamNumber() == TEAM_SPECTATOR && IsAlive() && !IsPlayer())
+	{
+		// this shouldnt happen
+		// if it does check code brah
+		ALERT(at_console, "Someone is somehow on the spectator team while alive!\n");
+		return "spectator";
+	}
+
+	return (GetTeamNumber() == TEAM_RED ? "TEAM_RED" : "TEAM_BLUE");
 }
 
 

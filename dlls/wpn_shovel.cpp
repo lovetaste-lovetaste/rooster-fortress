@@ -41,7 +41,7 @@ void CShovel::Spawn()
 
 void CShovel::Precache()
 {
-	PRECACHE_MODEL("models/chicken_fortress_3/v_shovel.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 	// PRECACHE_MODEL("models/rooster_fortress/w_shovel.mdl");
 	
@@ -75,7 +75,7 @@ bool CShovel::GetItemInfo(ItemInfo* p)
 
 bool CShovel::Deploy()
 {
-	return GroupDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "shovel", 0);
+	return GroupDeploy("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "shovel", 0);
 	// return DefaultDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/w_shovel.mdl", SHOVEL_DRAW, "shovel");
 }
 
@@ -163,13 +163,13 @@ bool CShovel::Swing(bool fFirst)
 		switch (((m_iSwing++) % 2) + 1)
 		{
 		case 0:
-			SendWeaponAnim(SHOVEL_SLASH1);
+			SendWeaponAnim(SHOVEL_SWING_A);
 			break;
 		case 1:
-			SendWeaponAnim(SHOVEL_SLASH1);
+			SendWeaponAnim(SHOVEL_SWING_B);
 			break;
 		case 2:
-			SendWeaponAnim(SHOVEL_SLASH2);
+			SendWeaponAnim(SHOVEL_SWING_C);
 			break;
 		}
 

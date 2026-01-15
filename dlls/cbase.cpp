@@ -546,7 +546,7 @@ bool CBaseEntity::TakeHealth(float flHealth, int bitsDamageType)
 bool CBaseEntity::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
 	Vector vecTemp;
-
+	
 	if (0 == pev->takedamage)
 		return false;
 

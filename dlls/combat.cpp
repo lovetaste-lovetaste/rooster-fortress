@@ -1045,7 +1045,7 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 
 	const bool bInWater = (UTIL_PointContents(vecSrc) == CONTENTS_WATER);
 
-	vecSrc.z += 1; // in case grenade is lying on the ground
+	vecSrc.z += 1; // in case grenade is lying on the 
 
 	if (!pevAttacker)
 		pevAttacker = pevInflictor;

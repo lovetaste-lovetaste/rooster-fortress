@@ -12,14 +12,12 @@
 *   without written permission from Valve LLC.
 *
 ****/
-// Robin, 4-22-98: Moved set_suicide_frame() here from player.cpp to allow us to
-//				   have one without a hardcoded player.mdl in tf_client.cpp
-
 /*
 
 ===== tf_bot.cpp ========================================================
 
   bot stuff :O
+  this is a simple bot that only looks, walks towards enemies, and shoots. Not much else
 
 */
 
@@ -48,6 +46,7 @@
 #include "pm_defs.h"
 #include "UserMessages.h"
 #include "tf_bot.h"
+#include "teamplay_gamerules.h"
 
 // CODE GRABBED FROM THE TF2SDK
 
@@ -73,13 +72,14 @@ void Bot_Think(int client)
 		pBot->pev->flags |= FL_FAKECLIENT;
 
 	float frametime = gpGlobals->time - g_LastBotUpdateTime[client];
+	g_LastBotUpdateTime[client] = gpGlobals->time;
 
 	if (frametime > 0.25f || frametime < 0)
 	{
 		frametime = 0;
 	}
 
-	const byte msec = byte(frametime * 1000);
+	const byte msec = byte(frametime * 1000.0);
 
 	// pBot->pev->view_ofs;
 	Vector vecMove(0, 0, 0);
@@ -101,12 +101,13 @@ void Bot_Think(int client)
 	}
 	else if (pBot->IsAlive())
 	{
-		Bot_AliveThink(client, vecViewAngles, vecMove);
+		Bot_AliveThink(client, &vecViewAngles, &vecMove);
 	}
 	else
 	{
-		Bot_DeadThink(client, vecViewAngles, vecMove);
+		Bot_DeadThink(client, &vecViewAngles, &vecMove);
 	}
+	
 	g_engfuncs.pfnRunPlayerMove(pBot->edict(), vecViewAngles, vecMove[0], vecMove[1], vecMove[2], pBot->pev->button, pBot->pev->impulse, msec);
 }
 
@@ -127,11 +128,11 @@ void Bot_RunAll(void)
 //-----------------------------------------------------------------------------
 // Purpose: Handle the Bot AI for a live bot
 //-----------------------------------------------------------------------------
-void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
+void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 	// trace_t trace;
-
+	
 	// m_bWasDead = false;
 
 	// In item testing mode, we run custom logic
@@ -142,19 +143,20 @@ void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
 	//	return;
 	//}
 
-	if (g_LastBotUpdateTime[client] < gpGlobals->time)
-	{
-		g_LastBotUpdateTime[client] = gpGlobals->time + 0.025;
-		enemy[client] = FindNearestEnemy(client, 4096);
-	}
-
-	if (!IsTargetVisible(client, enemy[client]))
+	enemy[client] = FindNearestEnemy(client, 4096); // this can be extended but 4096 is fine for now
+	
+	if (!IsTargetVisible(client, enemy[client])) // this works FINE. DO NOT TOUCH
 		enemy[client] = NULL;
 
 	if (enemy[client] != NULL)
 	{
 		// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
 		AimAtTarget(client, enemy[client]);
+		// BotMatchFacing(pBot, pBot->pev->origin, enemy[client]->edict()->v.origin);
+		
+		// TF2_LookAtPos(client, vecAngles, enemy[client]->pev->origin, 0.5);
+		// g_engfuncs.pfnWalkMove(pBot->edict(), pBot->pev->v_angle.y, 1.0, WALKMOVE_NORMAL);
+		
 		CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)pBot->m_pActiveItem;
 
 		if (pWeapon)
@@ -164,18 +166,20 @@ void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
 			{
 				if (clipSize > 0)
 				{
-					ALERT(at_console, "Botthink: I have ammo / COULD have ammo, fire!\n");
+					///ALERT(at_console, "Botthink: I have ammo / COULD have ammo, fire!\n");
 					pBot->pev->button |= IN_ATTACK;
 				}
 				else
 				{
-					ALERT(at_console, "Botthink: I have ammo but need to reload!\n");
+					///ALERT(at_console, "Botthink: I have ammo but need to reload!\n");
 					pBot->pev->button |= IN_RELOAD;
 				}
 			}
 			else
 			{
-				ALERT(at_console, "Botthink: No Ammo on this weapon!\n");
+				///ALERT(at_console, "Botthink: No Ammo on this weapon!\n");
+				pBot->pev->button |= IN_ATTACK;
+				// try attacking anyway; melee weapons usually have no ammo
 			}
 		}
 	}
@@ -185,7 +189,7 @@ void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
 	}
 
 	Bot_AliveMovementThink(client, vecAngles, vecMove);
-	// Bot_AliveWeaponThink(pBot, vecAngles, vecMove);
+	Bot_AliveWeaponThink(client, vecAngles, vecMove);
 
 	// Miscellaneous
 	//if (bot_saveme.GetInt() > 0)
@@ -195,44 +199,286 @@ void Bot_AliveThink(int client, Vector vecAngles, Vector vecMove)
 	//}
 }
 
-void Bot_AliveMovementThink(int client, Vector vecAngles, Vector vecMove)
+void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
-	//if (bot_jump.GetBool() && m_hBot->GetFlags() & FL_ONGROUND)
-	//{
-	//	buttons |= IN_JUMP;
-	//}
+	// pBot->pev->button |= IN_FORWARD;
+	vecMove->x = 0.0;
+	vecMove->y = 0.0;
+	vecMove->z = 0.0;
 
-	//if (bot_crouch.GetBool())
-	//{
-	//	buttons |= IN_DUCK;
-	//}
-	// gotta port the commands over from tf2
+	// movement based
+	// gotta learn how to make the bot walk normally first
+	// after i figure out the basics then i will start getting serious with it
+	// im used to writing bots in normal TF2, so I will port that logic over
+	// 
+	if( (enemy[client] != NULL && g_engfuncs.pfnRandomLong(0, 100) == 1)
+		|| pBot->pev->waterlevel >= 3)
+	{
+		// if in deep water or randomly while fighting, bot will try to 
+		pBot->pev->button |= IN_JUMP;
+	}
+
+	if (g_engfuncs.pfnRandomLong(0, 100) == 2)
+	{
+		pBot->pev->button |= IN_DUCK;
+	}
+	// TODO: port the bot_jump & bot_duck commands from tf2
+}
+
+void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
+{
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+	//
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Handle the Bot AI for a dead bot
 //-----------------------------------------------------------------------------
-void Bot_DeadThink(int client, Vector vecAngles, Vector vecMove)
+void Bot_DeadThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 	// Wait for Reinforcement wave
 	if (!pBot->IsAlive())
 	{
-		// if (m_bWasDead)
-		// {
+		/*
+		if (m_bWasDead)
+		{
 			// Wait for a few seconds before respawning.
-			// if (gpGlobals->curtime - m_flDeadTime > 3)
-			// {
+			if (gpGlobals->curtime - m_flDeadTime > 3)
+			{
 				// Respawn the bot
-				// buttons |= IN_JUMP;
-			// }
-		// }
-		// else
-		// {
+				buttons |= IN_JUMP;
+			}
+		}
+		else
+		{
 			// Start a timer to respawn them in a few seconds.
-			// m_bWasDead = true;
-			// m_flDeadTime = gpGlobals->curtime;
-		// }
+			m_bWasDead = true;
+			m_flDeadTime = gpGlobals->curtime;
+		}
+		*/
 	}
+}
+
+CBaseEntity* FindNearestEnemy(int client, float MAXRANGE = 4096.0)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+	{
+		return NULL;
+	}
+
+	CBaseEntity* pEntity = NULL;
+	CBaseEntity* pNearest = NULL;
+	float flMinDist = MAXRANGE;
+
+	// Search for enemies
+	while ((pEntity = UTIL_FindEntityInSphere(pEntity, player->pev->origin, 2048)) != NULL)
+	{
+		// Skip non-living entities
+		if (!pEntity->IsAlive())
+			continue;
+		
+		// Skip teammates (basic team check)
+		// if (pEntity->IsPlayer() && pEntity->pev->team == player->pev->team)
+			// continue;
+		// todo
+
+		// Skip self
+		if (pEntity == player)
+			continue;
+
+		// Check if it's a valid player
+		if (!pEntity->IsPlayer())
+			continue;
+
+		if (!IsTargetVisible(client, pEntity))
+			continue;
+
+		float flDist = (pEntity->pev->origin - player->pev->origin).Length();
+
+		if (flDist < flMinDist)
+		{
+			flMinDist = flDist;
+			pNearest = pEntity;
+		}
+	}
+
+	return pNearest;
+}
+
+// converted from TF2Ebots
+//
+void TF2_LookAtPos(int client, Vector* vecAngles, float flGoal[3], float flAimSpeed)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+	{
+		return;
+	}
+
+
+	Vector flPos = player->pev->view_ofs;
+	Vector flAng = player->pev->angles;
+
+	// get normalised direction from target to client
+	Vector desired_dir;
+	desired_dir[0] = flGoal[0] - flPos[0];
+	desired_dir[1] = flGoal[1] - flPos[1];
+	desired_dir[2] = flGoal[2] - flPos[2];
+
+	desired_dir = UTIL_VecToAngles(desired_dir);
+
+	// ease the current direction to the target direction
+	flAng[0] += AngleNormalize(desired_dir[0] - flAng[0]) * flAimSpeed;
+	flAng[1] += AngleNormalize(desired_dir[1] - flAng[1]) * flAimSpeed;
+
+	// Set view angles
+	player->pev->v_angle = flAng;
+	//player->pev->angles.x = vecCurrentAngles.x / 3.0f; // Pitch for model
+	player->pev->angles.y = flAng.y;
+	player->pev->angles.z = 0;
+
+	// Update ideal yaw for movement
+	player->pev->ideal_yaw = flAng.y;
+
+	// Set angle change for smooth turning
+	player->ChangeYaw(player->pev->yaw_speed);
+
+	// TeleportEntity(client, NULL_VECTOR, flAng, NULL_VECTOR);
+}
+
+void AimAtTarget(int client, CBaseEntity* pTarget)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+	{
+		return;
+	}
+
+	if (!pTarget)
+		return;
+
+	// Calculate target position (aim at chest/head)
+	Vector vecTarget = pTarget->pev->origin + Vector(0, 0, pTarget->pev->view_ofs.z * 0.8f);
+	Vector vecDir = (vecTarget - player->GetGunPosition()).Normalize();
+
+	// Convert direction to angles
+	Vector vecTargetAngles = UTIL_VecToAngles(vecDir);
+
+	// Smooth aiming - interpolate towards target
+	Vector vecCurrentAngles = player->pev->v_angle;
+
+	// Normalize angle differences
+	float flYawDiff = UTIL_AngleMod(vecTargetAngles.y - vecCurrentAngles.y);
+	float flPitchDiff = UTIL_AngleMod(vecTargetAngles.x - vecCurrentAngles.x);
+
+	// Apply aim speed (lower = slower, more human-like)
+	// float flAimDelta = 5.0;
+
+	// vecCurrentAngles.y += clamp(flYawDiff, -flAimDelta, flAimDelta);
+	// vecCurrentAngles.x += clamp(flPitchDiff, -flAimDelta, flAimDelta);
+
+	vecCurrentAngles.y += flYawDiff;
+	vecCurrentAngles.x += flPitchDiff;
+
+	// Set view angles
+	player->pev->v_angle = vecCurrentAngles;
+	player->pev->angles.x = vecCurrentAngles.x; // Pitch for model
+	player->pev->angles.y = vecCurrentAngles.y;
+	player->pev->angles.z = 0;
+
+	// Update ideal yaw for movement
+	player->pev->ideal_yaw = vecCurrentAngles.y;
+
+	BotFixIdealPitch(player->edict());
+	BotFixIdealYaw(player->edict());
+	// Set angle change for smooth turning
+	player->ChangeYaw(1048);
+}
+
+float clamp(float init, float min, float max)
+{
+	// clamp(flYawDiff, -flAimDelta, flAimDelta);
+
+	float main = init;
+	if (main > max)
+		main = max;
+	if (main < min)
+		main = min;
+
+	return main;
+}
+
+
+float AngleNormalize(float angle)
+{
+	angle = fmodf(angle, 360.0);
+	if (angle > 180)
+	{
+		angle -= 360;
+	}
+	if (angle < -180)
+	{
+		angle += 360;
+	}
+
+	return angle;
+}
+
+bool IsTargetVisible(int client, CBaseEntity* pTarget)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+		return false;
+
+	if (!pTarget)
+		return false;
+
+	// Skip non-living entities
+	if (!pTarget->IsAlive() || !player->IsAlive())
+		return false;
+
+	// Check line of sight
+	TraceResult tr;
+	UTIL_TraceLine(player->GetGunPosition(), pTarget->pev->origin + pTarget->pev->view_ofs,
+		ignore_monsters, ignore_glass, ENT(pTarget->pev), &tr);
+
+	return (tr.flFraction >= 1.0f || tr.pHit == pTarget->edict());
+}
+
+void BotFixIdealPitch(edict_t* pEdict)
+{
+	// check for wrap around of angle...
+	if (pEdict->v.idealpitch > 180)
+		pEdict->v.idealpitch -= 360;
+	else if (pEdict->v.idealpitch < -180)
+		pEdict->v.idealpitch += 360;
+}
+
+void BotFixIdealYaw(edict_t* pEdict)
+{
+	// check for wrap around of angle...
+	if (pEdict->v.ideal_yaw > 180)
+		pEdict->v.ideal_yaw -= 360;
+	else if (pEdict->v.ideal_yaw < -180)
+		pEdict->v.ideal_yaw += 360;
+}
+
+// This function will tell the bot to face the map coordinates
+// indicated by v_focus
+void BotMatchFacing(CBasePlayer* pBot, const Vector& v_source, Vector v_focus)
+{
+	v_focus = v_focus - (pBot->pev->origin + pBot->pev->view_ofs);
+	const Vector bot_angles = UTIL_VecToAngles(v_focus);
+	pBot->pev->ideal_yaw = bot_angles.y;
+	pBot->pev->idealpitch = bot_angles.x;
+	BotFixIdealYaw(pBot->edict());
+	BotFixIdealPitch(pBot->edict());
+	pBot->ChangeYaw(pBot->pev->yaw_speed);
 }

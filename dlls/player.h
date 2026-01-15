@@ -394,8 +394,8 @@ public:
 	bool IsPlayer() override { return true; } // Spectators should return false for this, they aren't "players" as far as game logic is concerned
 
 	bool IsNetClient() override { return (pev->flags & FL_FAKECLIENT) == 0; }
-	// Bots should return false for this, they can't receive NET messages
-												 // Spectators should return true for this
+	// Bots should return false for this, they can't receive NET messages. Spectators should return true for this
+
 	const char* TeamID() override;
 
 	bool Save(CSave& save) override;

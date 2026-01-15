@@ -35,7 +35,7 @@ void CShotgun::Spawn()
 	m_bIsPrimary = false;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
 	pev->sequence = 1;
-	pev->body = iBody();
+	// pev->body = iBody(); // this is weird for viewmodels
 	m_iDefaultAmmo = SHOTGUN_DEFAULT_GIVE;
 
 	FallInit(); // get ready to fall
@@ -44,7 +44,7 @@ void CShotgun::Spawn()
 
 void CShotgun::Precache()
 {
-	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgunall.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 	// PRECACHE_MODEL("models/p_shotgun.mdl");
 
@@ -99,7 +99,7 @@ int CShotgun::iWeight(void)
 bool CShotgun::Deploy()
 {
 	//
-	return GroupDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, iBody(), 0, "shotgun", 3);
+	return GroupDeploy("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, iBody(), 0, "shotgun", 3);
 	// return DefaultDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", iBody());
 }
 
@@ -121,14 +121,6 @@ int CShotgun::iBody(void)
 
 void CShotgun::PrimaryAttack()
 {
-	// don't fire underwater
-	if (m_pPlayer->pev->waterlevel == 3)
-	{
-		PlayEmptySound();
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.15);
-		return;
-	}
-
 	if (m_iClip <= 0)
 	{
 		Reload();
@@ -156,23 +148,11 @@ void CShotgun::PrimaryAttack()
 	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
 	Vector vecDir;
+	vecDir = m_pPlayer->FireBulletsPlayer(10, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 6, m_pPlayer->pev, m_pPlayer->random_seed);
 
-#ifdef CLIENT_DLL
-	if (bIsMultiplayer())
-#else
-	if (g_pGameRules->IsMultiplayer())
-#endif
-	{
-		vecDir = m_pPlayer->FireBulletsPlayer(4, vecSrc, vecAiming, VECTOR_CONE_DM_SHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-	}
-	else
-	{
-		// regular old, untouched spread.
-		vecDir = m_pPlayer->FireBulletsPlayer(12, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 9, m_pPlayer->pev, m_pPlayer->random_seed);
-	}
+	// CKFFireBullets(vecSrc, gpGlobals->v_forward, 0.0, 8192, BULLET_PLAYER_TF2, 6, iCrit, m_pPlayer->pev, m_pPlayer->random_seed, FALSE);
 
 	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
-
 
 	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		// HEV suit - indicate out of ammo condition
@@ -271,7 +251,7 @@ void CShotgun::WeaponIdle()
 			else
 			{
 				// reload debounce has timed out
-				SendWeaponAnim(SHOTGUN_PUMP);
+				SendWeaponAnim(SHOTGUN_END_RELOAD);
 
 				// play cocking sound
 				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));

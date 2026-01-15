@@ -342,7 +342,7 @@ public:
 	int DeadPlayerAmmo(CBasePlayer* pPlayer) override;
 
 	// Teamplay stuff
-	const char* GetTeamID(CBaseEntity* pEntity) override { return ""; }
+	const char* GetTeamID(CBaseEntity* pEntity) override;
 	int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget) override;
 
 	bool PlayTextureSounds() override { return false; }

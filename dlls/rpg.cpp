@@ -26,62 +26,6 @@ LINK_ENTITY_TO_CLASS(weapon_rpg, CRpg);
 
 #ifndef CLIENT_DLL
 
-LINK_ENTITY_TO_CLASS(laser_spot, CLaserSpot);
-
-//=========================================================
-//=========================================================
-CLaserSpot* CLaserSpot::CreateSpot()
-{
-	CLaserSpot* pSpot = GetClassPtr((CLaserSpot*)NULL);
-	pSpot->Spawn();
-
-	pSpot->pev->classname = MAKE_STRING("laser_spot");
-
-	return pSpot;
-}
-
-//=========================================================
-//=========================================================
-void CLaserSpot::Spawn()
-{
-	Precache();
-	pev->movetype = MOVETYPE_NONE;
-	pev->solid = SOLID_NOT;
-
-	pev->rendermode = kRenderGlow;
-	pev->renderfx = kRenderFxNoDissipation;
-	pev->renderamt = 255;
-
-	SET_MODEL(ENT(pev), "sprites/laserdot.spr");
-	UTIL_SetOrigin(pev, pev->origin);
-};
-
-//=========================================================
-// Suspend- make the laser sight invisible.
-//=========================================================
-void CLaserSpot::Suspend(float flSuspendTime)
-{
-	pev->effects |= EF_NODRAW;
-
-	SetThink(&CLaserSpot::Revive);
-	pev->nextthink = gpGlobals->time + flSuspendTime;
-}
-
-//=========================================================
-// Revive - bring a suspended laser sight back.
-//=========================================================
-void CLaserSpot::Revive()
-{
-	pev->effects &= ~EF_NODRAW;
-
-	SetThink(NULL);
-}
-
-void CLaserSpot::Precache()
-{
-	PRECACHE_MODEL("sprites/laserdot.spr");
-};
-
 LINK_ENTITY_TO_CLASS(rpg_rocket, CRpgRocket);
 
 CRpgRocket::~CRpgRocket()
@@ -170,7 +114,7 @@ void CRpgRocket::IgniteThink()
 	WRITE_BYTE(TE_BEAMFOLLOW);
 	WRITE_SHORT(entindex()); // entity
 	WRITE_SHORT(m_iTrail);	 // model
-	WRITE_BYTE(40);			 // life
+	WRITE_BYTE(10);			 // life
 	WRITE_BYTE(5);			 // width
 	WRITE_BYTE(224);		 // r, g, b
 	WRITE_BYTE(224);		 // r, g, b
@@ -181,7 +125,6 @@ void CRpgRocket::IgniteThink()
 
 	m_flIgniteTime = gpGlobals->time;
 
-	// set to follow laser spot
 	SetThink(&CRpgRocket::FollowThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 }
@@ -197,14 +140,8 @@ CRpg* CRpgRocket::GetLauncher()
 
 void CRpgRocket::FollowThink()
 {
-	CBaseEntity* pOther = NULL;
-	Vector vecTarget;
-	Vector vecDir;
-	TraceResult tr;
-
-	UTIL_MakeAimVectors(pev->angles);
-
-	vecTarget = gpGlobals->v_forward;
+	UTIL_MakeAimVectors(pev->angles); // use for model eventually
+	// pev->angles
 
 	float flSpeed = pev->velocity.Length();
 	if ((pev->effects & EF_LIGHT) != 0)
@@ -212,16 +149,11 @@ void CRpgRocket::FollowThink()
 		pev->effects = 0;
 		STOP_SOUND(ENT(pev), CHAN_VOICE, "weapons/rocket1.wav");
 	}
+
 	if (GetLauncher())
 	{
-		float flDistance = (pev->origin - GetLauncher()->pev->origin).Length();
-
-		// if we've travelled more than max distance the player can send a spot, stop tracking the original launcher (allow it to reload)
-		if (flDistance > 0.0)
-		{
-			GetLauncher()->m_cActiveRockets--;
-			m_hLauncher = NULL;
-		}
+		GetLauncher()->m_cActiveRockets--;
+		m_hLauncher = NULL;
 	}
 
 	if ((UTIL_PointContents(pev->origin) == CONTENTS_SKY))
@@ -237,7 +169,6 @@ void CRpgRocket::FollowThink()
 
 void CRpg::Reload()
 {
-	//ALERT(at_console, "RPG Reload, m_cActiveRockets: %d, m_fSpotActive: %d\n", m_cActiveRockets, m_fSpotActive);
 
 	if (m_iClip >= 4)
 	{
@@ -252,16 +183,14 @@ void CRpg::Reload()
 	if (m_flNextPrimaryAttack > UTIL_WeaponTimeBase())
 		return;
 
-	m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
-
 	if (m_fInSpecialReload == 0)
 	{
 		SendWeaponAnim(ROCKETLAUNCHER_START_RELOAD);
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.50);
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.50;
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.12;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.12;
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.12);
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.12;
 		return;
 	}
 	else if (m_fInSpecialReload == 1)
@@ -279,9 +208,9 @@ void CRpg::Reload()
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
 
 		// too long, shorten to match reload anim to make it smoother
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.70);
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.80);
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.80;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 	}
 	else
 	{
@@ -289,7 +218,7 @@ void CRpg::Reload()
 		m_iClip += 1;
 		m_pPlayer->ammo_rockets -= 1;
 		m_fInSpecialReload = 1;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
+		// m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.1;
 	}
 }
 
@@ -300,7 +229,6 @@ void CRpg::Spawn()
 
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
 	pev->sequence = 1;
-	m_fSpotActive = true;
 
 #ifdef CLIENT_DLL
 	if (bIsMultiplayer())
@@ -328,7 +256,6 @@ void CRpg::Precache()
 
 	PRECACHE_SOUND("items/9mmclip1.wav");
 
-	UTIL_PrecacheOther("laser_spot");
 	UTIL_PrecacheOther("rpg_rocket");
 
 	PRECACHE_SOUND("weapons/rocketfire1.wav");
@@ -357,10 +284,10 @@ bool CRpg::GetItemInfo(ItemInfo* p)
 
 bool CRpg::Deploy()
 {
-	if (m_iClip == 0)
-	{
-		return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
-	}
+	//if (m_iClip == 0)
+	//{
+		//return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
+	//}
 
 	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 }
@@ -368,12 +295,6 @@ bool CRpg::Deploy()
 
 bool CRpg::CanHolster()
 {
-	if (m_fSpotActive && 0 != m_cActiveRockets)
-	{
-		// can't put away while guiding a missile.
-		return false;
-	}
-
 	return true;
 }
 
@@ -384,14 +305,6 @@ void CRpg::Holster()
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 
 	SendWeaponAnim(ROCKETLAUNCHER_IDLE);
-
-#ifndef CLIENT_DLL
-	if (m_pSpot)
-	{
-		m_pSpot->Killed(NULL, GIB_NEVER);
-		m_pSpot = NULL;
-	}
-#endif
 }
 
 
@@ -441,7 +354,6 @@ void CRpg::PrimaryAttack()
 	{
 		PlayEmptySound();
 	}
-	UpdateSpot();
 }
 
 
@@ -452,7 +364,6 @@ void CRpg::SecondaryAttack()
 
 void CRpg::WeaponIdle()
 {
-	UpdateSpot();
 
 	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
 		return;
@@ -482,37 +393,6 @@ void CRpg::WeaponIdle()
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (20.0 / 9.0);
 		SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 	}
-}
-
-
-
-void CRpg::UpdateSpot()
-{
-
-#ifndef CLIENT_DLL
-	// Don't turn on the laser if we're in the middle of a reload.
-	if (m_fInReload)
-	{
-		return;
-	}
-
-	if (m_fSpotActive)
-	{
-		if (!m_pSpot)
-		{
-			m_pSpot = CLaserSpot::CreateSpot();
-		}
-
-		UTIL_MakeVectors(m_pPlayer->pev->v_angle);
-		Vector vecSrc = m_pPlayer->GetGunPosition();
-		Vector vecAiming = gpGlobals->v_forward;
-
-		TraceResult tr;
-		UTIL_TraceLine(vecSrc, vecSrc + vecAiming * 8192, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr);
-
-		UTIL_SetOrigin(m_pSpot->pev, tr.vecEndPos);
-	}
-#endif
 }
 
 class CRpgAmmo : public CBasePlayerAmmo
