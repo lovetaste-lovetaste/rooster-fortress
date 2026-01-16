@@ -90,16 +90,18 @@ void Bot_Think(int client)
 	// Create some random values
 	if (pBot->GetTeamNumber() == TEAM_UNASSIGNED)
 	{
-		// unassigned team
-
 		pBot->SetTeamNumber((RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
 	}
 	else if (pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->m_iClass == CLASS_UNDEFINED)
 	{
-		// on team but havent chosen a class
+		// on team but havent chosen a class, usually dead or just joining
+
 		pBot->m_iClass = CLASS_SOLDIER;
+		pBot->m_iNewClass = CLASS_SOLDIER;
+		pBot->Spawn();
 	}
-	else if (pBot->IsAlive())
+	
+	if (pBot->IsAlive())
 	{
 		Bot_AliveThink(client, &vecViewAngles, &vecMove);
 	}
@@ -273,21 +275,32 @@ CBaseEntity* FindNearestEnemy(int client, float MAXRANGE = 4096.0)
 	CBaseEntity* pEntity = NULL;
 	CBaseEntity* pNearest = NULL;
 	float flMinDist = MAXRANGE;
-
+	
 	// Search for enemies
 	while ((pEntity = UTIL_FindEntityInSphere(pEntity, player->pev->origin, 2048)) != NULL)
 	{
+		if (!pEntity->pev)
+			continue;
+
 		// Skip non-living entities
 		if (!pEntity->IsAlive())
 			continue;
 		
 		// Skip teammates (basic team check)
-		// if (pEntity->IsPlayer() && pEntity->pev->team == player->pev->team)
+		// if (pEntity->pev->team == player->pev->team)
 			// continue;
-		// todo
+		// broken
 
 		// Skip self
 		if (pEntity == player)
+			continue;
+
+		CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pEntity->pev));
+		//entvars_t* pev = &pEntity->v;
+
+		//CBasePlayer* pl = (CBasePlayer*)CBasePlayer::Instance(pev);
+
+		if (edictPlayer->m_iTeam == player->m_iTeam)
 			continue;
 
 		// Check if it's a valid player

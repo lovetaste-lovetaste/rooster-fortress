@@ -1465,6 +1465,8 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	// Find a player to watch
 	m_flNextObserverInput = 0;
 	Observer_SetMode(m_iObserverLastMode);
+
+	m_iTeam = TEAM_SPECTATOR; // duh!
 }
 
 //
@@ -1847,6 +1849,8 @@ void CBasePlayer::PreThink()
 	// UNDONE: Do we need auto-repeat?
 	m_afButtonPressed = buttonsChanged & pev->button;	  // The changed ones still down are "pressed"
 	m_afButtonReleased = buttonsChanged & (~pev->button); // The ones not down are "released"
+
+	ResetMaxSpeed();
 
 	g_pGameRules->PlayerThink(this);
 
@@ -2923,23 +2927,42 @@ int GetClassMaxHealth(int iClass)
 
 float GetClassMaxSpeed(int iClass)
 {
-	float speed = 300; // base speed
+	float speed = 300.0; // base speed
 	// for some reason the values were all fucked up in the original version
 	// not too different though, so i just added base tf2 values
 	// i also left the variable above so unlocks will be easier
 	switch (iClass)
 	{
-	case CLASS_SCOUT: speed * 1.33;
-	case CLASS_HEAVY: speed * 0.77;
-	case CLASS_SOLDIER: speed * 0.8;
-	case CLASS_PYRO: speed * 1.0;
-	case CLASS_SNIPER: speed * 1.0;
-	case CLASS_MEDIC: speed * 1.07;
-	case CLASS_ENGINEER: speed * 1.0;
-	case CLASS_DEMOMAN: speed * 0.93;
-	case CLASS_SPY: speed * 1.07;
+		case CLASS_SCOUT: 
+			speed * 1.33;
+		case CLASS_HEAVY: 
+			speed * 0.77;
+		case CLASS_SOLDIER: 
+			speed * 0.8;
+		case CLASS_PYRO: 
+			speed * 1.0;
+		case CLASS_SNIPER: 
+			speed * 1.0;
+		case CLASS_MEDIC: 
+			speed * 1.07;
+		case CLASS_ENGINEER: 
+			speed * 1.0;
+		case CLASS_DEMOMAN: 
+			speed * 0.93;
+		case CLASS_SPY: 
+			speed * 1.07;
 	}
 	return speed;
+}
+
+void CBasePlayer::ResetMaxSpeed()
+{
+	float speed = GetClassMaxSpeed(m_iClass);
+
+	if (IsObserver())
+		speed = 1200;
+
+	g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
 }
 
 void CBasePlayer::SetPlayerModel()
@@ -3005,7 +3028,8 @@ void CBasePlayer::Spawn()
 
 	pev->classname = MAKE_STRING("player");
 
-	m_iClass = CLASS_SOLDIER;
+	m_iClass = m_iNewClass; // switches to the new wanted class
+	m_iNewClass = m_iClass; // resets it so the player respawns as the same class if they dont choose another one. DO NOT TOUCH.
 
 	pev->health = GetClassMaxHealth(m_iClass);
 	pev->armorvalue = 0;
@@ -3013,6 +3037,9 @@ void CBasePlayer::Spawn()
 	pev->solid = SOLID_SLIDEBOX;
 	pev->movetype = MOVETYPE_WALK;
 	pev->max_health = pev->health;
+	m_iHideHUD = 0;
+	if ((pev->flags & FL_SPECTATOR) == 1)
+		pev->flags &= ~FL_SPECTATOR;
 	pev->flags &= FL_PROXY | FL_FAKECLIENT; // keep proxy and fakeclient flags set by engine
 	pev->flags |= FL_CLIENT;
 	pev->air_finished = gpGlobals->time + 12;
@@ -3099,6 +3126,9 @@ void CBasePlayer::Spawn()
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn(this);
+
+	pev->iuser1 = 0; // disable any spec modes
+	pev->iuser2 = 0;
 }
 
 
@@ -3150,21 +3180,29 @@ void CBasePlayer::SpawnClassWeapons()
 {
 	switch( m_iClass )
 	{
+		default:
+		{
+			GiveNamedItem("weapon_glock");
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as a invalid class, giving default HL loadout.\n");
+			break;
+		}
 		case CLASS_SOLDIER:
 		{
 			GiveNamedItem("weapon_rpg");
 			GiveNamedItem("weapon_shotgun");
-			// GiveNamedItem("weapon_glock");
-			GiveNamedItem("weapon_crowbar");
+			GiveNamedItem("weapon_shovel");
 			ALERT(at_console, "Player spawned as Soldier!\n");
+			break;
 		}
-		/// default:
-		// {
-			// GiveNamedItem("weapon_glock");
-			// GiveNamedItem("weapon_crowbar");
-			// ALERT(at_console, "Player spawned as a invalid class, giving default HL loadout.\n");
-		// }
-		// not needed lolololololol
+		case CLASS_SCOUT:
+		{
+			GiveNamedItem("weapon_scattergun");
+			GiveNamedItem("weapon_glock");
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Scout!\n");
+			break;
+		}
 	}
 	
 	// GiveNamedItem("weapon_hornetgun");

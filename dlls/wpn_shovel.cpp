@@ -65,24 +65,28 @@ bool CShovel::GetItemInfo(ItemInfo* p)
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
 	p->iMaxClip = WEAPON_NOCLIP;
-	p->iSlot = 2;
-	p->iPosition = 1;
+	p->iSlot = 0;
+	p->iPosition = 0;
 	p->iId = WEAPON_SHOVEL;
-	p->iWeight = SHOVEL_WEIGHT;
+	p->iWeight = 10;
+	p->iFlags = ITEM_FLAG_SELECTONEMPTY;
 	return true;
 }
 
 
 bool CShovel::Deploy()
 {
-	return GroupDeploy("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "shovel", 0);
+	return GroupDeploy("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "crowbar", 0);
 	// return DefaultDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/w_shovel.mdl", SHOVEL_DRAW, "shovel");
 }
 
 void CShovel::Holster()
 {
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.001;
-	SendWeaponAnim(SHOVEL_DRAW);
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+	m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
+	CBasePlayerWeapon::Holster();
+	// 
+	//SendWeaponAnim(SHOVEL_DRAW);
 }
 
 void FindHullIntersection2(const Vector& vecSrc, TraceResult& tr, const Vector& mins, const Vector& maxs, edict_t* pEntity)
@@ -146,7 +150,7 @@ void CShovel::Smack()
 
 void CShovel::SwingAgain()
 {
-	ALERT(at_console, "Damaging Swing\n");
+	//ALERT(at_console, "Damaging Swing\n");
 	Swing(false);
 }
 
@@ -155,7 +159,7 @@ bool CShovel::Swing(bool fFirst)
 {
 	if (fFirst)
 	{
-		ALERT(at_console, "Start Animation\n");
+		//ALERT(at_console, "Start Animation\n");
 		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usShovel,
 			0.0, g_vecZero, g_vecZero, 0, 0, 0,
 			0.0, 0, 0.0);

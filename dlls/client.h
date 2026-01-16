@@ -62,3 +62,6 @@ extern void CreateInstancedBaselines();
 extern int InconsistentFile(const edict_t* player, const char* filename, char* disconnect_message);
 
 extern int AllowLagCompensation();
+
+extern void TFClient_JoinClass(edict_t* pEntity);
+extern void TFClient_JoinTeam(edict_t* pEntity);

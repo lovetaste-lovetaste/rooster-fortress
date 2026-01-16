@@ -266,6 +266,7 @@ public:
 	void SetTeamNumber(int newTeam);
 
 	int m_iClass;			// tf2 class
+	int m_iNewClass;
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.
 	int m_iWeaponVolume;	// how loud the player's weapon is right now.
@@ -371,6 +372,8 @@ public:
 	char m_szTeamName[TEAM_NAME_LENGTH];
 
 	void SetPlayerModel();
+
+	void ResetMaxSpeed();
 
 	void Spawn() override;
 	void Pain();

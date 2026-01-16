@@ -618,6 +618,9 @@ void CHalfLifeMultiplay::PlayerKilled(CBasePlayer* pVictim, entvars_t* pKiller, 
 //=========================================================
 void CHalfLifeMultiplay::DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pevInflictor)
 {
+	if (pKiller == nullptr || pevInflictor == nullptr || !pVictim)
+		return;
+
 	// Work out what killed the player, and send a message to all clients about it
 	CBaseEntity* Killer = CBaseEntity::Instance(pKiller);
 

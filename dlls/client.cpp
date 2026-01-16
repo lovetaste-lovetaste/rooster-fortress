@@ -178,6 +178,8 @@ void ClientKill(edict_t* pEntity)
 	entvars_t* pev = &pEntity->v;
 
 	CBasePlayer* pl = (CBasePlayer*)CBasePlayer::Instance(pev);
+	if (!pl)
+		return;
 
 	if (pl->m_fNextSuicideTime > gpGlobals->time)
 		return; // prevent suiciding too ofter
@@ -209,14 +211,20 @@ void ClientPutInServer(edict_t* pEntity)
 	pPlayer = GetClassPtr((CBasePlayer*)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 
-	// Allocate a CBasePlayer for pev, and call spawn
-	pPlayer->Spawn();
+	edict_t* pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot(pPlayer);
+	pPlayer->StartObserver(pev->origin, VARS(pentSpawnSpot)->angles);
+	
+	pPlayer->m_iClass = CLASS_UNKNOWN;
+	pPlayer->m_iTeam = TEAM_UNASSIGNED;
+	// pPlayer->pev->deadflag = DEAD_DEAD;
+	// pPlayer->Spawn();
+	// ALERT(at_console, "ClientPutInServer");
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
 
-	pPlayer->pev->iuser1 = 0; // disable any spec modes
-	pPlayer->pev->iuser2 = 0;
+	//pPlayer->pev->iuser1 = 0; // disable any spec modes
+	//pPlayer->pev->iuser2 = 0;
 }
 
 #include "voice_gamemgr.h"
@@ -536,7 +544,21 @@ void ClientCommand(edict_t* pEntity)
 			player->GiveNamedItem(STRING(iszItem));
 		}
 	}
-
+	else if (FStrEq(pcmd, "joinclass"))
+	{
+		TFClient_JoinClass(pEntity);
+	}
+	else if (FStrEq(pcmd, "jointeam"))
+	{
+		TFClient_JoinTeam(pEntity);
+	}
+	else if (FStrEq(pcmd, "backupspawn"))
+	{
+		player->m_iClass = CLASS_SOLDIER;
+		player->m_iNewClass = CLASS_SOLDIER;
+		player->SetTeamNumber(player->m_iTeam == TEAM_BLUE ? TEAM_RED : TEAM_BLUE);
+		player->Spawn();
+	}
 	else if (FStrEq(pcmd, "drop"))
 	{
 		// player is dropping an item.
@@ -1832,6 +1854,271 @@ int GetWeaponData(struct edict_s* player, struct weapon_data_s* info)
 	}
 #endif
 	return 1;
+}
+
+void TFClient_JoinTeam(edict_t* pEntity)
+{
+	CBasePlayer* client;
+	int j;
+	char* p;
+	char text[128];
+	char szTemp[256];
+	const char* cpSay = "jointeam";
+	const char* cpSayTeam = "jointeam";
+	const char* pcmd = CMD_ARGV(0);
+
+	if (CMD_ARGC() == 0)
+		return;
+
+	entvars_t* pev = &pEntity->v;
+	CBasePlayer* player = GetClassPtr((CBasePlayer*)pev);
+
+	if (!stricmp(pcmd, cpSay) || !stricmp(pcmd, cpSayTeam))
+	{
+		if (CMD_ARGC() >= 2)
+		{
+			p = (char*)CMD_ARGS();
+		}
+		else
+		{
+			// say with a blank message, nothing to do
+			return;
+		}
+	}
+	else // Raw text, need to prepend argv[0]
+	{
+		if (CMD_ARGC() >= 2)
+		{
+			sprintf(szTemp, "%s %s", (char*)pcmd, (char*)CMD_ARGS());
+		}
+		else
+		{
+			// Just a one word command, use the first word...sigh
+			sprintf(szTemp, "%s", (char*)pcmd);
+		}
+		p = szTemp;
+	}
+
+	// remove quotes if present
+	if (*p == '"')
+	{
+		p++;
+		p[strlen(p) - 1] = 0;
+	}
+
+	// make sure the text has content
+
+	if (!p || '\0' == p[0] || !Q_UnicodeValidate(p))
+		return; // no character found, so say nothing
+
+	ALERT(at_console, "TFClient_JoinTeam %s\n", p);
+
+	if (!stricmp("0", p) || !stricmp("red", p))
+	{
+		ALERT(at_console, "JoinTeam Red");
+
+		CLIENT_PRINTF(player->edict(), print_center, "You switched to the RED team.");
+
+		player->SetTeamNumber(TEAM_RED);
+		player->m_iTeam = TEAM_RED;
+		// UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s joined the RED team.\n",(!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+
+
+		if (player->m_iClass != CLASS_UNKNOWN)
+		{
+			CLIENT_PRINTF(player->edict(), print_center, "attempt respawn");
+
+			// if you already have a class chosen, then do respawn/suicide logic
+			if (player->IsAlive())
+			{
+				// if alive, then die
+				ClientKill(player->edict());
+			}
+			else if (player->pev->deadflag == DEAD_RESPAWNABLE)
+			{
+				// if dead but able to respawn, then spawn immediately
+				player->Spawn();
+			}
+		}
+		else
+		{
+			CLIENT_PRINTF(player->edict(), print_center, "Now pick a class!");
+		}
+	}
+	else if (!stricmp("1", p) || !stricmp("blue", p) || !stricmp("blu", p))
+	{
+		ALERT(at_console, "JoinTeam Blue");
+
+		player->SetTeamNumber(TEAM_BLUE);
+		player->m_iTeam = TEAM_BLUE;
+
+		//UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s joined the BLU team.\n",((!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+
+		CLIENT_PRINTF(player->edict(), print_center, "You switched to the RED team.");
+
+		if (player->m_iClass != CLASS_UNKNOWN)
+		{
+			CLIENT_PRINTF(player->edict(), print_center, "attempt respawn");
+
+			// if you already have a class chosen, then do respawn/suicide logic
+			if (player->IsAlive())
+			{
+				// if alive, then die
+				ClientKill(player->edict());
+			}
+			else if (player->pev->deadflag == DEAD_RESPAWNABLE)
+			{
+				// if dead but able to respawn, then spawn immediately
+				player->Spawn();
+			}
+		}
+		else
+		{
+			CLIENT_PRINTF(player->edict(), print_center, "Now pick a class!");
+		}
+	}
+	else if (!stricmp("spectator", p) || !stricmp("spec", p))
+	{
+		// copied from above in ClientCommand
+		if ((pev->flags & FL_PROXY) != 0 || 0 != allow_spectators.value)
+		{
+			edict_t* pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot(player);
+			player->StartObserver(pev->origin, VARS(pentSpawnSpot)->angles);
+
+			UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s switched to spectator mode\n",
+													 (!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+		}
+	}
+	else if (!stricmp("2", p) || !stricmp("random", p))
+	{
+		player->SetTeamNumber((RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
+
+		if (player->GetTeamNumber() == TEAM_RED)
+		{
+			UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s was randomly assigned to the RED team.\n",
+													 (!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+		}
+		else if (player->GetTeamNumber() == TEAM_BLUE)
+		{
+			UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s was randomly assigned to the BLU team.\n",
+													 (!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+		}
+
+		if (player->m_iClass != CLASS_UNKNOWN)
+		{
+			// if you already have a class chosen, then do respawn/suicide logic
+			if (player->IsAlive())
+			{
+				// if alive, then die
+				ClientKill(player->edict());
+			}
+			else if (player->pev->deadflag == DEAD_RESPAWNABLE)
+			{
+				// if dead but able to respawn, then spawn immediately
+				player->Spawn();
+			}
+		}
+		else
+		{
+			CLIENT_PRINTF(player->edict(), print_center, "Now pick a class!");
+		}
+	}
+}
+
+void TFClient_JoinClass(edict_t* pEntity)
+{
+	CBasePlayer* client;
+	int j;
+	char* p;
+	char text[128];
+	char szTemp[256];
+	const char* cpSay = "joinclass";
+	const char* cpSayTeam = "joinclass";
+	const char* pcmd = CMD_ARGV(0);
+	
+	if (CMD_ARGC() == 0)
+		return;
+
+	entvars_t* pev = &pEntity->v;
+	CBasePlayer* player = GetClassPtr((CBasePlayer*)pev);
+
+	if (!stricmp(pcmd, cpSay) || !stricmp(pcmd, cpSayTeam))
+	{
+		if (CMD_ARGC() >= 2)
+		{
+			p = (char*)CMD_ARGS();
+		}
+		else
+		{
+			// say with a blank message, nothing to do
+			return;
+		}
+	}
+	else // Raw text, need to prepend argv[0]
+	{
+		if (CMD_ARGC() >= 2)
+		{
+			sprintf(szTemp, "%s %s", (char*)pcmd, (char*)CMD_ARGS());
+		}
+		else
+		{
+			// Just a one word command, use the first word...sigh
+			sprintf(szTemp, "%s", (char*)pcmd);
+		}
+		p = szTemp;
+	}
+
+	// remove quotes if present
+	if (*p == '"')
+	{
+		p++;
+		p[strlen(p) - 1] = 0;
+	}
+
+	// make sure the text has content
+
+	if (!p || '\0' == p[0] || !Q_UnicodeValidate(p))
+		return; // no character found, so say nothing
+	
+	ALERT(at_console, "TFClient_JoinClass");
+
+	//if (player->m_iTeam == TEAM_UNASSIGNED)
+		//player->pev->deadflag == DEAD_RESPAWNABLE;
+
+	if (player->GetTeamNumber() == TEAM_UNASSIGNED)
+	{
+		CLIENT_PRINTF(player->edict(), print_center, "Pick a team first.");
+		return;
+	}
+	else if (player->GetTeamNumber() == TEAM_SPECTATOR)
+	{
+		CLIENT_PRINTF(player->edict(), print_center, "You are spectating! Pick a team first.");
+		return;
+	}
+	else
+	{
+		if (!stricmp("1", p) || !stricmp("scout", p))
+		{
+			player->m_iNewClass = CLASS_SCOUT;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Scout.");
+		}
+		if (!stricmp("2", p) || !stricmp("soldier", p))
+		{
+			player->m_iNewClass = CLASS_SOLDIER;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Soldier.");
+		}
+
+		if (player->IsAlive())
+		{
+			// if alive, then die
+			ClientKill(player->edict());
+		}
+		else if (player->pev->deadflag == DEAD_RESPAWNABLE)
+		{
+			// if dead but able to respawn, then spawn immediately
+			player->Spawn();
+		}
+	}
 }
 
 /*

@@ -324,6 +324,9 @@
     <ClCompile Include="..\..\dlls\wpn_shovel.cpp">
       <Filter>Source Files\_hl\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\wpn_scattergun.cpp">
+      <Filter>Source Files\_hl\dlls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cl_dll\kbutton.h">

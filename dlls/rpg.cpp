@@ -227,7 +227,7 @@ void CRpg::Spawn()
 	Precache();
 	m_iId = WEAPON_RPG;
 
-	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	SET_MODEL(ENT(pev), "models/rooster_fortress/w_rocketlauncher.mdl");
 	pev->sequence = 1;
 
 #ifdef CLIENT_DLL
@@ -250,7 +250,7 @@ void CRpg::Spawn()
 
 void CRpg::Precache()
 {
-	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/w_rocketlauncher.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl");
 	// PRECACHE_MODEL("models/p_rpg.mdl");
 
@@ -289,7 +289,7 @@ bool CRpg::Deploy()
 		//return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 	//}
 
-	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/w_rocketlauncher.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 }
 
 

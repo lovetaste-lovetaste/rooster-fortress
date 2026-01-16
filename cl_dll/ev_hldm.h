@@ -33,6 +33,7 @@ void EV_TripmineFire(event_args_t* args);
 void EV_SnarkFire(event_args_t* args);
 
 void EV_Shovel(event_args_t* args);
+void EV_FireScattergun(event_args_t* args);
 
 
 void EV_TrainPitchAdjust(event_args_t* args);

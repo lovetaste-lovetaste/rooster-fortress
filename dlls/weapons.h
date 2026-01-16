@@ -87,6 +87,7 @@ public:
 #define SNARK_WEIGHT 5
 #define SATCHEL_WEIGHT -10
 #define TRIPMINE_WEIGHT -10
+#define SCATTERGUN_WEIGHT 16
 
 
 // weapon clip/carry ammo capacities
@@ -111,7 +112,7 @@ public:
 #define PYTHON_MAX_CLIP 6
 #define MP5_MAX_CLIP 50
 #define MP5_DEFAULT_AMMO 25
-#define SHOTGUN_MAX_CLIP 8
+#define SHOTGUN_MAX_CLIP 6
 #define CROSSBOW_MAX_CLIP 5
 #define RPG_MAX_CLIP 4
 #define GAUSS_MAX_CLIP WEAPON_NOCLIP
@@ -121,6 +122,7 @@ public:
 #define SATCHEL_MAX_CLIP WEAPON_NOCLIP
 #define TRIPMINE_MAX_CLIP WEAPON_NOCLIP
 #define SNARK_MAX_CLIP WEAPON_NOCLIP
+#define SCATTERGUN_MAX_CLIP SHOTGUN_MAX_CLIP
 
 
 // the default amount of ammo that comes with each gun when it spawns
@@ -139,6 +141,7 @@ public:
 #define TRIPMINE_DEFAULT_GIVE 1
 #define SNARK_DEFAULT_GIVE 5
 #define HIVEHAND_DEFAULT_GIVE 8
+#define SCATTERGUN_DEFAULT_GIVE SHOTGUN_DEFAULT_GIVE
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE 20
@@ -1275,4 +1278,45 @@ public:
 
 private:
 	unsigned short m_usShovel;
+};
+
+enum scattergun_e
+{
+	SCATTERGUN_DRAW,
+	SCATTERGUN_FIRE,
+	SCATTERGUN_IDLE,
+	SCATTERGUN_RELOAD_END,
+	SCATTERGUN_RELOAD_LOOP,
+	SCATTERGUN_RELOAD_START,
+	SCATTERGUN_REF
+};
+
+class CScattergun : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 2; }
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void Reload() override;
+	void WeaponIdle() override;
+	float m_flNextReload;
+	int m_iShell;
+
+	virtual bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usScattergun;
 };

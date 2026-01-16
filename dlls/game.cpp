@@ -494,14 +494,13 @@ void GameDLLInit()
 		SERVER_COMMAND("quit\n");
 		return;
 	}
-
-	g_engfuncs.pfnAddServerCommand("sv_addbot", []()
+	g_engfuncs.pfnAddServerCommand("bot", []()
 		{
 			if (CMD_ARGC() != 2)
 			{
-				g_engfuncs.pfnServerPrint("Usage: sv_addbot <bot_name>");
+				g_engfuncs.pfnServerPrint("Usage: bot <bot_name>");
 			}
-
+			
 			const char* name = CMD_ARGV(1);
 
 			// The engine will validate the name and change it to "unnamed" if it's not valid.

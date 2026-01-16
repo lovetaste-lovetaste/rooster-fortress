@@ -66,6 +66,7 @@ CHandGrenade g_HandGren;
 CSatchel g_Satchel;
 CTripmine g_Tripmine;
 CSqueak g_Snark;
+CScattergun g_Scattergun;
 
 
 /*
@@ -474,6 +475,7 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_Mp5, &player);
 	HUD_PrepEntity(&g_Crossbow, &player);
 	HUD_PrepEntity(&g_Shotgun, &player);
+	HUD_PrepEntity(&g_Scattergun, &player);
 	HUD_PrepEntity(&g_Rpg, &player);
 	HUD_PrepEntity(&g_Gauss, &player);
 	HUD_PrepEntity(&g_Egon, &player);
@@ -576,6 +578,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	case WEAPON_SHOTGUN:
 		pWeapon = &g_Shotgun;
+		break;
+
+	case WEAPON_SCATTERGUN:
+		pWeapon = &g_Scattergun;
 		break;
 
 	case WEAPON_RPG:

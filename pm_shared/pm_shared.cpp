@@ -1139,8 +1139,9 @@ void PM_WalkMove()
 	wishspeed = VectorNormalize(wishdir);
 
 	//
-	// Clamp to server defined max speed
+	// Clamp to class max speed
 	//
+
 	if (wishspeed > pmove->maxspeed)
 	{
 		VectorScale(wishvel, pmove->maxspeed / wishspeed, wishvel);

@@ -335,6 +335,9 @@ void W_Precache()
 	// shovel
 	UTIL_PrecacheOtherWeapon("weapon_shovel");
 
+	// scattergun
+	UTIL_PrecacheOtherWeapon("weapon_scattergun");
+
 	if (g_pGameRules->IsDeathmatch())
 	{
 		UTIL_PrecacheOther("weaponbox"); // container for dropped deathmatch weapons
