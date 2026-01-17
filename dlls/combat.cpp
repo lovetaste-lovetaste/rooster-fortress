@@ -29,6 +29,7 @@
 #include "animation.h"
 #include "weapons.h"
 #include "func_break.h"
+#include "player.h"
 
 extern Vector VecBModelOrigin(entvars_t* pevBModel);
 
@@ -1045,7 +1046,14 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 
 	const bool bInWater = (UTIL_PointContents(vecSrc) == CONTENTS_WATER);
 
-	vecSrc.z += 1; // in case grenade is lying on the 
+	vecSrc.z += 1; // in case grenade is lying on the
+
+	bool reducedSelfDMG = true;
+	//if (pevAttacker == pevInflictor)
+	//{
+		// for soldier rocket jumps
+		//reducedSelfDMG = true;
+	//}
 
 	if (!pevAttacker)
 		pevAttacker = pevInflictor;
@@ -1087,6 +1095,36 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 				if (flAdjustedDamage < 0)
 				{
 					flAdjustedDamage = 0;
+				}
+
+				if (GetClassPtr((CBasePlayer*)(pEntity->pev)) == GetClassPtr((CBasePlayer*)(pevAttacker))) // same entity
+				{
+					CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pEntity->pev));
+					if (edictPlayer->m_iClass == CLASS_SOLDIER)
+					{
+						if (!(edictPlayer->pev->flags & FL_ONGROUND) && edictPlayer->pev->waterlevel != 3)
+						{
+							// only happens when the soldier is both not on the ground and not fully underwater
+							// just like tf2
+							// ALERT(at_console, "detected soldier rocket jump, reduced dmg!!!\n");
+							flAdjustedDamage *= 0.60;
+						}
+						else
+						{
+							// ALERT(at_console, "detected soldier but no RJ, no reduced dmg!!!\n");
+						}
+					}
+					else if (edictPlayer->m_iClass == CLASS_DEMOMAN)
+					{
+						flAdjustedDamage *= 0.75;
+						// demoman has resistance to his own explosive REGARDLESS of what conditions he's in
+					}
+				}
+				else if (GetClassPtr((CBasePlayer*)(pEntity->pev))->m_iTeam == GetClassPtr((CBasePlayer*)(pevAttacker))->m_iTeam)
+				{
+					// ALERT(at_console, "Teammate cancel damage for explosion\n");
+					continue;
+					// cancel damage for teammates!
 				}
 
 				// ALERT( at_console, "hit %s\n", STRING( pEntity->pev->classname ) );

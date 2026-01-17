@@ -2827,6 +2827,11 @@ edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer)
 	}
 	else if (g_pGameRules->IsDeathmatch())
 	{
+		// todo: make RED players spawn in info_player_deathmatch while BLU players spawn in info_player_start
+		// they can both spawn in info_player_coop maybe...
+		// CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pPlayer->pev));
+		// const char* cpSay = "info_player_deathmatch";
+
 		if (NULL == g_pLastSpawn)
 		{
 			int nNumSpawnPoints = 0;

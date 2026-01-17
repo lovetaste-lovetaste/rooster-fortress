@@ -35,10 +35,9 @@ void CGlock::Spawn()
 	FallInit(); // get ready to fall down.
 }
 
-
 void CGlock::Precache()
 {
-	PRECACHE_MODEL("models/v_9mmhandgun.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_scout.mdl");
 	PRECACHE_MODEL("models/w_9mmhandgun.mdl");
 	PRECACHE_MODEL("models/p_9mmhandgun.mdl");
 
@@ -75,17 +74,17 @@ bool CGlock::GetItemInfo(ItemInfo* p)
 bool CGlock::Deploy()
 {
 	// pev->body = 1;
-	return DefaultDeploy("models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_pistol_scout.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
 }
 
 void CGlock::SecondaryAttack()
 {
-	GlockFire(0.1, 0.2, false);
+	CGlock::PrimaryAttack(); // too lazy to check for different stuff so this should do it fine
 }
 
 void CGlock::PrimaryAttack()
 {
-	GlockFire(0.01, 0.3, true);
+	GlockFire(0.1, 0.15, false);
 }
 
 void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
@@ -161,7 +160,7 @@ void CGlock::Reload()
 	if (m_pPlayer->ammo_9mm <= 0)
 		return;
 
-	bool iResult = DefaultReload(17, m_iClip > 0 ? GLOCK_RELOAD_NOT_EMPTY : GLOCK_RELOAD, 1.5);
+	bool iResult = DefaultReload(17, GLOCK_RELOAD, 1.5);
 	if (iResult)
 	{
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
@@ -185,21 +184,9 @@ void CGlock::WeaponIdle()
 		int iAnim;
 		float flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0.0, 1.0);
 
-		if (flRand <= 0.3 + 0 * 0.75)
-		{
-			iAnim = GLOCK_IDLE3;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 49.0 / 16;
-		}
-		else if (flRand <= 0.6 + 0 * 0.875)
-		{
-			iAnim = GLOCK_IDLE1;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 60.0 / 16.0;
-		}
-		else
-		{
-			iAnim = GLOCK_IDLE2;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 40.0 / 16.0;
-		}
+		iAnim = GLOCK_IDLE;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 40.0 / 16.0;
+
 		SendWeaponAnim(iAnim);
 	}
 }

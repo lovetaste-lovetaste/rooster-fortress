@@ -96,8 +96,11 @@ void Bot_Think(int client)
 	{
 		// on team but havent chosen a class, usually dead or just joining
 
-		pBot->m_iClass = CLASS_SOLDIER;
-		pBot->m_iNewClass = CLASS_SOLDIER;
+		int chosenBotClass = ((RANDOM_LONG(0, 1) ? CLASS_SOLDIER : CLASS_SCOUT));
+
+		// specific for bots due to them not being networked n shit
+		// probably a better way to do this but as of right now its fine
+		pBot->m_iClass = pBot->m_iNewClass = chosenBotClass;
 		pBot->Spawn();
 	}
 	
@@ -181,6 +184,7 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 			{
 				///ALERT(at_console, "Botthink: No Ammo on this weapon!\n");
 				pBot->pev->button |= IN_ATTACK;
+
 				// try attacking anyway; melee weapons usually have no ammo
 			}
 		}

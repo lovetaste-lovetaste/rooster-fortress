@@ -22,6 +22,7 @@
 #include "gamerules.h"
 #include "game.h"
 #include "pm_shared.h"
+#include "player.h"
 
 void EntvarsKeyvalue(entvars_t* pev, KeyValueData* pkvd);
 
@@ -551,6 +552,15 @@ bool CBaseEntity::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 
 	// UNDONE: some entity types may be immune or resistant to some bitsDamageType
+	
+	if ((GetClassPtr((CBasePlayer*)(pevAttacker))->m_iTeam == GetClassPtr((CBasePlayer*)(pev))->m_iTeam) || (GetClassPtr((CBasePlayer*)(pevInflictor))->m_iTeam == GetClassPtr((CBasePlayer*)(pev))->m_iTeam))
+	{
+		// no damage for teammates!!!
+		ALERT(at_console, "Teammate cancel damage in TakeDamage\n");
+		return false;
+	}
+	// for some reason ts aint work :((((
+	// gotta test ts more
 
 	// if Attacker == Inflictor, the attack was a melee or other instant-hit attack.
 	// (that is, no actual entity projectile was involved in the attack so use the shooter's origin).
@@ -584,6 +594,9 @@ bool CBaseEntity::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	// do the damage
 	pev->health -= flDamage;
+
+	// g_engfuncs.pfnPlaySoundByIndex("CKF_III/hitsound.wav", 1);
+	
 	if (pev->health <= 0)
 	{
 		Killed(pevAttacker, GIB_NORMAL);

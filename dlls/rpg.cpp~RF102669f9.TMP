@@ -51,7 +51,6 @@ CRpgRocket* CRpgRocket::CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBas
 	pRocket->m_hLauncher = pLauncher; // remember what RPG fired me.
 	pLauncher->m_cActiveRockets++;	  // register this missile as active for the launcher
 	pRocket->pev->owner = pOwner->edict();
-	pRocket->pev->team = GetClassPtr((CBasePlayer*)(pOwner->pev))->m_iTeam;
 
 	return pRocket;
 }
@@ -62,7 +61,7 @@ void CRpgRocket::Spawn()
 {
 	Precache();
 	// motor
-	pev->movetype = MOVETYPE_FLYMISSILE;
+	pev->movetype = MOVETYPE_BOUNCE;
 	pev->solid = SOLID_BBOX;
 	
 	SET_MODEL(ENT(pev), "models/rooster_fortress/w_rocket.mdl");
@@ -75,7 +74,7 @@ void CRpgRocket::Spawn()
 	SetTouch(&CRpgRocket::ExplodeTouch);
 
 	pev->velocity = gpGlobals->v_forward * 1100;
-	// pev->gravity = 0.000001;
+	pev->gravity = 0.000001;
 
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -86,15 +85,10 @@ void CRpgRocket::Spawn()
 //=========================================================
 void CRpgRocket::RocketTouch(CBaseEntity* pOther)
 {
-	if (pOther == nullptr)
-		return; // just in case
-
 	CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pOther->pev));
 	
-	if (edictPlayer == nullptr)
-		return; // just in case
-
-	if ( pev->team != edictPlayer->m_iTeam // only collides & explodes with enemies
+	
+	if ( //owner->m_iTeam != edictPlayer->m_iTeam // same team 
 		)
 	{
 		STOP_SOUND(edict(), CHAN_VOICE, "weapons/rocket1.wav");
@@ -104,8 +98,6 @@ void CRpgRocket::RocketTouch(CBaseEntity* pOther)
 	{
 		ALERT(at_console, "rocket passing through teammate\n");
 	}
-	// this works, but it kills momentum n shi
-	// plus the dmg still applies
 }
 
 //=========================================================

@@ -51,19 +51,19 @@ void CScattergun::Precache()
 
 	PRECACHE_SOUND("items/9mmclip1.wav");
 
-	PRECACHE_SOUND("weapons/dbarrel1.wav"); //shotgun
-	PRECACHE_SOUND("weapons/sbarrel1.wav"); //shotgun
+	PRECACHE_SOUND("chicken_fortress_3/scattergun_reload.wav"); //shotgun
+	PRECACHE_SOUND("chicken_fortress_3/scattergun_shoot.wav"); //shotgun
 
 	PRECACHE_SOUND("weapons/reload1.wav"); // shotgun reload
 	PRECACHE_SOUND("weapons/reload3.wav"); // shotgun reload
 
 	//	PRECACHE_SOUND ("weapons/sshell1.wav");	// shotgun reload - played on client
 	//	PRECACHE_SOUND ("weapons/sshell3.wav");	// shotgun reload - played on client
-
+	
 	PRECACHE_SOUND("weapons/357_cock1.wav"); // gun empty sound
 	PRECACHE_SOUND("weapons/scock1.wav");	 // cock gun
 
-	m_usScattergun = PRECACHE_EVENT(1, "events/roosterfortress.sc");
+	m_usScattergun = PRECACHE_EVENT(1, "events/roosterfortress2.sc");
 	//m_usDoubleFire = PRECACHE_EVENT(1, "events/shotgun2.sc");
 }
 
@@ -124,7 +124,7 @@ void CScattergun::PrimaryAttack()
 
 	// CKFFireBullets(vecSrc, gpGlobals->v_forward, 0.0, 8192, BULLET_PLAYER_TF2, 6, iCrit, m_pPlayer->pev, m_pPlayer->random_seed, FALSE);
 
-	// PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
+	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usScattergun, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
 	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		// HEV suit - indicate out of ammo condition

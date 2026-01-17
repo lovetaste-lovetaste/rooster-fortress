@@ -486,11 +486,11 @@ void CAM_Init()
 	gEngfuncs.pfnAddCommand("snapto", CAM_ToggleSnapto);
 
 	cam_command = gEngfuncs.pfnRegisterVariable("cam_command", "0", 0);		  // tells camera to go to thirdperson
-	cam_snapto = gEngfuncs.pfnRegisterVariable("cam_snapto", "0", 0);		  // snap to thirdperson view
-	cam_idealyaw = gEngfuncs.pfnRegisterVariable("cam_idealyaw", "90", 0);	  // thirdperson yaw
+	cam_snapto = gEngfuncs.pfnRegisterVariable("cam_snapto", "1", 0);		  // snap to thirdperson view
+	cam_idealyaw = gEngfuncs.pfnRegisterVariable("cam_idealyaw", "0", 0);	  // thirdperson yaw
 	cam_idealpitch = gEngfuncs.pfnRegisterVariable("cam_idealpitch", "0", 0); // thirperson pitch
-	cam_idealdist = gEngfuncs.pfnRegisterVariable("cam_idealdist", "64", 0);  // thirdperson distance
-	cam_contain = gEngfuncs.pfnRegisterVariable("cam_contain", "0", 0);		  // contain camera to world
+	cam_idealdist = gEngfuncs.pfnRegisterVariable("cam_idealdist", "120", 0);  // thirdperson distance
+	cam_contain = gEngfuncs.pfnRegisterVariable("cam_contain", "1", 0);		  // contain camera to world
 
 	c_maxpitch = gEngfuncs.pfnRegisterVariable("c_maxpitch", "90.0", 0);
 	c_minpitch = gEngfuncs.pfnRegisterVariable("c_minpitch", "0.0", 0);

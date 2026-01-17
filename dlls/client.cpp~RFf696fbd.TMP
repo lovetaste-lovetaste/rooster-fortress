@@ -211,7 +211,7 @@ void ClientPutInServer(edict_t* pEntity)
 	pPlayer = GetClassPtr((CBasePlayer*)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 	
-	CBaseEntity* pTarget = UTIL_FindEntityByClassname(NULL, "info_intermission");
+	CBaseEntity* pTarget = UTIL_FindEntityByClassname(NULL, "trigger_camera");
 	if (pTarget != nullptr)
 	{
 		pPlayer->StartObserver(pTarget->pev->origin, pTarget->pev->angles);
