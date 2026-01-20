@@ -1105,7 +1105,6 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 						if (!(edictPlayer->pev->flags & FL_ONGROUND) && edictPlayer->pev->waterlevel != 3)
 						{
 							// only happens when the soldier is both not on the ground and not fully underwater
-							// just like tf2
 							// ALERT(at_console, "detected soldier rocket jump, reduced dmg!!!\n");
 							flAdjustedDamage *= 0.60;
 						}

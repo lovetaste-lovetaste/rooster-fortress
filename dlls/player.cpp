@@ -375,6 +375,14 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
 
+	if ((this != GetClassPtr((CBasePlayer*)(pevAttacker))) && ((GetClassPtr((CBasePlayer*)(pevAttacker))->m_iTeam == this->m_iTeam) || (GetClassPtr((CBasePlayer*)(pevInflictor))->m_iTeam == this->m_iTeam)))
+	{
+		// no damage for teammates!!! except for self-hits
+		// checks inflictor just in case
+		ALERT(at_console, "Teammate cancel damage in TakeDamage\n");
+		return false;
+	}
+
 	if (!g_pGameRules->FPlayerCanTakeDamage(this, pAttacker))
 	{
 		// Refuse the damage
@@ -2828,7 +2836,7 @@ edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer)
 	else if (g_pGameRules->IsDeathmatch())
 	{
 		// todo: make RED players spawn in info_player_deathmatch while BLU players spawn in info_player_start
-		// they can both spawn in info_player_coop maybe...
+		// they can both spawn in info_player_coop maybe ( probably not )
 		// CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pPlayer->pev));
 		// const char* cpSay = "info_player_deathmatch";
 
