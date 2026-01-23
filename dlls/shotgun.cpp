@@ -21,7 +21,7 @@
 #include "player.h"
 #include "gamerules.h"
 #include "UserMessages.h"
-
+ 
 // special deathmatch shotgun spreads
 #define VECTOR_CONE_DM_SHOTGUN Vector(0.08716, 0.04362, 0.00)		// 10 degrees by 5 degrees
 #define VECTOR_CONE_DM_DOUBLESHOTGUN Vector(0.17365, 0.04362, 0.00) // 20 degrees by 5 degrees
@@ -45,6 +45,9 @@ void CShotgun::Spawn()
 void CShotgun::Precache()
 {
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_pyro.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_engineer.mdl");
+
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 	// PRECACHE_MODEL("models/p_shotgun.mdl");
 
@@ -98,13 +101,29 @@ int CShotgun::iWeight(void)
 
 bool CShotgun::Deploy()
 {
-	//
-	return GroupDeploy("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, iBody(), 0, "shotgun", 3);
-	// return DefaultDeploy("models/rooster_fortress/viewmodels/v_shotgunall.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", iBody());
+	// return GroupDeploy("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, iBody(), 0, "shotgun", 3);
+	
+	const char* classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl"; // defaults to soldier viewmodel
+	// todo: add class viewmodels
+
+	if (m_pPlayer->m_iClass == CLASS_SOLDIER)
+		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl"; // just in case
+	else if (m_pPlayer->m_iClass == CLASS_PYRO)
+		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_pyro.mdl";
+	else if (m_pPlayer->m_iClass == CLASS_ENGINEER)
+		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_engineer.mdl";
+	// else if (m_pPlayer->m_iClass == CLASS_HEAVY)
+		// classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_heavy.mdl";
+	
+	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 2);
 }
 
 int CShotgun::iBody(void)
 {
+	// dont even know if this does anything cuz after some testing ts does nothing brah
+	// this SHOULD change the viewmodel so it matches the class but it DOESNT WORK!
+	// the multiclass shotty viewmodel is v_shotgunall
+
 	int iViewBody = 0;
 	if (m_pPlayer)
 	{
@@ -115,6 +134,7 @@ int CShotgun::iBody(void)
 		else if (m_pPlayer->m_iClass == CLASS_ENGINEER)
 			iViewBody = 3;
 	}
+
 	return iViewBody;
 }
 

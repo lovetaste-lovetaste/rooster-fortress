@@ -22,13 +22,16 @@
 #include "gamerules.h"
 
 
-LINK_ENTITY_TO_CLASS(weapon_shovel, CShovel);
+#define SHOVEL_BODYHIT_VOLUME 128
+#define SHOVEL_WALLHIT_VOLUME 512
 
-void CShovel::Spawn()
+LINK_ENTITY_TO_CLASS(weapon_bat, CBat);
+
+void CBat::Spawn()
 {
-	pev->classname = MAKE_STRING("weapon_shovel");
+	pev->classname = MAKE_STRING("weapon_bat");
 	Precache();
-	m_iId = WEAPON_SHOVEL;
+	m_iId = WEAPON_BAT;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
 	m_iClip = -1;
 
@@ -36,13 +39,10 @@ void CShovel::Spawn()
 }
 
 
-void CShovel::Precache()
+void CBat::Precache()
 {
-	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
-	// PRECACHE_MODEL("models/rooster_fortress/w_shovel.mdl");
-	
-	// PRECACHE_MODEL("models/p_crowbar.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_bat.mdl");
 
 	PRECACHE_SOUND("weapons/cbar_hit1.wav");
 	PRECACHE_SOUND("weapons/cbar_hit2.wav");
@@ -51,10 +51,10 @@ void CShovel::Precache()
 	PRECACHE_SOUND("weapons/cbar_hitbod3.wav");
 	PRECACHE_SOUND("weapons/cbar_miss1.wav");
 
-	m_usShovel = PRECACHE_EVENT(1, "events/sandwich.sc");
+	m_usBat = PRECACHE_EVENT(1, "events/bat.sc");
 }
 
-bool CShovel::GetItemInfo(ItemInfo* p)
+bool CBat::GetItemInfo(ItemInfo* p)
 {
 	p->pszName = STRING(pev->classname);
 	p->pszAmmo1 = NULL;
@@ -64,78 +64,72 @@ bool CShovel::GetItemInfo(ItemInfo* p)
 	p->iMaxClip = WEAPON_NOCLIP;
 	p->iSlot = 0;
 	p->iPosition = 0;
-	p->iId = WEAPON_SHOVEL;
+	p->iId = WEAPON_BAT;
 	p->iWeight = 10;
 	p->iFlags = ITEM_FLAG_SELECTONEMPTY;
 	return true;
 }
 
 
-bool CShovel::Deploy()
+bool CBat::Deploy()
 {
-	return GroupDeploy("models/rooster_fortress/viewmodels/v_shovel_soldier.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOVEL_DRAW, 0, 0, "crowbar", 0);
-	// return DefaultDeploy("models/chicken_fortress_3/v_shovel.mdl", "models/rooster_fortress/w_shovel.mdl", SHOVEL_DRAW, "shovel");
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_bat.mdl", "models/rooster_fortress/wp_group_rf.mdl", BAT_DRAW, "crowbar");
 }
 
-void CShovel::Holster()
+void CBat::Holster()
 {
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
 	CBasePlayerWeapon::Holster();
-	// 
-	//SendWeaponAnim(SHOVEL_DRAW);
 }
 
-void CShovel::PrimaryAttack()
+void CBat::PrimaryAttack()
 {
-	// ALERT(at_console, "Primary Attack\n");
-
 	Swing(true);
 }
 
 
-void CShovel::Smack()
+void CBat::Smack()
 {
 	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR);
 }
 
 
-void CShovel::SwingAgain()
+void CBat::SwingAgain()
 {
 	//ALERT(at_console, "Damaging Swing\n");
 	Swing(false);
 }
 
 
-bool CShovel::Swing(bool fFirst)
+bool CBat::Swing(bool fFirst)
 {
 	if (fFirst)
 	{
-		//ALERT(at_console, "Start Animation\n");
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usShovel,
+		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usBat,
 			0.0, g_vecZero, g_vecZero, 0, 0, 0,
 			0.0, 0, 0.0);
 
 		switch (((m_iSwing++) % 2) + 1)
 		{
 		case 0:
-			SendWeaponAnim(SHOVEL_SWING_A);
+			SendWeaponAnim(BAT_SWING_A);
 			break;
 		case 1:
-			SendWeaponAnim(SHOVEL_SWING_B);
+			SendWeaponAnim(BAT_SWING_B);
 			break;
 		case 2:
-			SendWeaponAnim(SHOVEL_SWING_C);
+			SendWeaponAnim(BAT_SWING_CRIT);
 			break;
 		}
 
 		// player "shoot" animation
 		m_pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-		SetThink(&CShovel::SwingAgain);
+		SetThink(&CBat::SwingAgain);
 		pev->nextthink = gpGlobals->time + 0.2;
 
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.8);
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
 
 		return false;
 	}
@@ -179,19 +173,7 @@ bool CShovel::Swing(bool fFirst)
 
 			ClearMultiDamage();
 
-			// JoshA: Changed from < -> <= to fix the full swing logic since client weapon prediction.
-			// -1.0f + 1.0f = 0.0f. UTIL_WeaponTimeBase is always 0 with client weapon prediction (0 time base vs curtime base)
-			// if ((m_flNextPrimaryAttack + 1.0f <= UTIL_WeaponTimeBase()) || g_pGameRules->IsMultiplayer())
-			// {
-				// first swing does full damage
-				// pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar, gpGlobals->v_forward, &tr, DMG_CLUB);
-			// }
-			// else
-			// {
-				// subsequent swings do half
-				// pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar / 2, gpGlobals->v_forward, &tr, DMG_CLUB);
-			// }
-			pEntity->TraceAttack(m_pPlayer->pev, 65.0, gpGlobals->v_forward, &tr, DMG_CLUB);
+			pEntity->TraceAttack(m_pPlayer->pev, 35.0, gpGlobals->v_forward, &tr, DMG_CLUB);
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 			// play thwack, smack, or dong sound

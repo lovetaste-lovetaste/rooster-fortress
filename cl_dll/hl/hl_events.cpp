@@ -44,8 +44,10 @@ void Game_HookEvents()
 	gEngfuncs.pfnHookEvent("events/train.sc", EV_TrainPitchAdjust);
 	gEngfuncs.pfnHookEvent("events/vehicle.sc", EV_VehiclePitchAdjust);
 	gEngfuncs.pfnHookEvent("events/crowbar.sc", EV_Crowbar);
-	gEngfuncs.pfnHookEvent("events/roosterfortress.sc", EV_Shovel);
+	gEngfuncs.pfnHookEvent("events/sandwich.sc", EV_Shovel);
 	gEngfuncs.pfnHookEvent("events/roosterfortress2.sc", EV_FireScattergun);
+	gEngfuncs.pfnHookEvent("events/roosterfortress3.sc", EV_Wrench);
+	gEngfuncs.pfnHookEvent("events/bat.sc", EV_Bat);
 	gEngfuncs.pfnHookEvent("events/crossbow1.sc", EV_FireCrossbow);
 	gEngfuncs.pfnHookEvent("events/crossbow2.sc", EV_FireCrossbow2);
 	gEngfuncs.pfnHookEvent("events/rpg.sc", EV_FireRpg);

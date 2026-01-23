@@ -609,9 +609,10 @@ void CBasePlayer::PackDeadPlayerItems()
 	iWeaponRules = g_pGameRules->DeadPlayerWeapons(this);
 	iAmmoRules = g_pGameRules->DeadPlayerAmmo(this);
 
-	if (iWeaponRules == GR_PLR_DROP_GUN_NO && iAmmoRules == GR_PLR_DROP_AMMO_NO)
+	if ( true ) //iWeaponRules == GR_PLR_DROP_GUN_NO && iAmmoRules == GR_PLR_DROP_AMMO_NO)
 	{
 		// nothing to pack. Remove the weapons and return. Don't call create on the box!
+		// i will eventually make a server variable for this
 		RemoveAllItems(true);
 		return;
 	}
@@ -2654,6 +2655,9 @@ void CBasePlayer::PostThink()
 	// of maximum safe distance will make no sound. Falling farther than max safe distance will play a
 	// fallpain sound, and damage will be inflicted based on how far the player fell
 
+
+	// todo: edit to match hl2/tf2 fall damage
+
 	if ((FBitSet(pev->flags, FL_ONGROUND)) && (pev->health > 0) && m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHHOLD)
 	{
 		// ALERT ( at_console, "%f\n", m_flFallVelocity );
@@ -3200,6 +3204,14 @@ void CBasePlayer::SpawnClassWeapons()
 			ALERT(at_console, "Player spawned as a invalid class, giving default HL loadout.\n");
 			break;
 		}
+		case CLASS_SCOUT:
+		{
+			GiveNamedItem("weapon_scattergun");
+			GiveNamedItem("weapon_glock");
+			GiveNamedItem("weapon_bat");
+			ALERT(at_console, "Player spawned as Scout!\n");
+			break;
+		}
 		case CLASS_SOLDIER:
 		{
 			GiveNamedItem("weapon_rpg");
@@ -3208,12 +3220,55 @@ void CBasePlayer::SpawnClassWeapons()
 			ALERT(at_console, "Player spawned as Soldier!\n");
 			break;
 		}
-		case CLASS_SCOUT:
+		case CLASS_PYRO:
 		{
-			GiveNamedItem("weapon_scattergun");
-			GiveNamedItem("weapon_glock");
+			GiveNamedItem("weapon_egon"); // stand-in for flamethrower
+			GiveNamedItem("weapon_shotgun");
 			GiveNamedItem("weapon_crowbar");
-			ALERT(at_console, "Player spawned as Scout!\n");
+			ALERT(at_console, "Player spawned as Pyro!\n");
+			break;
+		}
+		case CLASS_DEMOMAN:
+		{
+			// not done and there are practically no stand-ins for his weapons
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Demoman!\n");
+			break;
+		}
+		case CLASS_HEAVY:
+		{
+			GiveNamedItem("weapon_shotgun");
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Heavy!\n");
+			break;
+		}
+		case CLASS_ENGINEER:
+		{
+			GiveNamedItem("weapon_shotgun");
+			GiveNamedItem("weapon_glock");
+			GiveNamedItem("weapon_wrench");
+			ALERT(at_console, "Player spawned as Engineer!\n");
+			break;
+		}
+		case CLASS_MEDIC:
+		{
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Medic!\n");
+			break;
+		}
+		case CLASS_SNIPER:
+		{
+			GiveNamedItem("weapon_crossbow"); // stand-in for sniper rifle
+			GiveNamedItem("weapon_mp5"); // stand-in for SMG
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Sniper!\n");
+			break;
+		}
+		case CLASS_SPY:
+		{
+			GiveNamedItem("weapon_357"); // stand-in for revolver
+			GiveNamedItem("weapon_crowbar");
+			ALERT(at_console, "Player spawned as Spy!\n");
 			break;
 		}
 	}

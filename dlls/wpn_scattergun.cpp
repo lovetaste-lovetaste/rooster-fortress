@@ -64,7 +64,6 @@ void CScattergun::Precache()
 	PRECACHE_SOUND("weapons/scock1.wav");	 // cock gun
 
 	m_usScattergun = PRECACHE_EVENT(1, "events/roosterfortress2.sc");
-	//m_usDoubleFire = PRECACHE_EVENT(1, "events/shotgun2.sc");
 }
 
 bool CScattergun::GetItemInfo(ItemInfo* p)

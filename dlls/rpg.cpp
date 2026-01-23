@@ -75,7 +75,7 @@ void CRpgRocket::Spawn()
 	SetTouch(&CRpgRocket::ExplodeTouch);
 
 	pev->velocity = gpGlobals->v_forward * 1100;
-	// pev->gravity = 0.000001;
+	pev->gravity = 0.000001; // stupid chud div by 0 errors
 
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -105,7 +105,6 @@ void CRpgRocket::RocketTouch(CBaseEntity* pOther)
 		ALERT(at_console, "rocket passing through teammate\n");
 	}
 	// this works, but it kills momentum n shi
-	// plus the dmg still applies
 }
 
 //=========================================================
@@ -122,7 +121,7 @@ void CRpgRocket::IgniteThink()
 {
 	// pev->movetype = MOVETYPE_TOSS;
 
-	pev->movetype = MOVETYPE_FLY;
+	pev->movetype = MOVETYPE_TOSS;
 	pev->effects |= EF_LIGHT;
 
 	// make rocket sound
@@ -160,7 +159,7 @@ CRpg* CRpgRocket::GetLauncher()
 
 void CRpgRocket::FollowThink()
 {
-	UTIL_MakeAimVectors(pev->angles); // use for model eventually
+	// UTIL_MakeAimVectors(pev->angles); // use for model eventually
 	// pev->angles
 
 	float flSpeed = pev->velocity.Length();

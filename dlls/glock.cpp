@@ -38,6 +38,8 @@ void CGlock::Spawn()
 void CGlock::Precache()
 {
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_scout.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_engineer.mdl");
+
 	PRECACHE_MODEL("models/w_9mmhandgun.mdl");
 	PRECACHE_MODEL("models/p_9mmhandgun.mdl");
 
@@ -73,8 +75,15 @@ bool CGlock::GetItemInfo(ItemInfo* p)
 
 bool CGlock::Deploy()
 {
-	// pev->body = 1;
-	return DefaultDeploy("models/rooster_fortress/viewmodels/v_pistol_scout.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
+	const char* classViewmodel = "models/rooster_fortress/viewmodels/v_pistol_scout.mdl"; // defaults to scout viewmodel
+
+	if (m_pPlayer->m_iClass == CLASS_ENGINEER)
+	{
+		classViewmodel = "models/rooster_fortress/viewmodels/v_pistol_engineer.mdl";
+	}
+
+
+	return DefaultDeploy(classViewmodel, "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
 }
 
 void CGlock::SecondaryAttack()

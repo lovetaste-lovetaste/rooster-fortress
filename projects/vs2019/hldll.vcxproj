@@ -214,8 +214,10 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\weapons_shared.cpp" />
     <ClCompile Include="..\..\dlls\world.cpp" />
     <ClCompile Include="..\..\dlls\glock.cpp" />
+    <ClCompile Include="..\..\dlls\wpn_bat.cpp" />
     <ClCompile Include="..\..\dlls\wpn_scattergun.cpp" />
     <ClCompile Include="..\..\dlls\wpn_shovel.cpp" />
+    <ClCompile Include="..\..\dlls\wpn_wrench.cpp" />
     <ClCompile Include="..\..\dlls\xen.cpp" />
     <ClCompile Include="..\..\dlls\zombie.cpp" />
     <ClCompile Include="..\..\game_shared\filesystem_utils.cpp" />

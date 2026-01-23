@@ -212,7 +212,7 @@ void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 
 	if (pBot->m_fDeadTime + 10 > gpGlobals->time)
 	{
-		if (client % 2 == 1)
+		if (RANDOM_LONG(0, 1) == 1)
 			vecMove->y = 500.0;
 		else
 			vecMove->x = 500.0;
@@ -421,7 +421,7 @@ void AimAtTarget(int client, CBaseEntity* pTarget)
 	BotFixIdealPitch(player->edict());
 	BotFixIdealYaw(player->edict());
 	// Set angle change for smooth turning
-	player->ChangeYaw(100);
+	player->ChangeYaw(1048);
 }
 
 float clamp(float init, float min, float max)

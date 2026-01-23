@@ -74,6 +74,7 @@ public:
 
 #define CROWBAR_WEIGHT 0
 #define SHOVEL_WEIGHT 10
+#define BAT_WEIGHT 10
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -324,6 +325,8 @@ public:
 	virtual void SendWeaponAnim(int iAnim, int body = 0);
 
 	void SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int skiplocal);
+
+	void FindHullIntersection(const Vector& vecSrc, TraceResult& tr, const Vector& mins, const Vector& maxs, edict_t* pEntity);
 
 	bool CanDeploy() override;
 	virtual bool IsUseable();
@@ -700,14 +703,10 @@ enum shotgun_e
 {
 	SHOTGUN_DRAW = 0,
 	SHOTGUN_SHOOT,
-	SHOTGUN_PUMP_START,
-	SHOTGUN_PUMP_IDLE,
 	SHOTGUN_IDLE,
 	SHOTGUN_END_RELOAD,
 	SHOTGUN_RELOAD,
-	SHOTGUN_START_RELOAD,
-	SHOTGUN_END_PUMP
-	
+	SHOTGUN_START_RELOAD
 };
 
 class CShotgun : public CBasePlayerWeapon
@@ -1261,6 +1260,9 @@ public:
 	int m_iSwing;
 	TraceResult m_trHit;
 
+	int SHOVEL_BODYHIT_VOLUME = 128;
+	int SHOVEL_WALLHIT_VOLUME = 512;
+
 	bool UseDecrement() override
 	{
 #if defined(CLIENT_WEAPONS)
@@ -1313,4 +1315,86 @@ public:
 
 private:
 	unsigned short m_usScattergun;
+};
+
+
+enum bat_e
+{
+	BAT_DRAW,
+	BAT_HOLSTER,
+	BAT_HOLSTER_IDLE,
+	BAT_UNHOLSTER,
+	BAT_IDLE,
+	BAT_SWING_A,
+	BAT_SWING_B,
+	BAT_SWING_CRIT
+};
+
+class CBat : public CShovel
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	void EXPORT SwingAgain();
+	void EXPORT Smack();
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	bool Swing(bool fFirst);
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	virtual bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usBat;
+};
+
+enum wrench_e
+{
+	WRENCH_DRAW,
+	WRENCH_IDLE,
+	WRENCH_SWING_A,
+	WRENCH_SWING_B,
+	WRENCH_SWING_C
+};
+
+class CWrench : public CShovel
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	void EXPORT SwingAgain();
+	void EXPORT Smack();
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	bool Swing(bool fFirst);
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	virtual bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usWrench;
 };

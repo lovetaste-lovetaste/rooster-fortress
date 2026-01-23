@@ -184,7 +184,7 @@ void ClientKill(edict_t* pEntity)
 	if (pl->m_fNextSuicideTime > gpGlobals->time)
 		return; // prevent suiciding too ofter
 
-	pl->m_fNextSuicideTime = gpGlobals->time + 1; // don't let them suicide for 5 seconds after suiciding
+	pl->m_fNextSuicideTime = gpGlobals->time + 5; // don't let them suicide for 5 seconds after suiciding
 
 	// have the player kill themself
 	pev->health = 0;
@@ -2041,6 +2041,10 @@ void TFClient_JoinTeam(edict_t* pEntity)
 
 void TFClient_JoinClass(edict_t* pEntity)
 {
+	// THIS IS A STUPID WAY OF DOING THIS
+	// BUT IT WOOOOORKS
+	// TOO LAZY TO DO ANOTHER OPTION FOR NOW
+
 	CBasePlayer* client;
 	int j;
 	char* p;
@@ -2092,12 +2096,7 @@ void TFClient_JoinClass(edict_t* pEntity)
 	// make sure the text has content
 
 	if (!p || '\0' == p[0] || !Q_UnicodeValidate(p))
-		return; // no character found, so say nothing
-	
-	// ALERT(at_console, "TFClient_JoinClass");
-	// 
-	//if (player->m_iTeam == TEAM_UNASSIGNED)
-		//player->pev->deadflag == DEAD_RESPAWNABLE;
+		return; // no character found
 
 	if (player->GetTeamNumber() == TEAM_UNASSIGNED)
 	{
@@ -2120,6 +2119,11 @@ void TFClient_JoinClass(edict_t* pEntity)
 		{
 			player->m_iNewClass = CLASS_SOLDIER;
 			CLIENT_PRINTF(player->edict(), print_center, "You switched to Soldier.");
+		}
+		else if (!stricmp("6", p) || !stricmp("engineer", p))
+		{
+			player->m_iNewClass = CLASS_ENGINEER;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Engineer.");
 		}
 		else
 		{

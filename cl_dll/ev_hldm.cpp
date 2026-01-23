@@ -1714,6 +1714,42 @@ void EV_Shovel(event_args_t* args)
 //======================
 //	   Shovel END
 //======================
+ 
+int swings;
+
+// Only predict the miss sounds, hit sounds are still played
+// server side, so players don't get the wrong idea.
+void EV_Wrench(event_args_t* args)
+{
+	int idx;
+	Vector origin;
+
+	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+
+	// Play Swing sound
+	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+
+	if (EV_IsLocal(idx))
+	{
+		switch ((swings++) % 3)
+		{
+		case 0:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(WRENCH_SWING_A, 0);
+			break;
+		case 1:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(WRENCH_SWING_B, 0);
+			break;
+		case 2:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(WRENCH_SWING_C, 0);
+			break;
+		}
+	}
+}
+
+
+
+// scattergun 
 
 void EV_FireScattergun(event_args_t* args)
 {
@@ -1757,3 +1793,43 @@ void EV_FireScattergun(event_args_t* args)
 
 	EV_HLDM_FireBullets(idx, forward, right, up, 10, vecSrc, vecAiming, 2048, BULLET_PLAYER_BUCKSHOT, 0, &tracerCount[idx - 1], 0.08716, 0.04362);
 }
+
+//scattergun end kjgrhhhkdsfhjklsfhhjlfjDLLJFLJjadhshAHJSAdjsshjaHLHJSDJDLJHJl
+
+//======================
+//	   BAT START
+//======================
+int g_i2Swings;
+
+// Only predict the miss sounds, hit sounds are still played
+// server side, so players don't get the wrong idea.
+void EV_Bat(event_args_t* args)
+{
+	int idx;
+	Vector origin;
+
+	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+
+	// Play Swing sound
+	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+
+	if (EV_IsLocal(idx))
+	{
+		switch ((g_i2Swings++) % 3)
+		{
+		case 0:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(BAT_SWING_A, 0);
+			break;
+		case 1:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(BAT_SWING_B, 0);
+			break;
+		case 2:
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(BAT_SWING_CRIT, 0);
+			break;
+		}
+	}
+}
+//======================
+//	   Shovel END
+//======================
