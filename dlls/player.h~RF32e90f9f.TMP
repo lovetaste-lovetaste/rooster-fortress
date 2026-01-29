@@ -242,11 +242,6 @@ enum ETFCond
 #define CLASS_DEMOMAN 8
 #define CLASS_SPY 9
 
-#define CLASS_ENGIE 7
-#define CLASS_DEMO 8
-// these 2 are never really used due to them being community nicknames
-// however, they are there for those who want them
-
 #define CHAT_INTERVAL 1.0f
 
 class CBasePlayer : public CBaseMonster
@@ -544,6 +539,7 @@ public:
 
 	
 	float m_flSpawnTime; // mainly used for bots, specifically for players
+
 };
 
 

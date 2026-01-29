@@ -105,6 +105,16 @@ public:
 #define HORNET_MAX_CARRY 8
 #define M203_GRENADE_MAX_CARRY 10
 
+#define SCATTERGUN_MAX_CARRY 32
+#define GRENADELAUNCHER_MAX_CARRY 16
+#define STICKYBOMB_MAX_CARRY 24
+#define ROCKERLAUNCHER_MAX_CARRY 20
+#define FLAMETHROWER_MAX_CARRY 200
+#define SYRINGEGUN_MAX_CARRY 150
+#define SNIPERRIFLE_MAX_CARRY 25
+#define SMG_MAX_CARRY 75
+#define REVOLVER_MAX_CARRY 24
+
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP -1
 
@@ -123,8 +133,13 @@ public:
 #define SATCHEL_MAX_CLIP WEAPON_NOCLIP
 #define TRIPMINE_MAX_CLIP WEAPON_NOCLIP
 #define SNARK_MAX_CLIP WEAPON_NOCLIP
-#define SCATTERGUN_MAX_CLIP SHOTGUN_MAX_CLIP
 
+#define SCATTERGUN_MAX_CLIP SHOTGUN_MAX_CLIP
+#define GRENADELAUNCHER_MAX_CLIP 4
+#define STICKYBOMBLAUCHER_MAX_CLIP 8
+#define REVOLVER_MAX_CLIP 6
+#define SYRINGEGUN_MAX_CLIP 40
+#define SMG_MAX_CLIP 25
 
 // the default amount of ammo that comes with each gun when it spawns
 #define GLOCK_DEFAULT_GIVE 36
@@ -142,7 +157,9 @@ public:
 #define TRIPMINE_DEFAULT_GIVE 1
 #define SNARK_DEFAULT_GIVE 5
 #define HIVEHAND_DEFAULT_GIVE 8
+
 #define SCATTERGUN_DEFAULT_GIVE SHOTGUN_DEFAULT_GIVE
+// the rest of the tf2 weapons use their max carry + their max clip
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE 20
@@ -165,6 +182,7 @@ typedef enum
 	BULLET_PLAYER_MP5,		// mp5
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
+	BULLET_PLAYER_TF2, // tf2 distance falloff
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
 
 	BULLET_MONSTER_9MM,
@@ -1397,4 +1415,167 @@ public:
 
 private:
 	unsigned short m_usWrench;
+};
+
+enum grenlauncher_e
+{
+	GRENADELAUNCHER_DRAW = 0,
+	GRENADELAUNCHER_SHOOT,
+	GRENADELAUNCHER_IDLE,
+	GRENADELAUNCHER_AFTER_RELOAD,
+	GRENADELAUNCHER_RELOAD,
+	GRENADELAUNCHER_START_RELOAD
+};
+
+class CGrenadelauncher : public CRpg
+{
+public:
+#ifndef CLIENT_DLL
+	//bool Save(CSave& save) override;
+	//bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+#endif
+
+	void Spawn() override;
+	void Precache() override;
+	void Reload() override;
+	int iItemSlot() override { return 4; }
+	bool GetItemInfo(ItemInfo* p) override;
+
+	bool Deploy() override;
+	bool CanHolster() override;
+	void Holster() override;
+
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	void WeaponIdle() override;
+
+	bool ShouldWeaponIdle() override { return true; }
+
+	float m_flNextReload;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usGrenadeLauncher;
+};
+
+class CTF2Grenade : public CGrenade
+{
+public:
+	~CTF2Grenade() override;
+
+	//bool Save(CSave& save) override;
+	//bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+	void Spawn() override;
+	Vector ProjectionProduct(const Vector& a, const Vector& b);
+	void Precache() override;
+	void EXPORT GrenadeTouch(CBaseEntity* pOther);
+	void EXPORT FollowThink();
+	void EXPORT IgniteThink();
+	void EXPORT RocketTouch(CBaseEntity* pOther);
+	static CTF2Grenade* CreateTF2Grenade(Vector vecOrigin, Vector vecAngles, CBaseEntity* pOwner, CGrenadelauncher* pLauncher);
+
+	CGrenadelauncher* GetLauncher();
+
+	int m_iTrail;
+	float m_flIgniteTime;
+	bool m_bFall;
+	bool m_bRoll;
+	int m_iJumpTimes;
+	EHANDLE m_hLauncher; // handle back to the launcher that fired me.
+};
+
+//"models/rooster_fortress/viewmodels/v_revolver_spy.mdl"
+
+enum revolver_e
+{
+	REVOLVER_DRAW = 0,
+	REVOLVER_IDLE,
+	REVOLVER_RELOAD,
+	REVOLVER_FIRE
+};
+
+class CRevolver : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 2; }
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	// void GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim);
+	// m_usFireRevolver
+	bool Deploy() override;
+	// void Holster() override;
+	void Reload() override;
+	void WeaponIdle() override;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	int m_iShell;
+	unsigned short m_usFireRevolver;
+};
+
+enum knife_e
+{
+	KNIFE_DRAW,
+	KNIFE_IDLE,
+	KNIFE_REF,
+	KNIFE_SWING_A,
+	KNIFE_SWING_B,
+	KNIFE_SWING_C,
+	KNIFE_BACKSTAB,
+	KNIFE_BACKSTAB_IDLE,
+	KNIFE_BACKSTAB_DOWN,
+	KNIFE_BACKSTAB_UP,
+	KNIFE_STUN
+};
+
+class CKnife : public CShovel
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	void EXPORT Smack();
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	bool Swing();
+	bool IsBackFace(Vector& anglesAttacker, Vector& anglesVictim);
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	virtual bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usKnife;
 };

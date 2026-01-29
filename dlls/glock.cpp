@@ -28,9 +28,11 @@ void CGlock::Spawn()
 	pev->classname = MAKE_STRING("weapon_9mmhandgun"); // hack to allow for old names
 	Precache();
 	m_iId = WEAPON_GLOCK;
-	SET_MODEL(ENT(pev), "models/w_9mmhandgun.mdl");
+	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 5;
+	pev->body = 15;
 
-	m_iDefaultAmmo = GLOCK_DEFAULT_GIVE;
+	m_iDefaultAmmo = GLOCK_MAX_CLIP + GLOCK_DEFAULT_GIVE;
 
 	FallInit(); // get ready to fall down.
 }
@@ -40,8 +42,7 @@ void CGlock::Precache()
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_scout.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_engineer.mdl");
 
-	PRECACHE_MODEL("models/w_9mmhandgun.mdl");
-	PRECACHE_MODEL("models/p_9mmhandgun.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 
 	m_iShell = PRECACHE_MODEL("models/shell.mdl"); // brass shell
 
@@ -83,7 +84,7 @@ bool CGlock::Deploy()
 	}
 
 
-	return DefaultDeploy(classViewmodel, "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
+	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", GLOCK_DRAW, "onehanded", 15);
 }
 
 void CGlock::SecondaryAttack()
@@ -100,12 +101,8 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 {
 	if (m_iClip <= 0)
 	{
-		//if (m_fFireOnEmpty)
-		{
-			PlayEmptySound();
-			m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(0.2);
-		}
-
+		PlayEmptySound();
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(0.2);
 		return;
 	}
 
@@ -150,7 +147,7 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 	}
 
 	Vector vecDir;
-	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_9MM, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_TF2, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 
 	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, (m_iClip == 0) ? 1 : 0, 0);
 

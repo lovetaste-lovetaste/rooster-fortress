@@ -35,7 +35,8 @@ void CShotgun::Spawn()
 	m_bIsPrimary = false;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
 	pev->sequence = 1;
-	// pev->body = iBody(); // this is weird for viewmodels
+	pev->body = 3;
+	
 	m_iDefaultAmmo = SHOTGUN_DEFAULT_GIVE;
 
 	FallInit(); // get ready to fall
@@ -49,14 +50,13 @@ void CShotgun::Precache()
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_engineer.mdl");
 
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
-	// PRECACHE_MODEL("models/p_shotgun.mdl");
 
 	m_iShell = PRECACHE_MODEL("models/shotgunshell.mdl"); // shotgun shell
 
 	PRECACHE_SOUND("items/9mmclip1.wav");
 
 	PRECACHE_SOUND("weapons/dbarrel1.wav"); //shotgun
-	PRECACHE_SOUND("weapons/sbarrel1.wav"); //shotgun
+	PRECACHE_SOUND("chicken_fortress_3/shotgun_shoot.wav"); //shotgun
 
 	PRECACHE_SOUND("weapons/reload1.wav"); // shotgun reload
 	PRECACHE_SOUND("weapons/reload3.wav"); // shotgun reload
@@ -115,7 +115,7 @@ bool CShotgun::Deploy()
 	// else if (m_pPlayer->m_iClass == CLASS_HEAVY)
 		// classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_heavy.mdl";
 	
-	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 2);
+	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 3);
 }
 
 int CShotgun::iBody(void)
@@ -168,9 +168,7 @@ void CShotgun::PrimaryAttack()
 	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
 	Vector vecDir;
-	vecDir = m_pPlayer->FireBulletsPlayer(10, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 6, m_pPlayer->pev, m_pPlayer->random_seed);
-
-	// CKFFireBullets(vecSrc, gpGlobals->v_forward, 0.0, 8192, BULLET_PLAYER_TF2, 6, iCrit, m_pPlayer->pev, m_pPlayer->random_seed, FALSE);
+	vecDir = m_pPlayer->FireBulletsPlayer(10, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_TF2, 0, 6, m_pPlayer->pev, m_pPlayer->random_seed);
 
 	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
@@ -220,10 +218,7 @@ void CShotgun::Reload()
 		// was waiting for gun to move to side
 		m_fInSpecialReload = 2;
 
-		if (RANDOM_LONG(0, 1))
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
-		else
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
+		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
 
 		SendWeaponAnim(SHOTGUN_RELOAD);
 
@@ -246,16 +241,6 @@ void CShotgun::WeaponIdle()
 
 	m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
-	//Moved to ItemPostFrame
-	/*
-	if ( m_flPumpTime && m_flPumpTime < gpGlobals->time )
-	{
-		// play pumping sound
-		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0,0x1f));
-		m_flPumpTime = 0;
-	}
-	*/
-
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
 		if (m_iClip == 0 && m_fInSpecialReload == 0 && 0 != m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
@@ -272,9 +257,6 @@ void CShotgun::WeaponIdle()
 			{
 				// reload debounce has timed out
 				SendWeaponAnim(SHOTGUN_END_RELOAD);
-
-				// play cocking sound
-				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
 				m_fInSpecialReload = 0;
 				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
 			}

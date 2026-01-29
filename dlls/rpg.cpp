@@ -246,8 +246,9 @@ void CRpg::Spawn()
 	Precache();
 	m_iId = WEAPON_RPG;
 
-	SET_MODEL(ENT(pev), "models/rooster_fortress/w_rocketlauncher.mdl");
-	pev->sequence = 1;
+	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 2;
+	pev->body = 6;
 
 #ifdef CLIENT_DLL
 	if (bIsMultiplayer())
@@ -256,7 +257,7 @@ void CRpg::Spawn()
 #endif
 	{
 		// more default ammo in multiplay.
-		m_iDefaultAmmo = RPG_DEFAULT_GIVE * 2;
+		m_iDefaultAmmo = RPG_DEFAULT_GIVE + ROCKERLAUNCHER_MAX_CARRY;
 	}
 	else
 	{
@@ -269,7 +270,7 @@ void CRpg::Spawn()
 
 void CRpg::Precache()
 {
-	PRECACHE_MODEL("models/rooster_fortress/w_rocketlauncher.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl");
 	// PRECACHE_MODEL("models/p_rpg.mdl");
 
@@ -277,8 +278,7 @@ void CRpg::Precache()
 
 	UTIL_PrecacheOther("rpg_rocket");
 
-	PRECACHE_SOUND("weapons/rocketfire1.wav");
-	PRECACHE_SOUND("weapons/glauncher.wav"); // alternative fire sound
+	PRECACHE_SOUND("chicken_fortress_3/rocketlauncher_shoot.wav");
 
 	m_usRpg = PRECACHE_EVENT(1, "events/rpg.sc");
 }
@@ -308,7 +308,7 @@ bool CRpg::Deploy()
 		//return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg");
 	//}
 
-	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/w_rocketlauncher.mdl", ROCKETLAUNCHER_DRAW, "rpg");
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_rocketlauncher.mdl", "models/rooster_fortress/wp_group_rf.mdl", ROCKETLAUNCHER_DRAW, "rpg", 6);
 }
 
 

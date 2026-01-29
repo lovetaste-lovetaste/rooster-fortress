@@ -29,6 +29,9 @@ void CWrench::Spawn()
 	Precache();
 	m_iId = WEAPON_WRENCH;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 12;
+	pev->body = 36;
+
 	m_iClip = -1;
 
 	FallInit(); // get ready to fall down.
@@ -69,7 +72,7 @@ bool CWrench::GetItemInfo(ItemInfo* p)
 
 bool CWrench::Deploy()
 {
-	return GroupDeploy("models/rooster_fortress/viewmodels/v_wrench.mdl", "models/rooster_fortress/wp_group_rf.mdl", WRENCH_DRAW, 0, 0, "crowbar", 0);
+	return GroupDeploy("models/rooster_fortress/viewmodels/v_wrench.mdl", "models/rooster_fortress/wp_group_rf.mdl", WRENCH_DRAW, 36, 0, "crowbar", 0);
 }
 
 void CWrench::Holster()

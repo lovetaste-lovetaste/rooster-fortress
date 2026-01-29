@@ -1573,10 +1573,35 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 		{
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
+			
 			if (0 != iDamage)
 			{
-				pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
+				if (iBulletType == BULLET_PLAYER_TF2)
+				{
+					float distanceFalloff = 1.0;
+					float damage = (float)iDamage;
+					float flDist = (pevAttacker->origin - pEntity->pev->origin).Length2D();
+					distanceFalloff = (((0.00000019402553638) * (flDist * flDist * flDist)) - ((0.000298023223877) * (flDist * flDist)) + ((0.00406901041667) * flDist) + 150.0) / 100.0;
 
+					// ALERT(at_console, "FireBulletsPlayer distance should be %f \n", flDist);
+					// ALERT(at_console, "FireBulletsPlayer falloff should be %f \n", distanceFalloff);
+					
+					damage *= distanceFalloff;
+
+					// ALERT(at_console, "FireBulletsPlayer new damage is %f \n", damage);
+					// 
+					// todo: make server cvar defining the limit for how much damage is required for the damage to gib
+					// imagine hitting someone in close range with full crits and watching them EXPLODE!!!
+					// cool
+					// for now it needs to be over 300 damage ( still doable with certain weapons in certain conditions, most notably the scattergun in close range with crits and chared sniper rifle headshots )
+					// this shouldnt be possible normally though due to it being impossible in live tf2
+					// however, server operators should be able to toggle it still ( when has more custom server options hurt anybody!?!? )
+					// for like offline fun or LAN scenarios
+					pEntity->TraceAttack(pevAttacker, damage, vecDir, &tr, DMG_BULLET | ((iDamage > 300) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
+				}
+				else
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
+				
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 				DecalGunshot(&tr, iBulletType);
 			}

@@ -370,8 +370,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// Already dead
 	if (!IsAlive())
 		return false;
-	// go take the damage first
-
 
 	CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
 
@@ -379,7 +377,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	{
 		// no damage for teammates!!! except for self-hits
 		// checks inflictor just in case
-		ALERT(at_console, "Teammate cancel damage in TakeDamage\n");
+		// ALERT(at_console, "Teammate cancel damage in TakeDamage\n");
 		return false;
 	}
 
@@ -2977,7 +2975,7 @@ void CBasePlayer::ResetMaxSpeed()
 	float speed = GetClassMaxSpeed(m_iClass);
 
 	if (IsObserver())
-		speed = 1200;
+		speed = 1200.0;
 
 	g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
 }
@@ -2988,16 +2986,16 @@ void CBasePlayer::SetPlayerModel()
 
 	switch (m_iClass)
 	{
-	default: return;
-	case CLASS_SCOUT: model = "scout"; break;
-	case CLASS_HEAVY: model = "hvyweapon"; break;
-	case CLASS_SOLDIER: model = "soldier"; break;
-	case CLASS_PYRO: model = "pyro"; break;
-	case CLASS_SNIPER: model = "sniper"; break;
-	case CLASS_MEDIC: model = "medic"; break;
-	case CLASS_ENGINEER: model = "engineer"; break;
-	case CLASS_DEMOMAN: model = "demo"; break;
-	case CLASS_SPY: model = "spy"; break;
+		default: return;
+		case CLASS_SCOUT: model = "scout"; break;
+		case CLASS_HEAVY: model = "hvyweapon"; break;
+		case CLASS_SOLDIER: model = "soldier"; break;
+		case CLASS_PYRO: model = "pyro"; break;
+		case CLASS_SNIPER: model = "sniper"; break;
+		case CLASS_MEDIC: model = "medic"; break;
+		case CLASS_ENGINEER: model = "engineer"; break;
+		case CLASS_DEMOMAN: model = "demo"; break;
+		case CLASS_SPY: model = "spy"; break;
 	}
 
 	char* color;
@@ -3027,13 +3025,12 @@ void CBasePlayer::SetPlayerModel()
 	static char szModelPath[64];
 	sprintf(szModelPath, "models/rooster_fortress/player/%s/%s.mdl", model, model);
 	SET_MODEL(ENT(pev), szModelPath);
-	// m_ulModelIndexPlayer = g_sModelIndexPlayerClass[m_iClass - 1];
-	// pev->modelindex = m_ulModelIndexPlayer;
 }
 
 void CBasePlayer::Spawn()
 {
 	m_flStartCharge = gpGlobals->time;
+	m_flSpawnTime = gpGlobals->time;
 	m_bIsSpawning = true;
 
 	//Make sure this gets reset even if somebody adds an early return or throws an exception.
@@ -3102,7 +3099,6 @@ void CBasePlayer::Spawn()
 	g_pGameRules->SetDefaultPlayerTeam(this);
 	g_pGameRules->GetPlayerSpawnSpot(this);
 
-	// SET_MODEL(ENT(pev), "models/player.mdl");
 	SetPlayerModel();
 
 	g_ulModelIndexPlayer = pev->modelindex;
@@ -3231,6 +3227,7 @@ void CBasePlayer::SpawnClassWeapons()
 		case CLASS_DEMOMAN:
 		{
 			// not done and there are practically no stand-ins for his weapons
+			GiveNamedItem("weapon_grenadelauncher");
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Demoman!\n");
 			break;
@@ -3252,6 +3249,7 @@ void CBasePlayer::SpawnClassWeapons()
 		}
 		case CLASS_MEDIC:
 		{
+			GiveNamedItem("weapon_hornetgun"); // stand-in for needlegun
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Medic!\n");
 			break;
@@ -3266,14 +3264,14 @@ void CBasePlayer::SpawnClassWeapons()
 		}
 		case CLASS_SPY:
 		{
-			GiveNamedItem("weapon_357"); // stand-in for revolver
-			GiveNamedItem("weapon_crowbar");
+			GiveNamedItem("weapon_revolver");
+			GiveNamedItem("weapon_knife");
 			ALERT(at_console, "Player spawned as Spy!\n");
 			break;
 		}
 	}
 	
-	// GiveNamedItem("weapon_hornetgun");
+	// 
 }
 
 bool CBasePlayer::Restore(CRestore& restore)

@@ -33,6 +33,8 @@ void CBat::Spawn()
 	Precache();
 	m_iId = WEAPON_BAT;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 4;
+	pev->body = 12;
 	m_iClip = -1;
 
 	FallInit(); // get ready to fall down.

@@ -2120,10 +2120,52 @@ void TFClient_JoinClass(edict_t* pEntity)
 			player->m_iNewClass = CLASS_SOLDIER;
 			CLIENT_PRINTF(player->edict(), print_center, "You switched to Soldier.");
 		}
-		else if (!stricmp("6", p) || !stricmp("engineer", p))
+		else if (!stricmp("3", p) || !stricmp("pyro", p))
+		{
+			player->m_iNewClass = CLASS_PYRO;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Pyro.");
+		}
+		else if (!stricmp("4", p) || !stricmp("demoman", p))
+		{
+			player->m_iNewClass = CLASS_DEMOMAN;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Demoman.");
+		}
+		else if (!stricmp("5", p) || !stricmp("heavy", p) || !stricmp("heavyweapons", p) || !stricmp("hvyweapons", p))
+		{
+			player->m_iNewClass = CLASS_HEAVY;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Heavy.");
+		}
+		else if (!stricmp("6", p) || !stricmp("engineer", p) || !stricmp("engie", p))
 		{
 			player->m_iNewClass = CLASS_ENGINEER;
 			CLIENT_PRINTF(player->edict(), print_center, "You switched to Engineer.");
+		}
+		else if (!stricmp("7", p) || !stricmp("medic", p))
+		{
+			player->m_iNewClass = CLASS_MEDIC;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Medic.");
+		}
+		else if (!stricmp("8", p) || !stricmp("sniper", p))
+		{
+			player->m_iNewClass = CLASS_SNIPER;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Sniper.");
+		}
+		else if (!stricmp("9", p) || !stricmp("spy", p))
+		{
+			player->m_iNewClass = CLASS_SPY;
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to Spy.");
+		}
+		else if (!stricmp("10", p) || !stricmp("random", p))
+		{
+			player->m_iNewClass = RANDOM_LONG(1, 9);
+			CLIENT_PRINTF(player->edict(), print_center, "You switched to a random class.");
+		}
+		else if (!stricmp("0", p) || !stricmp("main", p))
+		{
+			// This is a planned feature to allow people to automatically play their most played class.
+			// not implemented, but has an easter egg attached :D
+			CLIENT_PRINTF(player->edict(), print_center, "You read the source code, didn't you?\nInvalid class! Pick again!");
+			return;
 		}
 		else
 		{

@@ -36,6 +36,9 @@ void EV_Shovel(event_args_t* args);
 void EV_Wrench(event_args_t* args);
 void EV_FireScattergun(event_args_t* args);
 void EV_Bat(event_args_t* args);
+void EV_Revolver(event_args_t* args);
+void EV_Knife(event_args_t* args);
+void EV_GrenadeLauncher(event_args_t* args);
 
 void EV_TrainPitchAdjust(event_args_t* args);
 void EV_VehiclePitchAdjust(event_args_t* args);

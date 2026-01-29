@@ -30,6 +30,9 @@ void CShovel::Spawn()
 	Precache();
 	m_iId = WEAPON_SHOVEL;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
+	pev->sequence = 0;
+	pev->body = 0;
+
 	m_iClip = -1;
 
 	FallInit(); // get ready to fall down.

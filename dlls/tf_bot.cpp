@@ -98,7 +98,7 @@ void Bot_Think(int client)
 
 		int chosenBotClass = RANDOM_LONG(1, 9); //((RANDOM_LONG(0, 1) ? CLASS_SOLDIER : CLASS_SCOUT));
 
-		// specific for bots due to them not being networked n shit
+		// this forces a spawn on the bot's class, and is specific for bots due to them not being networked n shit
 		// probably a better way to do this but as of right now its fine
 		pBot->m_iClass = pBot->m_iNewClass = chosenBotClass;
 		pBot->Spawn();
@@ -136,17 +136,6 @@ void Bot_RunAll(void)
 void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
-	// trace_t trace;
-	
-	// m_bWasDead = false;
-
-	// In item testing mode, we run custom logic
-	// from tf2sdk, not implemented YET
-	//if (TFGameRules()->IsInItemTestingMode())
-	//{
-	//	Bot_ItemTestingThink(vecAngles, vecMove);
-	//	return;
-	//}
 
 	enemy[client] = FindNearestEnemy(client, 4096); // this can be extended but 4096 is fine for now
 	
@@ -207,41 +196,79 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 
 void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 {
-	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
-	// pBot->pev->button |= IN_FORWARD;
+	vecMove->z = 0.0;
 
-	if (pBot->m_fDeadTime + 10 > gpGlobals->time)
+	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (pBot->m_flSpawnTime + 5 > gpGlobals->time)
 	{
-		if (client % 2 == 1)
+		vecMove->x = 500.0;
+
+		if (client % 2 == 0)
 			vecMove->y = 500.0;
 		else
-			vecMove->x = 500.0;
+			vecMove->y = -500.0;
 	}
-	vecMove->z = 0.0;
 
 	// movement based
 	// gotta learn how to make the bot walk normally first
 	// after i figure out the basics then i will start getting serious with it
 	// im used to writing bots in normal TF2, so I will port that logic over
-	// 
-	if( (enemy[client] != NULL && g_engfuncs.pfnRandomLong(0, 100) == 1)
-		|| pBot->pev->waterlevel >= 3)
+	
+	if (enemy[client] != NULL)
 	{
-		// if in deep water or randomly while fighting, bot will try to 
-		pBot->pev->button |= IN_JUMP;
-	}
+		int random = g_engfuncs.pfnRandomLong(0, 100);
+		if (random == 1 || pBot->pev->waterlevel >= 3)
+		{
+			// if in deep water or randomly while fighting, bot will try to
+			pBot->pev->button |= IN_JUMP;
+		}
+		else if (random == 2)
+		{
+			pBot->pev->button |= IN_DUCK;
+		}
 
-	if (enemy[client] != NULL && g_engfuncs.pfnRandomLong(0, 100) == 2)
-	{
-		pBot->pev->button |= IN_DUCK;
+		if (pBot->m_pActiveItem)
+		{
+			if (pBot->m_pActiveItem->m_iId == WEAPON_CROWBAR ||
+				pBot->m_pActiveItem->m_iId == WEAPON_BAT ||
+				pBot->m_pActiveItem->m_iId == WEAPON_SHOVEL ||
+				pBot->m_pActiveItem->m_iId == WEAPON_FIREAXE ||
+				pBot->m_pActiveItem->m_iId == WEAPON_BOTTLE ||
+				pBot->m_pActiveItem->m_iId == WEAPON_FISTS ||
+				pBot->m_pActiveItem->m_iId == WEAPON_BONESAW ||
+				pBot->m_pActiveItem->m_iId == WEAPON_KUKRI ||
+				pBot->m_pActiveItem->m_iId == WEAPON_WRENCH ||
+				pBot->m_pActiveItem->m_iId == WEAPON_KNIFE)
+			{
+				vecMove->x = 500.0; // if holding melee, go forward into enemy with some random movement
+
+				if (pBot->pev->velocity.Length2D() > 300.0)
+				{
+					pBot->pev->button |= IN_JUMP;
+				}
+			}
+			else
+			{
+				if (pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN || 
+					pBot->m_pActiveItem->m_iId == WEAPON_SCATTERGUN ||
+					pBot->m_pActiveItem->m_iId == WEAPON_PYTHON)
+				{
+					if (random % 3 == 0)
+						vecMove->y = 500.0;
+					else if (random % 3 == 1)
+						vecMove->y = -500.0;
+					else
+						vecMove->x = 500.0;
+				}
+			}
+		}
 	}
-	// TODO: port the bot_jump & bot_duck commands from tf2
 }
 
 void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
-	//
 }
 
 //-----------------------------------------------------------------------------
@@ -401,10 +428,10 @@ void AimAtTarget(int client, CBaseEntity* pTarget)
 	float flPitchDiff = UTIL_AngleMod(vecTargetAngles.x - vecCurrentAngles.x);
 
 	// Apply aim speed (lower = slower, more human-like)
-	// float flAimDelta = 5.0;
+	//float flAimDelta = 102.4;
 
-	// vecCurrentAngles.y += clamp(flYawDiff, -flAimDelta, flAimDelta);
-	// vecCurrentAngles.x += clamp(flPitchDiff, -flAimDelta, flAimDelta);
+	//vecCurrentAngles.y += clamp(flYawDiff, -flAimDelta, flAimDelta);
+	//vecCurrentAngles.x += clamp(flPitchDiff, -flAimDelta, flAimDelta);
 
 	vecCurrentAngles.y += flYawDiff;
 	vecCurrentAngles.x += flPitchDiff;
@@ -415,13 +442,14 @@ void AimAtTarget(int client, CBaseEntity* pTarget)
 	player->pev->angles.y = vecCurrentAngles.y;
 	player->pev->angles.z = 0;
 
-	// Update ideal yaw for movement
+	// Update ideal yaw and pitch for movement
 	player->pev->ideal_yaw = vecCurrentAngles.y;
+	player->pev->idealpitch = vecCurrentAngles.x;
 
 	BotFixIdealPitch(player->edict());
 	BotFixIdealYaw(player->edict());
 	// Set angle change for smooth turning
-	player->ChangeYaw(100);
+	player->ChangeYaw(1024);
 }
 
 float clamp(float init, float min, float max)

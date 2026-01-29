@@ -69,7 +69,9 @@ CSqueak g_Snark;
 CScattergun g_Scattergun;
 CBat g_Bat;
 CWrench g_Wrench;
-
+CRevolver g_Revolver;
+CKnife g_Knife;
+CGrenadelauncher g_GrenadeLauncher;
 
 /*
 ======================
@@ -188,7 +190,6 @@ bool CBasePlayerWeapon::GroupDeploy(char* szViewModel, char* szWeaponModel, int 
 	gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
 
 	SendWeaponAnim(iViewAnim, iViewBody);
-	// SendWeaponAnimEx(iViewAnim, iViewBody, iViewSkin, UseDecrement() != false);
 
 	g_irunninggausspred = false;
 	m_pPlayer->m_flNextAttack = 0.5;
@@ -489,6 +490,9 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_Shovel, &player);
 	HUD_PrepEntity(&g_Bat, &player);
 	HUD_PrepEntity(&g_Wrench, &player);
+	HUD_PrepEntity(&g_Revolver, &player);
+	HUD_PrepEntity(&g_Knife, &player);
+	HUD_PrepEntity(&g_GrenadeLauncher, &player);
 }
 
 /*
@@ -627,7 +631,19 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	case WEAPON_WRENCH:
 		pWeapon = &g_Wrench;
 		break;
+
+	case WEAPON_REVOLVER:
+		pWeapon = &g_Revolver;
+		break;
 	
+	case WEAPON_KNIFE:
+		pWeapon = &g_Knife;
+		break;
+
+	case WEAPON_GRENADELAUNCHER:
+		pWeapon = &g_GrenadeLauncher;
+		break;
+
 	}
 
 

@@ -34,8 +34,9 @@ void CScattergun::Spawn()
 	m_iId = WEAPON_SCATTERGUN;
 	m_bIsPrimary = true;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
-	pev->sequence = 1;
-	// pev->body = iBody(); // this is weird for viewmodels
+	pev->sequence = 3;
+	pev->body = 9;
+
 	m_iDefaultAmmo = SCATTERGUN_DEFAULT_GIVE;
 
 	FallInit(); // get ready to fall
@@ -85,9 +86,7 @@ bool CScattergun::GetItemInfo(ItemInfo* p)
 
 bool CScattergun::Deploy()
 {
-	//
-	//return GroupDeploy("models/rooster_fortress/viewmodels/v_scattergun.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, 0, 0, "shotgun", 3);
-	return DefaultDeploy("models/rooster_fortress/viewmodels/v_scattergun.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 0);
+	return DefaultDeploy("models/rooster_fortress/viewmodels/v_scattergun.mdl", "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 9);
 }
 
 void CScattergun::PrimaryAttack()
@@ -119,7 +118,7 @@ void CScattergun::PrimaryAttack()
 	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
 	Vector vecDir;
-	vecDir = m_pPlayer->FireBulletsPlayer(10, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 6, m_pPlayer->pev, m_pPlayer->random_seed);
+	vecDir = m_pPlayer->FireBulletsPlayer(10, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_TF2, 0, 6, m_pPlayer->pev, m_pPlayer->random_seed);
 
 	// CKFFireBullets(vecSrc, gpGlobals->v_forward, 0.0, 8192, BULLET_PLAYER_TF2, 6, iCrit, m_pPlayer->pev, m_pPlayer->random_seed, FALSE);
 
