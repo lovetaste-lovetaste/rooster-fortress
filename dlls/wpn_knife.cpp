@@ -140,17 +140,15 @@ void CKnife::PrimaryAttack()
 
 		ClearMultiDamage();
 
-		// todo: backstab damage
-
 		float damage = 40.0;
 
 		if (IsBackFace(m_pPlayer->pev->v_angle, pEntity->pev->v_angle))
 		{
-			damage = pEntity->pev->health * 3.0;
-			ALERT(at_console, "Backstab!!!");
+			damage = pEntity->pev->health * 2.0;
+			// ALERT(at_console, "Backstab!!!");
 		}
 
-		pEntity->TraceAttack(m_pPlayer->pev, damage, gpGlobals->v_forward, &tr, DMG_CLUB);
+		pEntity->TraceAttack(m_pPlayer->pev, (int)damage, gpGlobals->v_forward, &tr, DMG_CLUB);
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 		// play thwack, smack, or dong sound

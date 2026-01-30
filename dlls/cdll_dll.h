@@ -203,6 +203,16 @@ enum WeaponId
 #define COLOR_RED "1"
 #define COLOR_BLU "140"
 
+#define VEC_VIEW_SCOUT Vector(0, 0, 17)
+#define VEC_VIEW_HEAVY Vector(0, 0, 17)
+#define VEC_VIEW_SOLDIER Vector(0, 0, 17)
+#define VEC_VIEW_PYRO Vector(0, 0, 18)
+#define VEC_VIEW_SNIPER Vector(0, 0, 19)
+#define VEC_VIEW_MEDIC Vector(0, 0, 21)
+#define VEC_VIEW_ENGINEER Vector(0, 0, 17)
+#define VEC_VIEW_DEMOMAN Vector(0, 0, 19)
+#define VEC_VIEW_SPY Vector(0, 0, 19)
+
 constexpr Vector VEC_HULL_MIN(-16, -16, -36);
 constexpr Vector VEC_HULL_MAX(16, 16, 36);
 constexpr Vector VEC_HUMAN_HULL_MIN(-16, -16, 0);

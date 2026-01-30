@@ -2638,8 +2638,8 @@ void PM_Jump()
 		return;						  // in air, so no effect
 	}
 
-	// if ((pmove->oldbuttons & IN_JUMP) != 0)
-		// return; // don't pogo stick
+	//if ((pmove->oldbuttons & IN_JUMP) != 0)
+		//return; // don't pogo stick
 
 	// In the air now.
 	pmove->onground = -1;

@@ -326,8 +326,6 @@ void CRpg::Holster()
 	SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 }
 
-
-
 void CRpg::PrimaryAttack()
 {
 	if (m_iClip >= 1)

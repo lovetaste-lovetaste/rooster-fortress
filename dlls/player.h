@@ -61,6 +61,10 @@
 
 #define TEAM_NAME_LENGTH 16
 
+#define FL_LOCK_DUCK (1 << 17)
+#define FL_LOCK_JUMP (1 << 18)
+#define FL_MULTIJUMP (1 << 19)
+
 typedef enum
 {
 	PLAYER_IDLE,
@@ -272,6 +276,9 @@ public:
 
 	int m_iClass;			// tf2 class
 	int m_iNewClass;
+	int m_iMultiJumpCurrent;
+	int m_iMultiJumpMax;
+	bool m_bMultiJump;
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.
 	int m_iWeaponVolume;	// how loud the player's weapon is right now.

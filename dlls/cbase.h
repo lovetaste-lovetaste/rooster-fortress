@@ -216,6 +216,8 @@ public:
 	virtual bool IsPlayer() { return false; }
 	virtual bool IsNetClient() { return false; }
 	virtual const char* TeamID() { return ""; }
+	float GetKnockBack();
+	void KnockBack(Vector vecDir, float flForce);
 
 
 	//	virtual void	SetActivator( CBaseEntity *pActivator ) {}

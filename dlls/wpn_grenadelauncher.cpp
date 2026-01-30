@@ -223,8 +223,6 @@ void CTF2Grenade::IgniteThink()
 
 void CTF2Grenade::FollowThink()
 {
-	// UTIL_MakeAimVectors(pev->angles); // use for model eventually
-
 	if (pev->waterlevel != 0)
 	{
 		pev->velocity = pev->velocity * 0.5;

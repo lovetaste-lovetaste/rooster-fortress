@@ -1615,13 +1615,19 @@ void CBasePlayer::Jump()
 		return;
 	}
 
+	if (!(pev->button & IN_JUMP) || (pev->oldbuttons & IN_JUMP)) // if (!(m_afButtonPressed & IN_JUMP))
+		return;
+
+	// if (pev->button & IN_DUCK)
+		// return;
+
 	// jump velocity is sqrt( height * gravity * 2)
 
 	// If this isn't the first frame pressing the jump button, break out.
 	if (!FBitSet(m_afButtonPressed, IN_JUMP))
-		return; // don't pogo stick
+		return;
 
-	if ((pev->flags & FL_ONGROUND) == 0 || !pev->groundentity)
+	if ( (!m_iMultiJumpMax || !(m_iMultiJumpCurrent < m_iMultiJumpMax)) && (pev->flags & FL_ONGROUND) == 0 || !pev->groundentity)
 	{
 		return;
 	}
@@ -1631,7 +1637,20 @@ void CBasePlayer::Jump()
 
 	// ClearBits(pev->flags, FL_ONGROUND);		// don't stairwalk
 
-	SetAnimation(PLAYER_JUMP);
+	if ((pev->flags & FL_ONGROUND) && pev->groundentity)
+		SetAnimation(PLAYER_JUMP);
+	else
+	{
+		if (!m_bMultiJump)
+		{
+			m_bMultiJump = true;
+			pev->flags |= FL_MULTIJUMP;
+		}
+		m_iMultiJumpCurrent++;
+		ALERT(at_console, "DOUBLEJUMP CURRENT %i MAX %i\n", m_iMultiJumpCurrent, m_iMultiJumpMax);
+		SetAnimation(PLAYER_SUPERJUMP);
+		// EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/multijump.wav", VOL_NORM, ATTN_NORM);
+	}
 
 	if (m_fLongJump &&
 		(pev->button & IN_DUCK) != 0 &&
@@ -2016,11 +2035,18 @@ void CBasePlayer::PreThink()
 	else if ((m_iTrain & TRAIN_ACTIVE) != 0)
 		m_iTrain = TRAIN_NEW; // turn off train
 
-	if ((pev->button & IN_JUMP) != 0)
-	{
+	//if ((pev->button & IN_JUMP) != 0)
+	//{
 		// If on a ladder, jump off the ladder
 		// else Jump
 		Jump();
+	//}
+
+	if (m_bMultiJump && (pev->flags & FL_ONGROUND))
+	{
+		m_iMultiJumpCurrent = 0;
+		m_bMultiJump = false;
+		pev->flags &= ~FL_MULTIJUMP;
 	}
 
 
@@ -3045,6 +3071,48 @@ void CBasePlayer::Spawn()
 	m_iClass = m_iNewClass; // switches to the new wanted class
 	m_iNewClass = m_iClass; // resets it so the player respawns as the same class if they dont choose another one. DO NOT TOUCH.
 
+	m_iMultiJumpCurrent = 0;
+	m_iMultiJumpMax = 0;
+	m_bMultiJump = false;
+
+	switch (m_iClass)
+	{
+	default:
+	case CLASS_SCOUT:
+		pev->view_ofs = VEC_VIEW_SCOUT;
+		m_iMultiJumpMax = 1;
+		break;
+	case CLASS_HEAVY:
+		pev->view_ofs = VEC_VIEW_HEAVY;
+		break;
+	case CLASS_SOLDIER:
+		pev->view_ofs = VEC_VIEW_SOLDIER;
+		break;
+	case CLASS_PYRO:
+		pev->view_ofs = VEC_VIEW_PYRO;
+		break;
+	case CLASS_SNIPER:
+		pev->view_ofs = VEC_VIEW_SNIPER;
+		break;
+	case CLASS_MEDIC:
+		pev->view_ofs = VEC_VIEW_MEDIC;
+		// m_fUbercharge = 0;
+		break;
+	case CLASS_ENGINEER:
+		pev->view_ofs = VEC_VIEW_ENGINEER;
+		// m_iMetal = 200;
+		break;
+	case CLASS_DEMOMAN:
+		pev->view_ofs = VEC_VIEW_DEMOMAN;
+		break;
+	case CLASS_SPY:
+		pev->view_ofs = VEC_VIEW_SPY;
+		// m_flCloakEnergy = 100;
+		break;
+	}
+
+
+
 	pev->health = GetClassMaxHealth(m_iClass);
 	pev->armorvalue = 0;
 	pev->takedamage = DAMAGE_AIM;
@@ -3226,7 +3294,6 @@ void CBasePlayer::SpawnClassWeapons()
 		}
 		case CLASS_DEMOMAN:
 		{
-			// not done and there are practically no stand-ins for his weapons
 			GiveNamedItem("weapon_grenadelauncher");
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Demoman!\n");

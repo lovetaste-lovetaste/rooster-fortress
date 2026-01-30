@@ -36,6 +36,7 @@ extern Vector VecBModelOrigin(entvars_t* pevBModel);
 #define GERMAN_GIB_COUNT 4
 #define HUMAN_GIB_COUNT 6
 #define ALIEN_GIB_COUNT 4
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 
 // HACKHACK -- The gib velocity equations don't work
@@ -1326,6 +1327,38 @@ void CBaseEntity::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 	}
 }
 
+void CBaseEntity::KnockBack(Vector vecDir, float flForce)
+{
+	float flRealForce = flForce * GetKnockBack();
+
+	if (flRealForce == 0)
+		return;
+
+	pev->velocity = pev->velocity + vecDir.Normalize() * flRealForce;
+}
+
+float CBaseEntity::GetKnockBack(void)
+{
+	// CBasePlayer* pPlayer = GetClassPtr((CBasePlayer*)(this));
+
+	// if (!pPlayer)
+		// return 1.0;
+
+	/*	switch (pPlayer->m_iClass)
+	{
+		case CLASS_SCOUT: return 1.1;
+		case CLASS_HEAVY: return 0.5;
+		case CLASS_SOLDIER: return 0.8;
+		case CLASS_PYRO: return 0.9;
+		case CLASS_SNIPER: return 1.0;
+		case CLASS_MEDIC: return 0.9;
+		case CLASS_ENGINEER: return 1.0;
+		case CLASS_DEMOMAN: return 0.8;
+		case CLASS_SPY: return 1.0;
+	}*/
+	return 1.0;
+}
+
 
 /*
 //=========================================================
@@ -1554,7 +1587,7 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 
 	for (unsigned int iShot = 1; iShot <= cShots; iShot++)
 	{
-		//Use player's random seed.
+		// Use player's random seed.
 		// get circular gaussian spread
 		x = UTIL_SharedRandomFloat(shared_rand + iShot, -0.5, 0.5) + UTIL_SharedRandomFloat(shared_rand + (1 + iShot), -0.5, 0.5);
 		y = UTIL_SharedRandomFloat(shared_rand + (2 + iShot), -0.5, 0.5) + UTIL_SharedRandomFloat(shared_rand + (3 + iShot), -0.5, 0.5);
@@ -1572,24 +1605,66 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 		if (tr.flFraction != 1.0)
 		{
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
-
 			
 			if (0 != iDamage)
 			{
 				if (iBulletType == BULLET_PLAYER_TF2)
 				{
+					int iCrit = 0; // full crits are 2 and above, mini-crits are 1
 					float distanceFalloff = 1.0;
 					float damage = (float)iDamage;
 					float flDist = (pevAttacker->origin - pEntity->pev->origin).Length2D();
+					iCrit = 2;
+					if (iCrit >= 0 && flDist > 512.0)
+					{
+						flDist = 512.0;
+						// Both Critical hits and Mini-Crits check to see if the final distance is greater than 512 units
+						// if it is, then the weapon does not lose damage due to the distance modifier when the player is more than 512 units away
+						// if the attack were not a Crit or Mini-Crit, the damage would continue to decrease out to 1024 units
+					}
 					distanceFalloff = (((0.00000019402553638) * (flDist * flDist * flDist)) - ((0.000298023223877) * (flDist * flDist)) + ((0.00406901041667) * flDist) + 150.0) / 100.0;
 
+					if (distanceFalloff <= 0.5)
+						distanceFalloff = 0.5;
+					// prevents too low dmg if the players are more than 1024 units apart
+					// this seems like a non-issue, so i may make a server CVar to allow server hosts to re-enable this and allow falloff to get to 0.0
+					// obviously not TRULY 0.0 due to rounding errors, maybe at 0.01
+
+					if (distanceFalloff >= 1.5)
+						distanceFalloff = 1.5; 
+					// this actually should be impossible due to 1.5 being at literally 0 units apart
+					// but you can never be too safe! just in case!
+					// coding is stupid sometimes and not even math is safe!!!
+
+					if (iCrit >= 2)
+					{
+						distanceFalloff = 1.0; // full crits ignore falloff entirely
+						damage *= 3;
+
+						if (pEntity->Classify() == CLASS_PLAYER && pevAttacker && (pevAttacker->flags & FL_FAKECLIENT) == 0)
+						{
+							// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER");
+							// crit icon
+							MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, pEntity->pev->origin, pevAttacker); // i set it to be unreliable due to it being kinda weird
+							WRITE_BYTE(TE_SMOKE);
+							WRITE_COORD(pEntity->pev->origin.x);
+							WRITE_COORD(pEntity->pev->origin.y);
+							WRITE_COORD(pEntity->pev->origin.z + 20.0);
+							WRITE_SHORT(g_sModelIndexCriticalHit);
+							WRITE_BYTE(2);	// size
+							WRITE_BYTE(1);	// fps
+							MESSAGE_END();
+						}
+					}
+					else if (iCrit == 1)
+						damage *= 1.35;
+
+					damage *= distanceFalloff;
 					// ALERT(at_console, "FireBulletsPlayer distance should be %f \n", flDist);
 					// ALERT(at_console, "FireBulletsPlayer falloff should be %f \n", distanceFalloff);
-					
-					damage *= distanceFalloff;
-
 					// ALERT(at_console, "FireBulletsPlayer new damage is %f \n", damage);
-					// 
+
+
 					// todo: make server cvar defining the limit for how much damage is required for the damage to gib
 					// imagine hitting someone in close range with full crits and watching them EXPLODE!!!
 					// cool
@@ -1598,6 +1673,12 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					// however, server operators should be able to toggle it still ( when has more custom server options hurt anybody!?!? )
 					// for like offline fun or LAN scenarios
 					pEntity->TraceAttack(pevAttacker, damage, vecDir, &tr, DMG_BULLET | ((iDamage > 300) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
+
+					float knockback = min(1000, damage * 1.0 * 9.0);
+					// this is the damage knockback equation from tf2 (thanks wget)
+					// as of right now it feels accurate, minus some changes ( no heavy resistance yet, no tiny boost from crouching due to this not checking the volume, whatever else i forgot )
+					// todo: add the other stuff related to this formula ( see above )
+					pEntity->KnockBack(vecDir, knockback);
 				}
 				else
 					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
