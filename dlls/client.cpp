@@ -1060,18 +1060,6 @@ void ClientPrecache()
 	// playermodels
 	PRECACHE_MODEL("models/player.mdl"); // just in case
 
-	// old playermodels from ckf3
-	// since ckf3 is based off of a cs 1.6 mod, then these models have 9way blending, and act weeeeeiiirrrddd
-	//PRECACHE_MODEL("models/player/ckf_scout/ckf_scout.mdl");
-	//PRECACHE_MODEL("models/player/ckf_soldier/ckf_soldier.mdl");
-	//PRECACHE_MODEL("models/player/ckf_pyro/ckf_pyro.mdl");
-	//PRECACHE_MODEL("models/player/ckf_demoman/ckf_demoman.mdl");
-	//PRECACHE_MODEL("models/player/ckf_heavy/ckf_heavy.mdl");
-	//PRECACHE_MODEL("models/player/ckf_engineer/ckf_engineer.mdl");
-	//PRECACHE_MODEL("models/player/ckf_medic/ckf_medic.mdl");
-	//PRECACHE_MODEL("models/player/ckf_sniper/ckf_sniper.mdl");
-	//PRECACHE_MODEL("models/player/ckf_spy/ckf_spy.mdl");
-
 	// new playermodels
 	// these are technically from TFC but with tf2 models
 	// EVENTUALLY I PLAN ON PORTING ANIMATIONS DIRECTLY FROM TF2, AS WELL AS WHATEVER AIMMATRIX LAYER SHIT SOURCE ENGINE USES!!
@@ -1095,6 +1083,7 @@ void ClientPrecache()
 	PRECACHE_SOUND("common/wpn_select.wav");
 	PRECACHE_SOUND("common/wpn_denyselect.wav");
 
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound.wav");
 
 	// geiger sounds
 

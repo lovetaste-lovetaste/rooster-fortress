@@ -25,6 +25,8 @@
 #include "pm_materials.h"
 #include "pm_movevars.h"
 #include "pm_debug.h"
+#include "extdll.h"
+#include "util.h"
 #include <stdio.h>	// NULL
 #include <string.h> // strcpy
 #include <stdlib.h> // atoi
@@ -2628,9 +2630,11 @@ void PM_Jump()
 		return;
 	}
 
-	// No more effect
-	if (pmove->onground == -1)
+	if (pmove->onground == -1 && pmove->iuser4 == 1)
 	{
+		// if pmove->iuser4 is NOOOOOT ONE!!!!!1, then the player can still jump even in-air
+
+		// ALERT(at_console, "PM_Jump\n");
 		// Flag that we jumped.
 		// HACK HACK HACK
 		// Remove this when the game .dll no longer does physics code!!!!
@@ -2638,8 +2642,11 @@ void PM_Jump()
 		return;						  // in air, so no effect
 	}
 
-	//if ((pmove->oldbuttons & IN_JUMP) != 0)
-		//return; // don't pogo stick
+	if (pmove->iuser4 == 1) // max jumps used!!! fallback just in case
+		return;
+
+	if ((pmove->oldbuttons & IN_JUMP) != 0)
+		return; // don't pogo stick
 
 	// In the air now.
 	pmove->onground = -1;
@@ -3048,6 +3055,8 @@ void PM_PlayerMove(qboolean server)
 	// Adjust speeds etc.
 	PM_CheckParamters();
 
+	//pmove->bInDuck;
+	
 	// Assume we don't touch anything
 	pmove->numtouch = 0;
 

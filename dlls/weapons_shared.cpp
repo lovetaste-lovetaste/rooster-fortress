@@ -209,6 +209,13 @@ void CBasePlayer::SelectLastItem()
 		return;
 	}
 
+	if (!m_pActiveItem)
+	{
+		ALERT(at_console, "BUGGED WEAPON!!!");
+		return;
+	}
+		
+
 	if (m_pActiveItem && !m_pActiveItem->CanHolster())
 	{
 		return;

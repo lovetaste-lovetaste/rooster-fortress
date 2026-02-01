@@ -276,8 +276,8 @@ public:
 
 	int m_iClass;			// tf2 class
 	int m_iNewClass;
-	int m_iMultiJumpCurrent;
-	int m_iMultiJumpMax;
+	int m_iExtraJumpCurrent;
+	int m_iExtraJumpMax;
 	bool m_bMultiJump;
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.

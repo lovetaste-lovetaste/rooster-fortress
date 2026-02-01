@@ -1636,11 +1636,27 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					// but you can never be too safe! just in case!
 					// coding is stupid sometimes and not even math is safe!!!
 
+					int bitsDamageType = DMG_BULLET;
+
+					if (damage >= 150)
+						bitsDamageType |= DMG_ALWAYSGIB;
+					else
+						bitsDamageType |= DMG_NEVERGIB;
+					// this is before the crit and falloff stuff ON PURPOSE
+
 					if (iCrit >= 2)
 					{
 						distanceFalloff = 1.0; // full crits ignore falloff entirely
 						damage *= 3;
 
+						bitsDamageType |= DMG_CRIT;
+
+					//	if (bitsDamageType & DMG_CRIT)
+						//	ALERT(at_console, "FBP bitsDamageType set to have crits\n");
+					//	else
+						//	ALERT(at_console, "FireBulletsPlayer has crits but bitsDamageType doesnt have crits\n");
+
+						/*
 						if (pEntity->Classify() == CLASS_PLAYER && pevAttacker && (pevAttacker->flags & FL_FAKECLIENT) == 0)
 						{
 							// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER");
@@ -1655,6 +1671,7 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 							WRITE_BYTE(1);	// fps
 							MESSAGE_END();
 						}
+						*/
 					}
 					else if (iCrit == 1)
 						damage *= 1.35;
@@ -1672,13 +1689,17 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					// this shouldnt be possible normally though due to it being impossible in live tf2
 					// however, server operators should be able to toggle it still ( when has more custom server options hurt anybody!?!? )
 					// for like offline fun or LAN scenarios
-					pEntity->TraceAttack(pevAttacker, damage, vecDir, &tr, DMG_BULLET | ((iDamage > 300) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
 
-					float knockback = min(1000, damage * 1.0 * 9.0);
+					// ALERT(at_console, "Projected damage: %f\n", damage);
+
+					pEntity->TraceAttack(pevAttacker, damage, vecDir, &tr, bitsDamageType);
+
+					// float knockback = min(1000, damage * 1.0 * 9.0);
 					// this is the damage knockback equation from tf2 (thanks wget)
 					// as of right now it feels accurate, minus some changes ( no heavy resistance yet, no tiny boost from crouching due to this not checking the volume, whatever else i forgot )
 					// todo: add the other stuff related to this formula ( see above )
-					pEntity->KnockBack(vecDir, knockback);
+					// pEntity->KnockBack(vecDir, knockback);
+					// WILL BE CHANGED SO THATS WHY THIS IS COMMENTED OUT DUE TO HL1'S DEFAULT KNOCKBACK SHIT
 				}
 				else
 					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB));

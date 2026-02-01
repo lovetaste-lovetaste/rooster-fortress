@@ -41,10 +41,6 @@ void CKnife::Precache()
 {
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_knife_spy.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
-	// PRECACHE_MODEL("models/rooster_fortress/w_shovel.mdl");
-	
-	// PRECACHE_MODEL("models/p_crowbar.mdl");
-
 	PRECACHE_SOUND("weapons/cbar_hit1.wav");
 	PRECACHE_SOUND("weapons/cbar_hit2.wav");
 	PRECACHE_SOUND("weapons/cbar_hitbod1.wav");
@@ -142,13 +138,16 @@ void CKnife::PrimaryAttack()
 
 		float damage = 40.0;
 
+		int damagebits = DMG_CLUB; //
+
 		if (IsBackFace(m_pPlayer->pev->v_angle, pEntity->pev->v_angle))
 		{
-			damage = pEntity->pev->health * 2.0;
+			damage = pEntity->pev->health * 6.0; // in live tf2 backstabs do 2x + the crit multiplier. this skips all that and just does 6x
+			damagebits |= DMG_CRIT;
 			// ALERT(at_console, "Backstab!!!");
 		}
 
-		pEntity->TraceAttack(m_pPlayer->pev, (int)damage, gpGlobals->v_forward, &tr, DMG_CLUB);
+		pEntity->TraceAttack(m_pPlayer->pev, (int)damage, gpGlobals->v_forward, &tr, damagebits);
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 		// play thwack, smack, or dong sound
@@ -157,7 +156,6 @@ void CKnife::PrimaryAttack()
 
 		if (pEntity)
 		{
-			// CLASS_PLAYER
 			if (pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
 			{
 				// play thwack or smack sound
@@ -231,7 +229,7 @@ bool CKnife::IsBackFace(Vector& anglesAttacker, Vector& anglesVictim)
 	if (flAngles < -180.0)
 		flAngles += 360.0;
 	if (flAngles <= 90.0 && flAngles >= -90.0)
-		return true;
-	return false;
+		return false;
+	return true;
 }
 // REVOLVER_MAX_CARRY

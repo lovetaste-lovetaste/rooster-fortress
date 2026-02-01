@@ -6,13 +6,14 @@ feel free to help :)
 
 ## Timeline / Plans:
   ### Make the classes functional<br/>
-    - Soldier
+    - Soldier ( BASICALLY DONE )
       - the basic class stuff + both of his weapons are already in hl ( rpg, shotgun, melee with some changes )
-    - Scout
+    - Scout ( BASICALLY DONE )
       - all hitscan, weapons are already in hl ( pistol ) or made when Soldier was worked on ( shotgun, melee )
-    - Engineer ( no buildings )
+      - double jumping!!!
+    - Engineer ( no buildings ) ( BASICALLY DONE )
       - all hitscan, literally just copy stuff from Scout & Soldier, mechanics are reserved for later
-    - Spy ( no cloak / disguise )
+    - Spy ( no cloak / disguise ) ( BASICALLY DONE )
       - all hitscan, knife mechanic is not hard to do, mechanics reserved for l8r
       - client based icons ( crit icon ) due to backstabs forcing crits
     - Heavy
@@ -34,11 +35,13 @@ feel free to help :)
     - Engineer buildings
       - seperate entities that have a bunch of properties, their own damage stuff, and needs to be networked to all clients constantly :))))
       - ugh
-      - saved for last bcuz this is going to be Retarded As Fuck
+      - this probably wont be as annoying as i am making it seem
+      - however, it is still saved for last
+      - sorry not sorry!!!
   ### Class selection stuff<br/>
-    - the reason why this is after the actual class stuff is bcuz i plan on ensuring bots stay compatible
-  ### Team selection stiff<br/>
-    - theres already a type of teamplay in hl but it works differently, so this is to make sure it works
+    - Commands are done, but there is no menu for it!! only commands right now
+  ### Team selection stuff<br/>
+    - Commands are done, but there is no menu for it!! only commands right now
   ### Gamemodes<br/>
     - Control Points
       - this is for compatibility with existing Chicken Fortress 3 maps
@@ -52,4 +55,5 @@ feel free to help :)
     - Zombie Infection
       - this is just to bait counter strike players into playing this LOLOLOL
    ### 9-way animation blending <br/>
-    - This is primarily so it is easier to port the TF2 models directly over to this. This may not be needed.
+    - This is primarily so it is easier to port the TF2 models directly over to this. 
+    - This may not be needed.

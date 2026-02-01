@@ -49,6 +49,8 @@ extern edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer);
 
 extern bool IsBustingGame();
 
+extern int gmsgHitsound;
+
 #define TRAIN_ACTIVE 0x80
 #define TRAIN_NEW 0xc0
 #define TRAIN_OFF 0x00
@@ -273,7 +275,7 @@ void CBasePlayer::DeathSound()
 	}
 
 	// play one of the suit death alarms
-	EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
+	// EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
 }
 
 // override takehealth
@@ -390,8 +392,26 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = flDamage;
 
+	if ((bitsDamageType & DMG_CRIT) && pevAttacker)
+	{
+		// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER\n");
+		// crit icon
+
+		MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, this->pev->origin, pevAttacker); // i set it to be unreliable due to it being kinda weird
+		WRITE_BYTE(TE_SMOKE);
+		WRITE_COORD(this->pev->origin.x);
+		WRITE_COORD(this->pev->origin.y);
+		WRITE_COORD(this->pev->origin.z + 20.0);
+		WRITE_SHORT(g_sModelIndexCriticalHit);
+		WRITE_BYTE(3); // size
+		WRITE_BYTE(1); // fps
+		MESSAGE_END();
+	}
+	// else
+		// ALERT(at_console, "no crit icon\n");
+
 	// Armor.
-	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN)) == 0) // armor doesn't protect against fall or drown damage!
+	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN | DMG_CRIT)) == 0) // armor doesn't protect against fall, drown, or crit damage!
 	{
 		float flNew = flDamage * flRatio;
 
@@ -434,6 +454,13 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	WRITE_LONG(5);							  // eventflags (priority and flags)
 	MESSAGE_END();
 
+	// If the attacker is a player, then it sends the hitsound message
+	// This is an incredibly hacky way of doing it, so this might be changed in the future
+	if (pAttacker->Classify() == CLASS_PLAYER && pAttacker && !(pAttacker->pev->flags & FL_FAKECLIENT))
+	{
+		MESSAGE_BEGIN(MSG_ONE, gmsgHitsound, NULL, pAttacker->pev);
+		MESSAGE_END();
+	}
 
 	// how bad is it, doc?
 
@@ -1338,7 +1365,7 @@ void CBasePlayer::PlayerDeathThink()
 	pev->button = 0;
 	m_flRespawnTimer = 0.0f;
 
-	ALERT(at_console, "Respawn\n");
+	// ALERT(at_console, "Respawn\n");
 
 	respawn(pev, (m_afPhysicsFlags & PFLAG_OBSERVER) == 0); // don't copy a corpse if we're in deathcam.
 	pev->nextthink = -1;
@@ -1458,6 +1485,7 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	m_fInitHUD = true;
 
 	pev->team = 0;
+	m_iTeam = TEAM_SPECTATOR; // duh!
 	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
 	WRITE_BYTE(ENTINDEX(edict()));
 	WRITE_STRING("");
@@ -1472,8 +1500,6 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	// Find a player to watch
 	m_flNextObserverInput = 0;
 	Observer_SetMode(m_iObserverLastMode);
-
-	m_iTeam = TEAM_SPECTATOR; // duh!
 }
 
 //
@@ -1620,6 +1646,8 @@ void CBasePlayer::Jump()
 
 	// if (pev->button & IN_DUCK)
 		// return;
+	// this breaks the prediction and allows for an infinite jump bug
+	// realistically being able to jump while duck only really affects stuff like rocket jumping/surfing
 
 	// jump velocity is sqrt( height * gravity * 2)
 
@@ -1627,10 +1655,14 @@ void CBasePlayer::Jump()
 	if (!FBitSet(m_afButtonPressed, IN_JUMP))
 		return;
 
-	if ( (!m_iMultiJumpMax || !(m_iMultiJumpCurrent < m_iMultiJumpMax)) && (pev->flags & FL_ONGROUND) == 0 || !pev->groundentity)
+	if ((!m_iExtraJumpMax || !(m_iExtraJumpCurrent < m_iExtraJumpMax)) && (pev->flags & FL_ONGROUND) == 0 || !pev->groundentity)
 	{
+		// ALERT(at_console, "Cant jump anymore, set iuser4 to 1");
+		pev->iuser4 = 1; // can no longer multi jump, sent to pm_shared stuff
 		return;
 	}
+	else
+		pev->iuser4 = 0; // can still multijump
 
 	// many features in this function use v_forward, so makevectors now.
 	UTIL_MakeVectors(pev->angles);
@@ -1646,8 +1678,8 @@ void CBasePlayer::Jump()
 			m_bMultiJump = true;
 			pev->flags |= FL_MULTIJUMP;
 		}
-		m_iMultiJumpCurrent++;
-		ALERT(at_console, "DOUBLEJUMP CURRENT %i MAX %i\n", m_iMultiJumpCurrent, m_iMultiJumpMax);
+		m_iExtraJumpCurrent++;
+		// ALERT(at_console, "DOUBLEJUMP CURRENT %i MAX %i\n", m_iExtraJumpCurrent, m_iExtraJumpMax);
 		SetAnimation(PLAYER_SUPERJUMP);
 		// EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/multijump.wav", VOL_NORM, ATTN_NORM);
 	}
@@ -1863,6 +1895,7 @@ void CBasePlayer::UpdateStatusBar()
 
 #define CLIMB_SHAKE_FREQUENCY 22 // how many frames in between screen shakes when climbing
 #define MAX_CLIMB_SPEED 200		 // fastest vertical climbing speed possible
+// TF2 DOES NOT ALLOW CLIMBING LADDERS, SO THIS WOULD BE SET TO 0. HOWEVER, CONSIDERING THAT A LOOOOT OF GOLDSRC MAPS HAVE IMPORTANT LADDERS, THEN THIS IS KEPT 200.
 #define CLIMB_SPEED_DEC 15		 // climbing deceleration rate
 #define CLIMB_PUNCH_X -7		 // how far to 'punch' client X axis when climbing
 #define CLIMB_PUNCH_Z 7			 // how far to 'punch' client Z axis when climbing
@@ -1877,6 +1910,8 @@ void CBasePlayer::PreThink()
 	m_afButtonReleased = buttonsChanged & (~pev->button); // The ones not down are "released"
 
 	ResetMaxSpeed();
+
+	// pev->iuser4;
 
 	g_pGameRules->PlayerThink(this);
 
@@ -2035,20 +2070,15 @@ void CBasePlayer::PreThink()
 	else if ((m_iTrain & TRAIN_ACTIVE) != 0)
 		m_iTrain = TRAIN_NEW; // turn off train
 
-	//if ((pev->button & IN_JUMP) != 0)
-	//{
-		// If on a ladder, jump off the ladder
-		// else Jump
-		Jump();
-	//}
+	Jump();
+	// jumping predictions
 
 	if (m_bMultiJump && (pev->flags & FL_ONGROUND))
 	{
-		m_iMultiJumpCurrent = 0;
+		m_iExtraJumpCurrent = 0;
 		m_bMultiJump = false;
 		pev->flags &= ~FL_MULTIJUMP;
 	}
-
 
 	// If trying to duck, already ducked, or in the process of ducking
 	if ((pev->button & IN_DUCK) != 0 || FBitSet(pev->flags, FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING) != 0)
@@ -2673,6 +2703,10 @@ void CBasePlayer::PostThink()
 	// do weapon stuff
 	ItemPostFrame();
 
+	// playermodel check
+	// SetPlayerModel();
+	// this is not here due to it fucking with collision n shi
+
 	// check to see if player landed hard enough to make a sound
 	// falling farther than half of the maximum safe distance, but not as far a max safe distance will
 	// play a bootscrape sound, and no damage will be inflicted. Fallling a distance shorter than half
@@ -3004,6 +3038,7 @@ void CBasePlayer::ResetMaxSpeed()
 		speed = 1200.0;
 
 	g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
+	pev->maxspeed = speed; // just in case
 }
 
 void CBasePlayer::SetPlayerModel()
@@ -3071,47 +3106,47 @@ void CBasePlayer::Spawn()
 	m_iClass = m_iNewClass; // switches to the new wanted class
 	m_iNewClass = m_iClass; // resets it so the player respawns as the same class if they dont choose another one. DO NOT TOUCH.
 
-	m_iMultiJumpCurrent = 0;
-	m_iMultiJumpMax = 0;
+	SetPlayerModel();
+
+	m_iExtraJumpCurrent = 0;
+	m_iExtraJumpMax = 0;
 	m_bMultiJump = false;
 
 	switch (m_iClass)
 	{
-	default:
-	case CLASS_SCOUT:
-		pev->view_ofs = VEC_VIEW_SCOUT;
-		m_iMultiJumpMax = 1;
-		break;
-	case CLASS_HEAVY:
-		pev->view_ofs = VEC_VIEW_HEAVY;
-		break;
-	case CLASS_SOLDIER:
-		pev->view_ofs = VEC_VIEW_SOLDIER;
-		break;
-	case CLASS_PYRO:
-		pev->view_ofs = VEC_VIEW_PYRO;
-		break;
-	case CLASS_SNIPER:
-		pev->view_ofs = VEC_VIEW_SNIPER;
-		break;
-	case CLASS_MEDIC:
-		pev->view_ofs = VEC_VIEW_MEDIC;
-		// m_fUbercharge = 0;
-		break;
-	case CLASS_ENGINEER:
-		pev->view_ofs = VEC_VIEW_ENGINEER;
-		// m_iMetal = 200;
-		break;
-	case CLASS_DEMOMAN:
-		pev->view_ofs = VEC_VIEW_DEMOMAN;
-		break;
-	case CLASS_SPY:
-		pev->view_ofs = VEC_VIEW_SPY;
-		// m_flCloakEnergy = 100;
-		break;
+		default:
+		case CLASS_SCOUT:
+			pev->view_ofs = VEC_VIEW_SCOUT;
+			m_iExtraJumpMax = 1;
+			break;
+		case CLASS_HEAVY:
+			pev->view_ofs = VEC_VIEW_HEAVY;
+			break;
+		case CLASS_SOLDIER:
+			pev->view_ofs = VEC_VIEW_SOLDIER;
+			break;
+		case CLASS_PYRO:
+			pev->view_ofs = VEC_VIEW_PYRO;
+			break;
+		case CLASS_SNIPER:
+			pev->view_ofs = VEC_VIEW_SNIPER;
+			break;
+		case CLASS_MEDIC:
+			pev->view_ofs = VEC_VIEW_MEDIC;
+			// m_fUbercharge = 0;
+			break;
+		case CLASS_ENGINEER:
+			pev->view_ofs = VEC_VIEW_ENGINEER;
+			// m_iMetal = 200;
+			break;
+		case CLASS_DEMOMAN:
+			pev->view_ofs = VEC_VIEW_DEMOMAN;
+			break;
+		case CLASS_SPY:
+			pev->view_ofs = VEC_VIEW_SPY;
+			// m_flCloakEnergy = 100;
+			break;
 	}
-
-
 
 	pev->health = GetClassMaxHealth(m_iClass);
 	pev->armorvalue = 0;
@@ -3555,7 +3590,7 @@ const char* CBasePlayer::TeamID()
 	if (GetTeamNumber() == TEAM_SPECTATOR && IsAlive() && !IsPlayer())
 	{
 		// this shouldnt happen
-		// if it does check code brah
+		// if it does then something broke
 		ALERT(at_console, "Someone is somehow on the spectator team while alive!\n");
 		return "spectator";
 	}

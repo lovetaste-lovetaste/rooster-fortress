@@ -96,7 +96,19 @@ void Bot_Think(int client)
 	{
 		// on team but havent chosen a class, usually dead or just joining
 
-		int chosenBotClass = RANDOM_LONG(1, 9); //((RANDOM_LONG(0, 1) ? CLASS_SOLDIER : CLASS_SCOUT));
+		int chosenBotClass = CLASS_SCOUT;
+
+		switch (RANDOM_LONG(1, 9))
+		{
+			case CLASS_SOLDIER:
+				chosenBotClass = CLASS_SOLDIER;
+			case CLASS_ENGINEER:
+				chosenBotClass = CLASS_ENGINEER;
+			case CLASS_SPY:
+				chosenBotClass = CLASS_SPY;
+			case CLASS_DEMOMAN:
+				chosenBotClass = CLASS_DEMOMAN;
+		}
 
 		// this forces a spawn on the bot's class, and is specific for bots due to them not being networked n shit
 		// probably a better way to do this but as of right now its fine
@@ -139,7 +151,7 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 
 	enemy[client] = FindNearestEnemy(client, 4096); // this can be extended but 4096 is fine for now
 	
-	if (!IsTargetVisible(client, enemy[client])) // this works FINE. DO NOT TOUCH
+	// if (!IsTargetVisible(client, enemy[client])) // this works FINE. DO NOT TOUCH
 		enemy[client] = NULL;
 
 	if (enemy[client] != NULL)

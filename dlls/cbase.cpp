@@ -23,6 +23,7 @@
 #include "game.h"
 #include "pm_shared.h"
 #include "player.h"
+#include "weapons.h"
 
 void EntvarsKeyvalue(entvars_t* pev, KeyValueData* pkvd);
 

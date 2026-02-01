@@ -84,6 +84,12 @@ void CHud::MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 	pBeam = pBeam2 = NULL;
 }
 
+void CHud::MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf)
+{
+	gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
+	return;
+}
+	
 
 bool CHud::MsgFunc_GameMode(const char* pszName, int iSize, void* pbuf)
 {

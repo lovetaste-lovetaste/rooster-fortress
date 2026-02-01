@@ -107,6 +107,12 @@ int __MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 	return 1;
 }
 
+int __MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf)
+{
+	gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
+	return 1;
+}
+
 int __MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf)
 {
 	gHUD.MsgFunc_ViewMode(pszName, iSize, pbuf);
@@ -291,6 +297,8 @@ void CHud::Init()
 	HOOK_MESSAGE(SetFOV);
 	HOOK_MESSAGE(Concuss);
 	HOOK_MESSAGE(Weapons);
+
+	HOOK_MESSAGE(Hitsound);
 
 	// TFFree CommandMenu
 	HOOK_COMMAND("+commandmenu", OpenCommandMenu);
