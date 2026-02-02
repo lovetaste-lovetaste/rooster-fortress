@@ -589,7 +589,7 @@ public:
 	bool MsgFunc_ResetHUD(const char* pszName, int iSize, void* pbuf);
 	void MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf);
 	void MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf);
-	void MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf);
+	// void MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_SetFOV(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_Concuss(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_Weapons(const char* pszName, int iSize, void* pbuf);

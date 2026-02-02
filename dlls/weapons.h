@@ -182,7 +182,7 @@ typedef enum
 	BULLET_PLAYER_MP5,		// mp5
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_TF2, // tf2 distance falloff
+	BULLET_PLAYER_TF2, //
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
 
 	BULLET_MONSTER_9MM,
@@ -424,6 +424,7 @@ inline DLL_GLOBAL short g_sModelIndexBloodDrop;	 // holds the sprite index for b
 inline DLL_GLOBAL short g_sModelIndexBloodSpray; // holds the sprite index for blood spray (bigger)
 
 inline DLL_GLOBAL short g_sModelIndexCriticalHit; // holds the index for the critical hit icon
+inline DLL_GLOBAL short g_sModelIndexMiniCritHit; // holds the index for the mini critical hit icon
 
 extern void ClearMultiDamage();
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker);
@@ -1269,12 +1270,11 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	int iItemSlot() override { return 1; }
-	void EXPORT SwingAgain();
 	void EXPORT Smack();
+	void EXPORT Swing();
 	bool GetItemInfo(ItemInfo* p) override;
 
 	void PrimaryAttack() override;
-	bool Swing(bool fFirst);
 	bool Deploy() override;
 	void Holster() override;
 	int m_iSwing;

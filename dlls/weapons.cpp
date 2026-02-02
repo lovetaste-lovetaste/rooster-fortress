@@ -363,6 +363,7 @@ void W_Precache()
 	g_sModelIndexLaserDot = PRECACHE_MODEL("sprites/laserdot.spr");
 
 	g_sModelIndexCriticalHit = PRECACHE_MODEL("sprites/rooster_fortress/crit.spr");
+	g_sModelIndexMiniCritHit = PRECACHE_MODEL("sprites/rooster_fortress/minicrit.spr");
 
 	// used by explosions
 	PRECACHE_MODEL("models/grenade.mdl");

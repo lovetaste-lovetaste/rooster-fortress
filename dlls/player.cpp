@@ -273,9 +273,6 @@ void CBasePlayer::DeathSound()
 		EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM);
 		break;
 	}
-
-	// play one of the suit death alarms
-	// EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
 }
 
 // override takehealth
@@ -390,25 +387,84 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	}
 
 	// keep track of amount of damage last sustained
+	//
 	m_lastDamageAmount = flDamage;
 
-	if ((bitsDamageType & DMG_CRIT) && pevAttacker)
+	if (pevAttacker)
 	{
-		// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER\n");
-		// crit icon
+		float damage = flDamage;
+		if (bitsDamageType & DMG_BULLET)
+		{
+			float distanceFalloff = 1.0;
+			
+			float flDist = (pevAttacker->origin - this->pev->origin).Length2D();
 
-		MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, this->pev->origin, pevAttacker); // i set it to be unreliable due to it being kinda weird
-		WRITE_BYTE(TE_SMOKE);
-		WRITE_COORD(this->pev->origin.x);
-		WRITE_COORD(this->pev->origin.y);
-		WRITE_COORD(this->pev->origin.z + 20.0);
-		WRITE_SHORT(g_sModelIndexCriticalHit);
-		WRITE_BYTE(3); // size
-		WRITE_BYTE(1); // fps
-		MESSAGE_END();
+			if ( ( (bitsDamageType & DMG_CRIT) || (bitsDamageType & DMG_MINICRIT) ) && flDist > 512.0 )
+			{
+				flDist = 512.0;
+				// Both Critical hits and Mini-Crits check to see if the final distance is greater than 512 units
+				// if it is, then the weapon does not lose damage due to the distance modifier when the player is more than 512 units away
+				// if the attack were not a Crit or Mini-Crit, the damage would continue to decrease out to 1024 units
+
+				// this doesnt really matter for full crits due to falloff being fully ignored including rampup
+				// however, this IS important for mini-crits, as they do not have falloff but they DO have rampup
+			}
+
+			distanceFalloff = (((0.00000019402553638) * (flDist * flDist * flDist)) - ((0.000298023223877) * (flDist * flDist)) + ((0.00406901041667) * flDist) + 150.0) / 100.0;
+			
+			if (distanceFalloff <= 0.5)
+				distanceFalloff = 0.5;
+			// prevents too low dmg if the players are more than 1024 units apart
+			// this seems like a non-issue, so i may make a server CVar to allow server hosts to re-enable this and allow falloff to get to 0.0
+			// obviously not TRULY 0.0 due to rounding errors, maybe at 0.01
+
+			if (distanceFalloff >= 1.5)
+				distanceFalloff = 1.5;
+			// this actually should be impossible due to 1.5 being at literally 0 units apart
+			// but you can never be too safe! just in case!
+			// coding is stupid sometimes and not even math is safe!!!
+			
+			damage *= distanceFalloff;
+		}
+
+
+		if (bitsDamageType & DMG_CRIT)
+		{
+			// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER\n");
+			// crit icon + dmg
+			damage = flDamage * 3; // removes falloff entirely due to full crits ignoring them
+
+			MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, this->pev->origin, pevAttacker); // i set it to be unreliable due to it being kinda weird
+			WRITE_BYTE(TE_SMOKE);
+			WRITE_COORD(this->pev->origin.x);
+			WRITE_COORD(this->pev->origin.y);
+			WRITE_COORD(this->pev->origin.z + 20.0);
+			WRITE_SHORT(g_sModelIndexCriticalHit);
+			WRITE_BYTE(3); // size
+			WRITE_BYTE(1); // fps
+			MESSAGE_END();
+		}
+		else if (bitsDamageType & DMG_MINICRIT)
+		{
+			// ALERT(at_console, "MINICRIT HIT ICON SENT TO PLAYER\n");
+			// mini crit icon + dmg
+			damage *= 1.35;
+
+			MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, this->pev->origin, pevAttacker);
+			WRITE_BYTE(TE_SMOKE);
+			WRITE_COORD(this->pev->origin.x);
+			WRITE_COORD(this->pev->origin.y);
+			WRITE_COORD(this->pev->origin.z + 20.0);
+			WRITE_SHORT(g_sModelIndexMiniCritHit);
+			WRITE_BYTE(3); // size
+			WRITE_BYTE(1); // fps
+			MESSAGE_END();
+		}
+
+		flDamage = damage;
+		ALERT(at_console, "Projected damage: %f\nflDamage: %f\n", damage, flDamage);
 	}
-	// else
-		// ALERT(at_console, "no crit icon\n");
+	
 
 	// Armor.
 	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN | DMG_CRIT)) == 0) // armor doesn't protect against fall, drown, or crit damage!
@@ -454,11 +510,19 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	WRITE_LONG(5);							  // eventflags (priority and flags)
 	MESSAGE_END();
 
-	// If the attacker is a player, then it sends the hitsound message
-	// This is an incredibly hacky way of doing it, so this might be changed in the future
+	// If the attacker is a player, then it sends the hitsound message as well as the crit noises and other stuff
+	// This is kinda hacky so this might be changed in the future
 	if (pAttacker->Classify() == CLASS_PLAYER && pAttacker && !(pAttacker->pev->flags & FL_FAKECLIENT))
 	{
+		// todo: add crit noises -- DONE
+		// todo: add client cvar for custom hitsounds
+		// todo: add killsounds -- DONE
+		// todo: add pitch for the damage
+		// todo: add volume for client cvar
+
 		MESSAGE_BEGIN(MSG_ONE, gmsgHitsound, NULL, pAttacker->pev);
+		WRITE_SHORT( (pev->health <= 0 ? 1 : 0) ); // hitsound / killsound detection
+		WRITE_LONG(bitsDamageType);			 // sends damagetype bits for critical / minicrit noises
 		MESSAGE_END();
 	}
 

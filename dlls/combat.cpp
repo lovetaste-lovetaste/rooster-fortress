@@ -896,7 +896,6 @@ bool CBaseMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, f
 	// do the damage
 	pev->health -= flTake;
 
-
 	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
 	if (m_MonsterState == MONSTERSTATE_SCRIPT)
 	{
@@ -1047,14 +1046,7 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 
 	const bool bInWater = (UTIL_PointContents(vecSrc) == CONTENTS_WATER);
 
-	vecSrc.z += 1; // in case grenade is lying on the
-
-	bool reducedSelfDMG = true;
-	//if (pevAttacker == pevInflictor)
-	//{
-		// for soldier rocket jumps
-		//reducedSelfDMG = true;
-	//}
+	vecSrc.z += 1; // in case grenade is lying on the ground
 
 	if (!pevAttacker)
 		pevAttacker = pevInflictor;
@@ -1611,88 +1603,23 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 				if (iBulletType == BULLET_PLAYER_TF2)
 				{
 					int iCrit = 0; // full crits are 2 and above, mini-crits are 1
-					float distanceFalloff = 1.0;
-					float damage = (float)iDamage;
-					float flDist = (pevAttacker->origin - pEntity->pev->origin).Length2D();
-					iCrit = 2;
-					if (iCrit >= 0 && flDist > 512.0)
-					{
-						flDist = 512.0;
-						// Both Critical hits and Mini-Crits check to see if the final distance is greater than 512 units
-						// if it is, then the weapon does not lose damage due to the distance modifier when the player is more than 512 units away
-						// if the attack were not a Crit or Mini-Crit, the damage would continue to decrease out to 1024 units
-					}
-					distanceFalloff = (((0.00000019402553638) * (flDist * flDist * flDist)) - ((0.000298023223877) * (flDist * flDist)) + ((0.00406901041667) * flDist) + 150.0) / 100.0;
-
-					if (distanceFalloff <= 0.5)
-						distanceFalloff = 0.5;
-					// prevents too low dmg if the players are more than 1024 units apart
-					// this seems like a non-issue, so i may make a server CVar to allow server hosts to re-enable this and allow falloff to get to 0.0
-					// obviously not TRULY 0.0 due to rounding errors, maybe at 0.01
-
-					if (distanceFalloff >= 1.5)
-						distanceFalloff = 1.5; 
-					// this actually should be impossible due to 1.5 being at literally 0 units apart
-					// but you can never be too safe! just in case!
-					// coding is stupid sometimes and not even math is safe!!!
 
 					int bitsDamageType = DMG_BULLET;
 
-					if (damage >= 150)
-						bitsDamageType |= DMG_ALWAYSGIB;
-					else
-						bitsDamageType |= DMG_NEVERGIB;
-					// this is before the crit and falloff stuff ON PURPOSE
-
 					if (iCrit >= 2)
 					{
-						distanceFalloff = 1.0; // full crits ignore falloff entirely
-						damage *= 3;
-
 						bitsDamageType |= DMG_CRIT;
-
-					//	if (bitsDamageType & DMG_CRIT)
-						//	ALERT(at_console, "FBP bitsDamageType set to have crits\n");
-					//	else
-						//	ALERT(at_console, "FireBulletsPlayer has crits but bitsDamageType doesnt have crits\n");
-
-						/*
-						if (pEntity->Classify() == CLASS_PLAYER && pevAttacker && (pevAttacker->flags & FL_FAKECLIENT) == 0)
-						{
-							// ALERT(at_console, "CRITICAL HIT ICON SENT TO PLAYER");
-							// crit icon
-							MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, pEntity->pev->origin, pevAttacker); // i set it to be unreliable due to it being kinda weird
-							WRITE_BYTE(TE_SMOKE);
-							WRITE_COORD(pEntity->pev->origin.x);
-							WRITE_COORD(pEntity->pev->origin.y);
-							WRITE_COORD(pEntity->pev->origin.z + 20.0);
-							WRITE_SHORT(g_sModelIndexCriticalHit);
-							WRITE_BYTE(2);	// size
-							WRITE_BYTE(1);	// fps
-							MESSAGE_END();
-						}
-						*/
 					}
 					else if (iCrit == 1)
-						damage *= 1.35;
+					{
+						bitsDamageType |= DMG_MINICRIT;
+					}
 
-					damage *= distanceFalloff;
 					// ALERT(at_console, "FireBulletsPlayer distance should be %f \n", flDist);
 					// ALERT(at_console, "FireBulletsPlayer falloff should be %f \n", distanceFalloff);
 					// ALERT(at_console, "FireBulletsPlayer new damage is %f \n", damage);
 
-
-					// todo: make server cvar defining the limit for how much damage is required for the damage to gib
-					// imagine hitting someone in close range with full crits and watching them EXPLODE!!!
-					// cool
-					// for now it needs to be over 300 damage ( still doable with certain weapons in certain conditions, most notably the scattergun in close range with crits and chared sniper rifle headshots )
-					// this shouldnt be possible normally though due to it being impossible in live tf2
-					// however, server operators should be able to toggle it still ( when has more custom server options hurt anybody!?!? )
-					// for like offline fun or LAN scenarios
-
-					// ALERT(at_console, "Projected damage: %f\n", damage);
-
-					pEntity->TraceAttack(pevAttacker, damage, vecDir, &tr, bitsDamageType);
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, bitsDamageType);
 
 					// float knockback = min(1000, damage * 1.0 * 9.0);
 					// this is the damage knockback equation from tf2 (thanks wget)
@@ -1720,7 +1647,6 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					break;
 
 				case BULLET_PLAYER_BUCKSHOT:
-					// make distance based!
 					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET);
 					break;
 

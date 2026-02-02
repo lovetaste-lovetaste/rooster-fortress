@@ -1083,7 +1083,30 @@ void ClientPrecache()
 	PRECACHE_SOUND("common/wpn_select.wav");
 	PRECACHE_SOUND("common/wpn_denyselect.wav");
 
+	// tf2 misc noises START
+
 	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound.wav");
+
+	PRECACHE_SOUND("rooster_fortress/crit_hit1.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit2.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit3.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit4.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit5.wav");
+
+	PRECACHE_SOUND("rooster_fortress/crit_hit_mini1.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit_mini2.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit_mini3.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit_mini4.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_hit_mini5.wav");
+
+	PRECACHE_SOUND("rooster_fortress/crit_received1.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_received2.wav");
+	PRECACHE_SOUND("rooster_fortress/crit_received3.wav");
+
+	PRECACHE_SOUND("rooster_fortress/crit_shot.wav");
+
+	// tf2 misc noises END
 
 	// geiger sounds
 

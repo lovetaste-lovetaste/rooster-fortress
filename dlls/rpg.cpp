@@ -61,8 +61,8 @@ CRpgRocket* CRpgRocket::CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBas
 void CRpgRocket::Spawn()
 {
 	Precache();
-	// motor
-	pev->movetype = MOVETYPE_FLYMISSILE;
+	pev->movetype = MOVETYPE_TOSS;
+	pev->effects |= EF_LIGHT;
 	pev->solid = SOLID_BBOX;
 	
 	SET_MODEL(ENT(pev), "models/rooster_fortress/w_rocket.mdl");
@@ -71,7 +71,27 @@ void CRpgRocket::Spawn()
 
 	pev->classname = MAKE_STRING("rpg_rocket");
 
-	SetThink(&CRpgRocket::IgniteThink);
+	// make rocket sound
+	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5);
+
+	// rocket trail
+	MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
+
+	WRITE_BYTE(TE_BEAMFOLLOW);
+	WRITE_SHORT(entindex()); // entity
+	WRITE_SHORT(m_iTrail);	 // model
+	WRITE_BYTE(10);			 // life
+	WRITE_BYTE(5);			 // width
+	WRITE_BYTE(224);		 // r, g, b
+	WRITE_BYTE(224);		 // r, g, b
+	WRITE_BYTE(255);		 // r, g, b
+	WRITE_BYTE(255);		 // brightness
+
+	MESSAGE_END(); // move PHS/PVS data sending into here (SEND_ALL, SEND_PVS, SEND_PHS)
+
+	m_flIgniteTime = gpGlobals->time;
+
+	SetThink(&CRpgRocket::FollowThink);
 	SetTouch(&CRpgRocket::ExplodeTouch);
 
 	pev->velocity = gpGlobals->v_forward * 1100;
@@ -100,10 +120,6 @@ void CRpgRocket::RocketTouch(CBaseEntity* pOther)
 		STOP_SOUND(edict(), CHAN_VOICE, "weapons/rocket1.wav");
 		ExplodeTouch(pOther);
 	}
-	else
-	{
-		ALERT(at_console, "rocket passing through teammate\n");
-	}
 	// this works, but it kills momentum n shi
 }
 
@@ -119,8 +135,6 @@ void CRpgRocket::Precache()
 
 void CRpgRocket::IgniteThink()
 {
-	// pev->movetype = MOVETYPE_TOSS;
-
 	pev->movetype = MOVETYPE_TOSS;
 	pev->effects |= EF_LIGHT;
 
@@ -159,10 +173,7 @@ CRpg* CRpgRocket::GetLauncher()
 
 void CRpgRocket::FollowThink()
 {
-	// UTIL_MakeAimVectors(pev->angles); // use for model eventually
-	// pev->angles
-
-	float flSpeed = pev->velocity.Length();
+	// float flSpeed = pev->velocity.Length();
 	if ((pev->effects & EF_LIGHT) != 0)
 	{
 		pev->effects = 0;

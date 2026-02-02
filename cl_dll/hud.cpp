@@ -109,7 +109,21 @@ int __MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 
 int __MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf)
 {
-	gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
+	BEGIN_READ(pbuf, iSize);
+
+	int hitkill = READ_SHORT();
+	int dmgbits = READ_LONG();
+
+	if (hitkill == 1)
+		gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound.wav", 1.0f);
+	else
+		gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
+
+	if (dmgbits & DMG_CRIT)
+		gEngfuncs.pfnPlaySoundByName("rooster_fortress/crit_hit1.wav", 0.9f);
+	else if (dmgbits & DMG_MINICRIT)
+		gEngfuncs.pfnPlaySoundByName("rooster_fortress/crit_hit_mini1.wav", 0.9f);
+
 	return 1;
 }
 
