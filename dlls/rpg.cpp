@@ -52,6 +52,11 @@ CRpgRocket* CRpgRocket::CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBas
 	pLauncher->m_cActiveRockets++;	  // register this missile as active for the launcher
 	pRocket->pev->owner = pOwner->edict();
 	pRocket->pev->team = GetClassPtr((CBasePlayer*)(pOwner->pev))->m_iTeam;
+	// Setup the initial velocity.
+	Vector vecForward, vecRight, vecUp;
+	AngleVectors(vecAngles, &vecForward, &vecRight, &vecUp);
+	float flLaunchSpeed = 1100.0f;
+	pRocket->pev->velocity = gpGlobals->v_forward * flLaunchSpeed;
 
 	return pRocket;
 }
@@ -94,7 +99,6 @@ void CRpgRocket::Spawn()
 	SetThink(&CRpgRocket::FollowThink);
 	SetTouch(&CRpgRocket::ExplodeTouch);
 
-	pev->velocity = gpGlobals->v_forward * 1100;
 	pev->gravity = 0.000001; // stupid chud div by 0 errors
 
 	pev->nextthink = gpGlobals->time + 0.1;

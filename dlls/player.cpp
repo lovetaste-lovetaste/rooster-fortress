@@ -393,6 +393,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	if (pevAttacker)
 	{
 		float damage = flDamage;
+
 		if (bitsDamageType & DMG_BULLET)
 		{
 			float distanceFalloff = 1.0;
@@ -426,7 +427,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 			
 			damage *= distanceFalloff;
 		}
-
 
 		if (bitsDamageType & DMG_CRIT)
 		{
@@ -512,17 +512,19 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	// If the attacker is a player, then it sends the hitsound message as well as the crit noises and other stuff
 	// This is kinda hacky so this might be changed in the future
-	if (pAttacker->Classify() == CLASS_PLAYER && pAttacker && !(pAttacker->pev->flags & FL_FAKECLIENT))
+	if (pevAttacker && pAttacker->Classify() == CLASS_PLAYER && !(pevAttacker->flags & FL_FAKECLIENT))
 	{
-		// todo: add crit noises -- DONE
+		// todo: add crit noises -- DONE BUT WITH A BUG ( the crit noises play after the hitsounds so they end up overriding them )
 		// todo: add client cvar for custom hitsounds
 		// todo: add killsounds -- DONE
 		// todo: add pitch for the damage
 		// todo: add volume for client cvar
 
-		MESSAGE_BEGIN(MSG_ONE, gmsgHitsound, NULL, pAttacker->pev);
-		WRITE_SHORT( (pev->health <= 0 ? 1 : 0) ); // hitsound / killsound detection
-		WRITE_LONG(bitsDamageType);			 // sends damagetype bits for critical / minicrit noises
+		// ALERT(at_console, "Dingaling played\n");
+
+		MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, gmsgHitsound, NULL, pevAttacker);
+		WRITE_SHORT( (pev->health <= 0 ? 2 : 1) ); // hitsound / killsound detection
+		WRITE_LONG(bitsDamageType);				   // sends damagetype bits for critical / minicrit noises
 		MESSAGE_END();
 	}
 

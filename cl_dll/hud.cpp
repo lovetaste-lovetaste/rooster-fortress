@@ -113,10 +113,10 @@ int __MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf)
 
 	int hitkill = READ_SHORT();
 	int dmgbits = READ_LONG();
-
-	if (hitkill == 1)
+	
+	if (hitkill == 2)
 		gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound.wav", 1.0f);
-	else
+	else if (hitkill == 1)
 		gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
 
 	if (dmgbits & DMG_CRIT)

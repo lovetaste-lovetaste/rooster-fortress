@@ -88,15 +88,15 @@ void CKnife::PrimaryAttack()
 
 	switch (((m_iSwing++) % 2) + 1)
 	{
-	case 0:
-		SendWeaponAnim(KNIFE_SWING_A);
-		break;
-	case 1:
-		SendWeaponAnim(KNIFE_SWING_B);
-		break;
-	case 2:
-		SendWeaponAnim(KNIFE_SWING_C);
-		break;
+		case 0:
+			SendWeaponAnim(KNIFE_SWING_A);
+			break;
+		case 1:
+			SendWeaponAnim(KNIFE_SWING_B);
+			break;
+		case 2:
+			SendWeaponAnim(KNIFE_SWING_C);
+			break;
 	}
 
 	// player "shoot" animation
@@ -126,9 +126,6 @@ void CKnife::PrimaryAttack()
 			vecEnd = tr.vecEndPos; // This is the point on the actual surface (the hull could have hit space)
 		}
 	}
-#endif
-
-#ifndef CLIENT_DLL
 
 	if (tr.flFraction < 1.0)
 	{
@@ -138,16 +135,17 @@ void CKnife::PrimaryAttack()
 
 		float damage = 40.0;
 
-		int damagebits = DMG_CLUB; //
+		int damagebits = DMG_CLUB;
 
-		if (IsBackFace(m_pPlayer->pev->v_angle, pEntity->pev->v_angle))
+		if (IsBehindAndFacingTarget(pEntity))
 		{
-			damage = pEntity->pev->health * 6.0; // in live tf2 backstabs do 2x + the crit multiplier. this skips all that and just does 6x
+			damage = 65536.0; // pEntity->pev->health * 2.0; // in live tf2 backstabs do 2x + the crit multiplier. this skips all that and just does the raw dmg
 			damagebits |= DMG_CRIT;
-			// ALERT(at_console, "Backstab!!!");
+			ALERT(at_console, "Backstab!!!");
+			SendWeaponAnim(KNIFE_BACKSTAB);
 		}
 
-		pEntity->TraceAttack(m_pPlayer->pev, (int)damage, gpGlobals->v_forward, &tr, damagebits);
+		pEntity->TraceAttack(m_pPlayer->pev, damage, gpGlobals->v_forward, &tr, damagebits);
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 		// play thwack, smack, or dong sound
@@ -217,19 +215,59 @@ void CKnife::PrimaryAttack()
 #endif
 }
 
-
 void CKnife::Smack()
 {
 	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR);
 }
 
-bool CKnife::IsBackFace(Vector& anglesAttacker, Vector& anglesVictim)
+bool CKnife::IsBackStab(CBaseEntity* pTarget)
 {
-	float flAngles = anglesAttacker.y - anglesVictim.y;
+	if (!pTarget)
+		return false;
+
+	float flAngles = m_pPlayer->pev->v_angle.y - pTarget->pev->v_angle.y;
 	if (flAngles < -180.0)
 		flAngles += 360.0;
 	if (flAngles <= 90.0 && flAngles >= -90.0)
 		return false;
 	return true;
 }
-// REVOLVER_MAX_CARRY
+
+bool CKnife::IsBehindAndFacingTarget(CBaseEntity* pTarget)
+{
+	if (!m_pPlayer)
+		return false;
+
+	if (!pTarget)
+		return false;
+
+	// Get a vector from owner origin to target origin
+	Vector vecToTarget;
+	vecToTarget = pTarget->pev->origin - m_pPlayer->pev->origin;
+	vecToTarget.z = 0.0f;
+	vecToTarget = vecToTarget.Normalize();
+
+	// Get owner forward view vector
+	Vector vecOwnerForward;
+	AngleVectors(m_pPlayer->pev->v_angle, &vecOwnerForward, NULL, NULL);
+	vecOwnerForward.z = 0.0f;
+	vecOwnerForward = vecOwnerForward.Normalize();
+
+	// Get target forward view vector
+	Vector vecTargetForward;
+	AngleVectors(pTarget->pev->v_angle, &vecTargetForward, NULL, NULL);
+	vecTargetForward.z = 0.0f;
+	vecTargetForward = vecTargetForward.Normalize();
+
+	// Make sure owner is behind, facing and aiming at target's back
+	float flPosVsTargetViewDot = DotProduct(vecToTarget, vecTargetForward); // Behind?
+	float flPosVsOwnerViewDot = DotProduct(vecToTarget, vecOwnerForward);	// Facing?
+	float flViewAnglesDot = DotProduct(vecTargetForward, vecOwnerForward);	// Facestab?
+	
+	// Debug
+	// 	NDebugOverlay::HorzArrow( pTarget->WorldSpaceCenter(), pTarget->WorldSpaceCenter() + 50.0f * vecTargetForward, 5.0f, 0, 255, 0, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+	// 	NDebugOverlay::HorzArrow( pOwner->WorldSpaceCenter(), pOwner->WorldSpaceCenter() + 50.0f * vecOwnerForward, 5.0f, 0, 255, 0, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+	ALERT(at_console, "PosDot: %3.2f FacingDot: %3.2f AnglesDot: %3.2f\n", flPosVsTargetViewDot, flPosVsOwnerViewDot, flViewAnglesDot );
+
+	return (flPosVsTargetViewDot > 0.f && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3f);
+}

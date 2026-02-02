@@ -1563,7 +1563,8 @@ public:
 
 	void PrimaryAttack() override;
 	bool Swing();
-	bool IsBackFace(Vector& anglesAttacker, Vector& anglesVictim);
+	bool IsBackStab(CBaseEntity* pTarget);
+	bool IsBehindAndFacingTarget(CBaseEntity* pTarget);
 	bool Deploy() override;
 	void Holster() override;
 	int m_iSwing;
