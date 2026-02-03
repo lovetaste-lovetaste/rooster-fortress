@@ -512,7 +512,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	// If the attacker is a player, then it sends the hitsound message as well as the crit noises and other stuff
 	// This is kinda hacky so this might be changed in the future
-	if (pevAttacker && pAttacker->Classify() == CLASS_PLAYER && !(pevAttacker->flags & FL_FAKECLIENT))
+	if (pevAttacker && pAttacker->Classify() == CLASS_PLAYER && !(pevAttacker->flags & FL_FAKECLIENT) && !(pevAttacker == this->pev))
 	{
 		// todo: add crit noises -- DONE BUT WITH A BUG ( the crit noises play after the hitsounds so they end up overriding them )
 		// todo: add client cvar for custom hitsounds

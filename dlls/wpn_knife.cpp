@@ -137,11 +137,14 @@ void CKnife::PrimaryAttack()
 
 		int damagebits = DMG_CLUB;
 
-		if (IsBehindAndFacingTarget(pEntity))
+		if (IsBehindAndFacingTarget(pEntity)) // SUPER BUGGY!!
 		{
-			damage = 65536.0; // pEntity->pev->health * 2.0; // in live tf2 backstabs do 2x + the crit multiplier. this skips all that and just does the raw dmg
+			damage = 65536.0; // pEntity->pev->health * 2.0;
+			// in live tf2 backstabs do 2x + the crit multiplier. this skips all that and just does raw dmg
+			// this DOES mean that with custom plugins you can tank backstabs
+			// however, you can do that in live tf2 anyway, so whateverrr
 			damagebits |= DMG_CRIT;
-			ALERT(at_console, "Backstab!!!");
+			ALERT(at_console, "Backstab!!!\n");
 			SendWeaponAnim(KNIFE_BACKSTAB);
 		}
 
@@ -160,13 +163,13 @@ void CKnife::PrimaryAttack()
 				switch (RANDOM_LONG(0, 2))
 				{
 				case 0:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM);
 					break;
 				case 1:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM);
 					break;
 				case 2:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM);
 					break;
 				}
 				m_pPlayer->m_iWeaponVolume = SHOVEL_BODYHIT_VOLUME;
@@ -215,26 +218,13 @@ void CKnife::PrimaryAttack()
 #endif
 }
 
-void CKnife::Smack()
-{
-	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR);
-}
-
-bool CKnife::IsBackStab(CBaseEntity* pTarget)
-{
-	if (!pTarget)
-		return false;
-
-	float flAngles = m_pPlayer->pev->v_angle.y - pTarget->pev->v_angle.y;
-	if (flAngles < -180.0)
-		flAngles += 360.0;
-	if (flAngles <= 90.0 && flAngles >= -90.0)
-		return false;
-	return true;
-}
-
 bool CKnife::IsBehindAndFacingTarget(CBaseEntity* pTarget)
 {
+	// converted from live tf2's source code
+	// FOR SOME REASON this can OCCASIONALLY fuck up, flipping the sides required
+	// this would mean that you would need to stab from the front and NOT the back
+	// I do not know why this happens
+
 	if (!m_pPlayer)
 		return false;
 
@@ -264,10 +254,7 @@ bool CKnife::IsBehindAndFacingTarget(CBaseEntity* pTarget)
 	float flPosVsOwnerViewDot = DotProduct(vecToTarget, vecOwnerForward);	// Facing?
 	float flViewAnglesDot = DotProduct(vecTargetForward, vecOwnerForward);	// Facestab?
 	
-	// Debug
-	// 	NDebugOverlay::HorzArrow( pTarget->WorldSpaceCenter(), pTarget->WorldSpaceCenter() + 50.0f * vecTargetForward, 5.0f, 0, 255, 0, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
-	// 	NDebugOverlay::HorzArrow( pOwner->WorldSpaceCenter(), pOwner->WorldSpaceCenter() + 50.0f * vecOwnerForward, 5.0f, 0, 255, 0, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
-	ALERT(at_console, "PosDot: %3.2f FacingDot: %3.2f AnglesDot: %3.2f\n", flPosVsTargetViewDot, flPosVsOwnerViewDot, flViewAnglesDot );
+	ALERT(at_console, "Success? %i PosDot: %3.2f FacingDot: %3.2f AnglesDot: %3.2f\n", ((flPosVsTargetViewDot > 0.0 && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3) ? 1 : 0 ), flPosVsTargetViewDot, flPosVsOwnerViewDot, flViewAnglesDot);
 
-	return (flPosVsTargetViewDot > 0.f && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3f);
+	return (flPosVsTargetViewDot > 0.0 && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3);
 }

@@ -1086,7 +1086,53 @@ void ClientPrecache()
 	// tf2 misc noises START
 
 	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_beepo.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_space.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_squasher.wav");
+
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_electro1.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_electro2.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_electro3.wav");
+
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note1.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note2.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note3.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note4.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note5.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note6.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note7.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note7b.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note8.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_menu_note9.wav");
+
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_percussion1.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_percussion2.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_percussion3.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_percussion4.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_percussion5.wav");
+
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_retro1.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_retro2.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_retro3.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_retro4.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_retro5.wav");
+
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_vortex1.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_vortex2.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_vortex3.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_vortex4.wav");
+	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound_vortex5.wav");
+
+
 	PRECACHE_SOUND("rooster_fortress/killsound/killsound.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_beepo.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_electro.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_note.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_percussion.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_retro.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_space.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_squasher.wav");
+	PRECACHE_SOUND("rooster_fortress/killsound/killsound_vortex.wav");
 
 	PRECACHE_SOUND("rooster_fortress/crit_hit1.wav");
 	PRECACHE_SOUND("rooster_fortress/crit_hit2.wav");

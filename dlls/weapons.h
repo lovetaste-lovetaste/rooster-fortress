@@ -1270,7 +1270,6 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	int iItemSlot() override { return 1; }
-	void EXPORT Smack();
 	void EXPORT Swing();
 	bool GetItemInfo(ItemInfo* p) override;
 
@@ -1394,13 +1393,10 @@ class CWrench : public CShovel
 public:
 	void Spawn() override;
 	void Precache() override;
-	int iItemSlot() override { return 1; }
-	void EXPORT SwingAgain();
-	void EXPORT Smack();
+	int iItemSlot() override { return 2; }
 	bool GetItemInfo(ItemInfo* p) override;
 
 	void PrimaryAttack() override;
-	bool Swing(bool fFirst);
 	bool Deploy() override;
 	void Holster() override;
 	int m_iSwing;
@@ -1558,12 +1554,10 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	int iItemSlot() override { return 1; }
-	void EXPORT Smack();
 	bool GetItemInfo(ItemInfo* p) override;
 
 	void PrimaryAttack() override;
 	bool Swing();
-	bool IsBackStab(CBaseEntity* pTarget);
 	bool IsBehindAndFacingTarget(CBaseEntity* pTarget);
 	bool Deploy() override;
 	void Holster() override;

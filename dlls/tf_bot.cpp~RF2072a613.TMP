@@ -19,16 +19,12 @@
   bot stuff :O
   this is a simple bot that only looks, walks towards enemies, and shoots. Not much else
 
-  the logic from this bot is taken from my live tf2 bot
-  you can get a link to the sourcemod plugin here:
-  https://github.com/lovetaste-lovetaste/lovelybots
 */
 
 #include <algorithm>
 #include <string>
 #include <vector>
 
-#include "mathlib.h"
 #include "extdll.h"
 #include "util.h"
 #include "filesystem_utils.h"
@@ -55,7 +51,7 @@
 // CODE GRABBED FROM THE TF2SDK
 
 static float g_LastBotUpdateTime[34];
-// static CBaseEntity* enemy[40];
+static CBaseEntity* enemy[40];
 extern cvar_t bot_difficulty;
 
 BotData g_BotData[TF_MAXPLAYERS];
@@ -72,112 +68,6 @@ inline float GetGameTime()
 	return gpGlobals->time;
 }
 
-inline float angleCoordsToFaceCoords(Vector angles, Vector pos, Vector inputted_coords, bool absoluteAngle = false)
-{
-	Vector clientpos = pos;
-	Vector targetpos = inputted_coords;
-	Vector anglevector;
-	Vector targetvector;
-	float resultangle = 0.0f;
-
-	if (absoluteAngle)
-	{
-		// Zero out pitch and roll, keep only yaw
-		Vector lookAngles(0.0f, angles.y, 0.0f);
-
-		// Get the forward vector from the yaw-only angle
-		Vector forward, right, up;
-		AngleVectors(lookAngles, &forward, &right, &up);
-		VectorNormalize(forward);
-
-		// Zero out Z so the comparison is done on the horizontal plane
-		clientpos.z = 0.0f;
-		targetpos.z = 0.0f;
-
-		// Build a vector from the client to the target
-		targetvector = targetpos - clientpos;
-		VectorNormalize(targetvector);
-
-		// Angle between the two vectors via dot product
-		float dot = DotProduct(targetvector, forward);
-		// Clamp to [-1, 1] to guard against floating-point drift
-		dot = V_max(-1.0f, V_min(1.0f, dot));
-		resultangle = acos(dot) * (180.0f / M_PI);
-	}
-	else
-	{
-		// Build vector from client to target and convert it to angles
-		targetvector = targetpos - clientpos;
-		VectorAngles(targetvector, anglevector);
-
-		// Difference is only on the yaw axis
-		resultangle = angles.y - anglevector.y;
-
-		// Normalize into the [-180, 180] range
-		if (resultangle < -180.0f)
-		{
-			resultangle = 360.0f + resultangle;
-		}
-
-		if (resultangle > 180.0f)
-		{
-			resultangle = 360.0f - resultangle;
-		}
-	}
-
-	return resultangle;
-}
-
-inline void TF2_LookAtPos(int client, Vector* vecAngles, float flGoal[3], float flAimSpeed)
-{
-	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
-
-	if (!player)
-	{
-		return;
-	}
-
-	// Get the bot's world-space eye position (origin + view offset)
-	Vector flEyePos = player->pev->origin + player->pev->view_ofs;
-
-	// Get current view angles
-	Vector flAng = player->pev->v_angle;
-
-	// Compute direction vector from eye position to goal
-	Vector desired_dir;
-	desired_dir[0] = flGoal[0] - flEyePos[0];
-	desired_dir[1] = flGoal[1] - flEyePos[1];
-	desired_dir[2] = flGoal[2] - flEyePos[2];
-
-	// Convert direction vector to pitch/yaw angles
-	Vector desired_angles;
-	desired_angles = UTIL_VecToAngles(desired_dir);
-
-	// Ease current view angles toward the desired angles
-	flAng[0] += AngleNormalize(desired_angles[0] - flAng[0]) * flAimSpeed;
-	flAng[1] += AngleNormalize(desired_angles[1] - flAng[1]) * flAimSpeed;
-
-	// Set the view angles (what the bot is actually "looking at")
-	player->pev->v_angle = flAng;
-
-	// Set model angles so the bot visually faces the target
-	// Pitch is divided by 3 for GoldSrc model pitch convention
-	player->pev->angles.x = flAng.x / 3.0f;
-	player->pev->angles.y = flAng.y;
-	player->pev->angles.z = 0;
-
-	// Update ideal yaw and yaw speed for smooth model turning
-	player->pev->ideal_yaw = flAng.y;
-	player->pev->yaw_speed = 360.0f;
-	player->ChangeYaw(player->pev->yaw_speed);
-
-	// Optionally write out the resulting angles if vecAngles is provided
-	if (vecAngles)
-	{
-		*vecAngles = flAng;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Run this Bot's AI for one frame.
 //-----------------------------------------------------------------------------
@@ -190,7 +80,8 @@ void Bot_Think(int client)
 		pBot->pev->flags |= FL_FAKECLIENT;
 
 	float frametime = gpGlobals->time - g_LastBotUpdateTime[client];
-	
+	g_LastBotUpdateTime[client] = gpGlobals->time;
+
 	if (frametime > 0.25f || frametime < 0)
 	{
 		frametime = 0;
@@ -202,6 +93,19 @@ void Bot_Think(int client)
 	Vector vecViewAngles = pBot->pev->angles;
 	pBot->pev->button = 0;
 
+	g_BotData[client].altTabbedTimer -= frametime;
+	if (g_BotData[client].altTabbedTimer < 0.0)
+		g_BotData[client].altTabbedTimer = 0.0;
+	g_BotData[client].noMouseTimer -= frametime;
+	if (g_BotData[client].noMouseTimer < 0.0)
+		g_BotData[client].noMouseTimer = 0.0;
+	if (g_BotData[client].altTabbedTimer > 0.0)
+	{
+		pBot->pev->button = 0;
+		return;
+	}
+
+	// Create some random values
 	if (pBot->GetTeamNumber() == TEAM_UNASSIGNED)
 	{
 		pBot->SetTeamNumber((RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
@@ -231,35 +135,6 @@ void Bot_Think(int client)
 		Bot_Start(client);
 	}
 	
-	g_BotData[client].altTabbedTimer -= frametime;
-	if (g_BotData[client].altTabbedTimer < 0.0)
-		g_BotData[client].altTabbedTimer = 0.0;
-	g_BotData[client].noMouseTimer -= frametime;
-	if (g_BotData[client].noMouseTimer < 0.0)
-		g_BotData[client].noMouseTimer = 0.0;
-
-	g_BotData[client].combatPercent -= 1.0;
-	if (g_BotData[client].combatPercent < 0.0)
-		g_BotData[client].combatPercent = 0.0;
-	if (g_BotData[client].combatPercent > 100.0)
-		g_BotData[client].combatPercent = 100.0;
-
-	if (g_BotData[client].Ego < 0)
-		g_BotData[client].Ego = 0;
-
-	if (g_BotData[client].altTabbedTimer > 0.0)
-	{
-		pBot->pev->button = 0;
-		return;
-	}
-
-	g_BotData[client].Paranoia -= 1;
-
-	if (g_BotData[client].Paranoia < 10)
-		g_BotData[client].Paranoia = 10;
-	if (g_BotData[client].Paranoia > 100)
-		g_BotData[client].Paranoia = 100;
-
 	if (pBot->IsAlive())
 	{
 		Bot_AliveThink(client, &vecViewAngles, &vecMove);
@@ -270,8 +145,6 @@ void Bot_Think(int client)
 	}
 	
 	g_engfuncs.pfnRunPlayerMove(pBot->edict(), vecViewAngles, vecMove[0], vecMove[1], vecMove[2], pBot->pev->button, pBot->pev->impulse, msec);
-
-	g_LastBotUpdateTime[client] = gpGlobals->time;
 }
 
 //-----------------------------------------------------------------------------
@@ -399,22 +272,17 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 	if (g_BotData[client].RecentDamageTaken[1] + 2.0 < GetGameTime())
 		g_BotData[client].RecentDamageTaken[0] = 0.0;
 
-	g_BotData[client].Targets[0] = FindNearestEnemy(client, 0, 2048);
-	// this can be extended but 2048 is fine for now
 
-	if (!IsTargetVisible(client, g_BotData[client].Targets[0]))
-		g_BotData[client].Targets[0] = NULL;
-	// this is probably not needed but sometimes the bot breaks without it
+	enemy[client] = FindNearestEnemy(client, 2048); // this can be extended but 2048 is fine for now
+	
+	if (!IsTargetVisible(client, enemy[client])) // this works FINE. DO NOT TOUCH
+		enemy[client] = NULL;
 
-	if (g_BotData[client].Targets[0] != NULL)
+	if (enemy[client] != NULL)
 	{
-		g_BotData[client].combatPercent += (2 * g_BotData[client].Difficulty[0]) + 5;
-		if (g_BotData[client].combatPercent > 100.0)
-			g_BotData[client].combatPercent = 100.0;
 		// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
+		AimAtTarget(client, enemy[client]);
 		
-		TF2_LookAtPos(client, vecAngles, g_BotData[client].Targets[0]->pev->origin, 0.75);
-
 		CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)pBot->m_pActiveItem;
 
 		if (pWeapon)
@@ -442,9 +310,20 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 			}
 		}
 	}
+	else
+	{
+		// ALERT(at_console, "Botthink: Couldn't get player!\n");
+	}
 
 	Bot_AliveMovementThink(client, vecAngles, vecMove);
 	Bot_AliveWeaponThink(client, vecAngles, vecMove);
+
+	// Miscellaneous
+	//if (bot_saveme.GetInt() > 0)
+	//{
+		//m_hBot->SaveMe();
+		//bot_saveme.SetValue(bot_saveme.GetInt() - 1);
+	//}
 }
 
 void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
@@ -468,29 +347,12 @@ void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 	// after i figure out the basics then i will start getting serious with it
 	// im used to writing bots in normal TF2, so I will port that logic over
 	
-	if (pBot->pev->waterlevel >= 3)
-	{
-		g_BotData[client].timeSpentUnderwater += ((gpGlobals->time - g_LastBotUpdateTime[client]) <= 0) ? (gpGlobals->time - g_LastBotUpdateTime[client]) : 0;
-
-		// if in deep water or not fighting, bot will try to surface for air
-		// if there is an enemy, the bot will be willing to go underwater for a bit
-		// however, after 10 updates then the bot will go upwards
-
-		if (g_BotData[client].timeSpentUnderwater > 10.0 || (g_BotData[client].Targets[0] == NULL) )
-			pBot->pev->button |= IN_JUMP;
-	}
-	else
-		g_BotData[client].timeSpentUnderwater -= ((gpGlobals->time - g_LastBotUpdateTime[client]) <= 0) ? (gpGlobals->time - g_LastBotUpdateTime[client]) : 0;
-
-	if (g_BotData[client].timeSpentUnderwater < 0.0)
-		g_BotData[client].timeSpentUnderwater = 0.0;
-
-	if (g_BotData[client].Targets[0] != NULL)
+	if (enemy[client] != NULL)
 	{
 		int random = g_engfuncs.pfnRandomLong(0, 100);
 		if (random == 1 || pBot->pev->waterlevel >= 3)
 		{
-			// randomly while fighting, bot will try to jump
+			// if in deep water or randomly while fighting, bot will try to
 			pBot->pev->button |= IN_JUMP;
 		}
 		else if (random == 2)
@@ -513,7 +375,7 @@ void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 			{
 				vecMove->x = 500.0; // if holding melee, go forward into enemy with some random movement
 
-				if (pBot->pev->velocity.Length2D() > 300.0 && random == 3)
+				if (pBot->pev->velocity.Length2D() > 300.0)
 				{
 					pBot->pev->button |= IN_JUMP;
 				}
@@ -522,11 +384,11 @@ void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 			{
 				if (pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN || 
 					pBot->m_pActiveItem->m_iId == WEAPON_SCATTERGUN ||
-					pBot->m_pActiveItem->m_iId == WEAPON_FLAMETHROWER)
+					pBot->m_pActiveItem->m_iId == WEAPON_PYTHON)
 				{
-					if (random % 6 == 0)
+					if (random % 3 == 0)
 						vecMove->y = 500.0;
-					else if (random % 6 == 1)
+					else if (random % 3 == 1)
 						vecMove->y = -500.0;
 					else
 						vecMove->x = 500.0;
@@ -550,21 +412,28 @@ void Bot_DeadThink(int client, Vector* vecAngles, Vector* vecMove)
 	// Wait for Reinforcement wave
 	if (!pBot->IsAlive())
 	{
-		// Wait for a few seconds before respawning.
-		if (gpGlobals->time - pBot->m_flSpawnTime > 3)
+		/*
+		if (m_bWasDead)
 		{
-			// Respawn the bot
-			pBot->pev->button |= IN_JUMP;
+			// Wait for a few seconds before respawning.
+			if (gpGlobals->curtime - m_flDeadTime > 3)
+			{
+				// Respawn the bot
+				buttons |= IN_JUMP;
+			}
 		}
+		else
+		{
+			// Start a timer to respawn them in a few seconds.
+			m_bWasDead = true;
+			m_flDeadTime = gpGlobals->curtime;
+		}
+		*/
 	}
 }
 
-CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
+CBaseEntity* FindNearestEnemy(int client, float MAXRANGE = 4096.0)
 {
-	// mode 0 = enemies
-	// mode 1 = teammates
-	// anything else = all
-
 	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 
 	if (!player)
@@ -577,32 +446,28 @@ CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
 	float flMinDist = MAXRANGE;
 	
 	// Search for enemies
-	for (int edict = 1; edict <= gpGlobals->maxClients; edict++)
+	while ((pEntity = UTIL_FindEntityInSphere(pEntity, player->pev->origin, 2048)) != NULL)
 	{
-		pEntity = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(edict));
-
-		if (pEntity == NULL)
-			continue;
-		if (!pEntity)
-			continue;
-		// DOUBLE CHECK BCUZ THIS ENGINE IS STUPID
-
 		if (!pEntity->pev)
 			continue;
-		
+
 		// Skip non-living entities
 		if (!pEntity->IsAlive())
-		{
-			g_BotData[client].AwarenessOfClient[edict] = 0.0;
 			continue;
-			// this makes sure that any awareness get reset for dead or invalid edicts
-		}
+		
+		// Skip teammates (basic team check)
+		// if (pEntity->pev->team == player->pev->team)
+			// continue;
+		// broken
 
 		// Skip self
 		if (pEntity == player)
 			continue;
 
 		CBasePlayer* edictPlayer = GetClassPtr((CBasePlayer*)(pEntity->pev));
+		//entvars_t* pev = &pEntity->v;
+
+		//CBasePlayer* pl = (CBasePlayer*)CBasePlayer::Instance(pev);
 
 		if (edictPlayer->m_iTeam == player->m_iTeam)
 			continue;
@@ -611,52 +476,10 @@ CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
 		if (!pEntity->IsPlayer())
 			continue;
 
-		if (g_BotData[client].AwarenessOfClient[edict] < 0.0)
-			g_BotData[client].AwarenessOfClient[edict] = 0.0;
-		if (g_BotData[client].AwarenessOfClient[edict] > 100.0)
-			g_BotData[client].AwarenessOfClient[edict] = 100.0;
-
 		if (!IsTargetVisible(client, pEntity))
-		{
-			g_BotData[client].AwarenessOfClient[edict] -= ((0 - (0.4 * g_BotData[client].Difficulty[0])) + 5);
-
-			//if (g_BotData[client].AwarenessOfClient[edict] < (((0 - 0.8) * g_BotData[client].combatPercent) + 90))
-			//	continue;
-			// this doesnt automatically ignore non-visible targets due to bots now being able to chase non-visible targets
-
-			if (g_BotData[client].DisregardTimer[edict] == -2.0)
-				g_BotData[client].DisregardTimer[edict] = RANDOM_FLOAT(100, 200);
-
 			continue;
-		}
-
-		if (angleCoordsToFaceCoords(player->pev->v_angle, player->pev->origin, edictPlayer->pev->origin, true) <= 70.0)
-		{
-			g_BotData[client].AwarenessOfClient[edict] += 10 * g_BotData[client].Difficulty[0];
-		}
-		else
-		{
-			g_BotData[client].AwarenessOfClient[edict] -= ((0 - (0.4 * g_BotData[client].Difficulty[0])) + 5);
-		}
-
-		if (g_BotData[client].DisregardTimer[edict] > 0.0)
-			g_BotData[client].DisregardTimer[edict] -= 1.0;
-
-		if (g_BotData[client].DisregardTimer[edict] > 0.0 || g_BotData[client].DisregardTimer[edict] == -1.0 || g_BotData[client].DisregardTimer[edict] == -2.0 || g_BotData[client].DisregardTimer[edict] == -3.0 || g_BotData[client].DisregardTimer[edict] == -4.0)
-			continue;
-		// ignore the several or thingys here
-		// the normal way didnt want to work sometimes
-
-		if (g_BotData[client].AwarenessOfClient[edict] < (((0 - 0.8) * g_BotData[client].combatPercent) + 90))
-			continue;
-		// if the bot still isnt aware, then the target is ignored
 
 		float flDist = (pEntity->pev->origin - player->pev->origin).Length();
-
-		if (flDist > MAXRANGE)
-		{
-			continue;
-		}
 
 		if (flDist < flMinDist)
 		{
@@ -666,6 +489,99 @@ CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
 	}
 
 	return pNearest;
+}
+
+// converted from TF2Ebots
+//
+void TF2_LookAtPos(int client, Vector* vecAngles, float flGoal[3], float flAimSpeed)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+	{
+		return;
+	}
+
+
+	Vector flPos = player->pev->view_ofs;
+	Vector flAng = player->pev->angles;
+
+	// get normalised direction from target to client
+	Vector desired_dir;
+	desired_dir[0] = flGoal[0] - flPos[0];
+	desired_dir[1] = flGoal[1] - flPos[1];
+	desired_dir[2] = flGoal[2] - flPos[2];
+
+	desired_dir = UTIL_VecToAngles(desired_dir);
+
+	// ease the current direction to the target direction
+	flAng[0] += AngleNormalize(desired_dir[0] - flAng[0]) * flAimSpeed;
+	flAng[1] += AngleNormalize(desired_dir[1] - flAng[1]) * flAimSpeed;
+
+	// Set view angles
+	player->pev->v_angle = flAng;
+	//player->pev->angles.x = vecCurrentAngles.x / 3.0f; // Pitch for model
+	player->pev->angles.y = flAng.y;
+	player->pev->angles.z = 0;
+
+	// Update ideal yaw for movement
+	player->pev->ideal_yaw = flAng.y;
+
+	// Set angle change for smooth turning
+	player->ChangeYaw(player->pev->yaw_speed);
+
+	// TeleportEntity(client, NULL_VECTOR, flAng, NULL_VECTOR);
+}
+
+void AimAtTarget(int client, CBaseEntity* pTarget)
+{
+	auto player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
+
+	if (!player)
+	{
+		return;
+	}
+
+	if (!pTarget)
+		return;
+
+	// Calculate target position (aim at chest/head)
+	Vector vecTarget = pTarget->pev->origin + Vector(0, 0, pTarget->pev->view_ofs.z * 0.8f);
+	Vector vecDir = (vecTarget - player->GetGunPosition()).Normalize();
+
+	// Convert direction to angles
+	Vector vecTargetAngles = UTIL_VecToAngles(vecDir);
+
+	// Smooth aiming - interpolate towards target
+	Vector vecCurrentAngles = player->pev->v_angle;
+
+	// Normalize angle differences
+	float flYawDiff = UTIL_AngleMod(vecTargetAngles.y - vecCurrentAngles.y);
+	float flPitchDiff = UTIL_AngleMod(vecTargetAngles.x - vecCurrentAngles.x);
+
+	// Apply aim speed (lower = slower, more human-like)
+	//float flAimDelta = 102.4;
+
+	//vecCurrentAngles.y += clamp(flYawDiff, -flAimDelta, flAimDelta);
+	//vecCurrentAngles.x += clamp(flPitchDiff, -flAimDelta, flAimDelta);
+
+	vecCurrentAngles.y += flYawDiff;
+	vecCurrentAngles.x += flPitchDiff;
+
+	// Set view angles
+	player->pev->v_angle = vecCurrentAngles;
+	player->pev->angles.x = vecCurrentAngles.x; // Pitch for model
+	player->pev->angles.y = vecCurrentAngles.y;
+	player->pev->angles.z = 0;
+
+	// Update ideal yaw and pitch for movement
+	player->pev->ideal_yaw = vecCurrentAngles.y;
+	player->pev->idealpitch = vecCurrentAngles.x;
+
+	BotFixIdealPitch(player->edict());
+	BotFixIdealYaw(player->edict());
+	// Set angle change for smooth turning
+	player->ChangeYaw(1024);
 }
 
 float clamp(float init, float min, float max)

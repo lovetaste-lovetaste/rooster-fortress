@@ -614,10 +614,10 @@
 
 // channels
 #define CHAN_AUTO 0
-#define CHAN_WEAPON 1
-#define CHAN_VOICE 2
-#define CHAN_ITEM 3
-#define CHAN_BODY 4
+#define CHAN_WEAPON 1			  // for guns
+#define CHAN_VOICE 2			  // for voices
+#define CHAN_ITEM 3				  // for items
+#define CHAN_BODY 4				  // for player related noises
 #define CHAN_STREAM 5			  // allocate stream channel from the static or dynamic area
 #define CHAN_STATIC 6			  // allocate channel from the static area
 #define CHAN_NETWORKVOICE_BASE 7  // voice data coming across the network

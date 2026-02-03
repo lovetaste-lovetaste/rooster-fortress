@@ -1607,17 +1607,9 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					int bitsDamageType = DMG_BULLET;
 
 					if (iCrit >= 2)
-					{
 						bitsDamageType |= DMG_CRIT;
-					}
 					else if (iCrit == 1)
-					{
 						bitsDamageType |= DMG_MINICRIT;
-					}
-
-					// ALERT(at_console, "FireBulletsPlayer distance should be %f \n", flDist);
-					// ALERT(at_console, "FireBulletsPlayer falloff should be %f \n", distanceFalloff);
-					// ALERT(at_console, "FireBulletsPlayer new damage is %f \n", damage);
 
 					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, bitsDamageType);
 

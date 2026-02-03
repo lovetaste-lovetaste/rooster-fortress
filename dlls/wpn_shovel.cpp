@@ -107,11 +107,6 @@ void CShovel::PrimaryAttack()
 	return;
 }
 
-void CShovel::Smack()
-{
-	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR);
-}
-
 void CShovel::Swing()
 {
 	bool fDidHit = false;
@@ -162,13 +157,13 @@ void CShovel::Swing()
 				switch (RANDOM_LONG(0, 2))
 				{
 				case 0:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM);
 					break;
 				case 1:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM);
 					break;
 				case 2:
-					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_BODY, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM);
 					break;
 				}
 				m_pPlayer->m_iWeaponVolume = SHOVEL_BODYHIT_VOLUME;

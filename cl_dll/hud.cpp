@@ -114,10 +114,182 @@ int __MsgFunc_Hitsound(const char* pszName, int iSize, void* pbuf)
 	int hitkill = READ_SHORT();
 	int dmgbits = READ_LONG();
 	
-	if (hitkill == 2)
-		gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound.wav", 1.0f);
-	else if (hitkill == 1)
-		gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", 1.0f);
+	int hitenabled = CVAR_GET_FLOAT("tf_dingalingaling");
+	int hiteffect = CVAR_GET_FLOAT("tf_dingalingaling_effect");
+	int killeffect = CVAR_GET_FLOAT("tf_dingalingaling_last_effect");
+	float hitvolume = CVAR_GET_FLOAT("tf_dingaling_volume");
+
+	if (hitenabled)
+	{
+		if (hitkill == 2)
+		{
+			switch (killeffect)
+			{
+				default:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound.wav", hitvolume);
+					break;
+				}
+				case 1:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_beepo.wav", hitvolume);
+					break;
+				}
+				case 2:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_electro.wav", hitvolume);
+					break;
+				}
+				case 3:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_note.wav", hitvolume);
+					break;
+				}
+				case 4:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_percussion.wav", hitvolume);
+					break;
+				}
+				case 5:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_retro.wav", hitvolume);
+					break;
+				}
+				case 6:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_space.wav", hitvolume);
+					break;
+				}
+				case 7:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_squasher.wav", hitvolume);
+					break;
+				}
+				case 8:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/killsound/killsound_vortex.wav", hitvolume);
+					break;
+				}
+			}
+		}
+		else if (hitkill == 1)
+		{
+			switch (hiteffect)
+			{
+				default:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound.wav", hitvolume);
+					break;
+				}
+				case 1:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_beepo.wav", hitvolume);
+					break;
+				}
+				case 2:
+				{
+					switch (gEngfuncs.pfnRandomLong(1,3))
+					{
+					case 1:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_electro1.wav", hitvolume);
+					case 2:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_electro2.wav", hitvolume);
+					case 3:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_electro3.wav", hitvolume);
+					}
+					break;
+				}
+				case 3:
+				{
+					switch (gEngfuncs.pfnRandomLong(1, 10))
+					{
+					case 1:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note1.wav", hitvolume);
+					case 2:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note2.wav", hitvolume);
+					case 3:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note3.wav", hitvolume);
+					case 4:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note4.wav", hitvolume);
+					case 5:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note5.wav", hitvolume);
+					case 6:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note6.wav", hitvolume);
+					case 7:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note7.wav", hitvolume);
+					case 8:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note7b.wav", hitvolume);
+					case 9:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note8.wav", hitvolume);
+					case 10:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_menu_note9.wav", hitvolume);
+					}
+					break;
+				}
+				case 4:
+				{
+					switch (gEngfuncs.pfnRandomLong(1, 5))
+					{
+					case 1:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_percussion1.wav", hitvolume);
+					case 2:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_percussion2.wav", hitvolume);
+					case 3:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_percussion3.wav", hitvolume);
+					case 4:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_percussion4.wav", hitvolume);
+					case 5:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_percussion5.wav", hitvolume);
+					}
+					break;
+				}
+				case 5:
+				{
+					switch (gEngfuncs.pfnRandomLong(1, 5))
+					{
+					case 1:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_retro1.wav", hitvolume);
+					case 2:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_retro2.wav", hitvolume);
+					case 3:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_retro3.wav", hitvolume);
+					case 4:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_retro4.wav", hitvolume);
+					case 5:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_retro5.wav", hitvolume);
+					}
+					break;
+				}
+				case 6:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_space.wav", hitvolume);
+					break;
+				}
+				case 7:
+				{
+					gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_squasher.wav", hitvolume);
+					break;
+				}
+				case 8:
+				{
+					switch (gEngfuncs.pfnRandomLong(1, 5))
+					{
+					case 1:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_vortex1.wav", hitvolume);
+					case 2:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_vortex2.wav", hitvolume);
+					case 3:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_vortex3.wav", hitvolume);
+					case 4:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_vortex4.wav", hitvolume);
+					case 5:
+						gEngfuncs.pfnPlaySoundByName("rooster_fortress/hitsound/hitsound_vortex5.wav", hitvolume);
+					}
+					break;
+				}
+			}
+		}
+	}
 
 	if (dmgbits & DMG_CRIT)
 		gEngfuncs.pfnPlaySoundByName("rooster_fortress/crit_hit1.wav", 0.9f);
@@ -343,7 +515,14 @@ void CHud::Init()
 
 	CVAR_CREATE("hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO); // controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE("hud_takesshots", "0", FCVAR_ARCHIVE);					   // controls whether or not to automatically take screenshots at the end of a round
-
+	
+	// Rooster Fortress / TF2 Cvars
+	CVAR_CREATE("tf_dingalingaling", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
+	CVAR_CREATE("tf_dingaling_volume", "1.0", FCVAR_ARCHIVE | FCVAR_USERINFO);
+	CVAR_CREATE("tf_dingalingaling_effect", "0", FCVAR_ARCHIVE | FCVAR_USERINFO);
+	CVAR_CREATE("tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE | FCVAR_USERINFO);
+	// END Rooster Fortress / TF2 Cvars 
+	
 
 	m_iLogo = 0;
 	m_iFOV = 0;

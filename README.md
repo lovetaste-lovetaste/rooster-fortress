@@ -6,14 +6,14 @@ feel free to help :)
 
 ## Timeline / Plans:
   ### Make the classes functional<br/>
-    - Soldier ( BASICALLY DONE )
+    - Soldier -- BASICALLY DONE
       - the basic class stuff + both of his weapons are already in hl ( rpg, shotgun, melee with some changes )
-    - Scout ( BASICALLY DONE )
+    - Scout -- BASICALLY DONE
       - all hitscan, weapons are already in hl ( pistol ) or made when Soldier was worked on ( shotgun, melee )
       - double jumping!!!
-    - Engineer ( no buildings ) ( BASICALLY DONE )
+    - Engineer ( no buildings ) -- BASICALLY DONE
       - all hitscan, literally just copy stuff from Scout & Soldier, mechanics are reserved for later
-    - Spy ( no cloak / disguise ) ( BASICALLY DONE )
+    - Spy ( no cloak / disguise ) -- BASICALLY DONE
       - all hitscan, knife mechanic is not hard to do, mechanics reserved for l8r
       - client based icons ( crit icon ) due to backstabs forcing crits
     - Heavy
@@ -25,7 +25,7 @@ feel free to help :)
       - AIRBLAST SHIT X_X
       - they should be easy to do anyway ( projectiles done on soldier )
     - Demoman
-      - arcing projectiles already in hl ( grenades )
+      - arcing projectiles already in hl ( grenades ) -- DONE
       - stickybomb things
     - Cloaking & Disguises
       - Networking the stuff will be more annoying

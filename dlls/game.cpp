@@ -458,6 +458,14 @@ cvar_t sv_pushable_fixed_tick_fudge = {"sv_pushable_fixed_tick_fudge", "15"};
 
 cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 
+
+// Rooster Fortress / TF2 Cvars
+
+cvar_t bot_difficulty = {"tf_bot_difficulty", "1", FCVAR_PRIVILEGED};
+
+// END Rooster Fortress / TF2 Cvars
+
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -1126,6 +1134,9 @@ void GameDLLInit()
 	// END REGISTER CVARS FOR SKILL LEVEL STUFF
 
 	CVAR_REGISTER(&sv_pushable_fixed_tick_fudge);
+
+	// REGISTERING FOR TF2/ROOSTER FORTRESS CVARS
+	CVAR_REGISTER(&bot_difficulty);
 
 	InitMapLoadingUtils();
 
