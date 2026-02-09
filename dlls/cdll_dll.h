@@ -73,6 +73,7 @@ enum WeaponId
 	WEAPON_MINIGUN,
 	WEAPON_FLAMETHROWER,
 	WEAPON_MEDIGUN,
+	WEAPON_SNIPERRIFLE,
 	// WEAPON_SYRINGEGUN, // this replaces the crossbow
 	// WEAPON_SMG, // this replaces the mp5
 
@@ -121,14 +122,14 @@ enum WeaponId
 #define DMG_SLOWFREEZE (1 << 22)   // in a subzero freezer
 #define DMG_MORTAR (1 << 23)	   // Hit by air raid (done to distinguish grenade from mortar)
 
-//TF ADDITIONS
+//TF ADDITIONS ( note: this was here b4 i started working on rf so idk what these do; i repalaced some of the bottom ones )
 #define DMG_IGNITE (1 << 24)	   // Players hit by this begin to burn
 #define DMG_RADIUS_MAX (1 << 25)   // Radius damage with this flag doesn't decrease over distance
 #define DMG_RADIUS_QUAKE (1 << 26) // Radius damage is done like Quake. 1/2 damage at 1/2 radius.
 #define DMG_IGNOREARMOR (1 << 27)  // Damage ignores target's armor
 #define DMG_AIMED (1 << 28)		   // Does Hit location damage
-#define DMG_WALLPIERCING (1 << 29) // Blast Damages ents through walls
 
+#define DMG_NOFALLOFF (1 << 29)
 #define DMG_MINICRIT (1 << 30)
 #define DMG_CRIT (1 << 31)
 

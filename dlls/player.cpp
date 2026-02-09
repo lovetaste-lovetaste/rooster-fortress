@@ -225,6 +225,36 @@ static void ThrowHead(entvars_t *pev, char *szGibModel, floatflDamage)   \
 */
 #endif
 
+float GetClassMaxSpeed(int iClass)
+{
+	float speed = 300.0; // base speed
+	// for some reason the values were all fucked up in the original version
+	// not too different though, so i just added base tf2 values
+	// i also left the variable above so unlocks will be easier
+	switch (iClass)
+	{
+	case CLASS_SCOUT:
+		speed * 1.33;
+	case CLASS_HEAVY:
+		speed * 0.77;
+	case CLASS_SOLDIER:
+		speed * 0.8;
+	case CLASS_PYRO:
+		speed * 1.0;
+	case CLASS_SNIPER:
+		speed * 1.0;
+	case CLASS_MEDIC:
+		speed * 1.07;
+	case CLASS_ENGINEER:
+		speed * 1.0;
+	case CLASS_DEMOMAN:
+		speed * 0.93;
+	case CLASS_SPY:
+		speed * 1.07;
+	}
+	return speed;
+}
+
 int TrainSpeed(int iSpeed, int iMax)
 {
 	float fSpeed, fMax;
@@ -306,9 +336,7 @@ void CBasePlayer::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 		switch (ptr->iHitgroup)
 		{
 		case HITGROUP_GENERIC:
-			break;
 		case HITGROUP_HEAD:
-			flDamage *= gSkillData.plrHead;
 			break;
 		case HITGROUP_CHEST:
 			flDamage *= gSkillData.plrChest;
@@ -386,15 +414,11 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 	}
 
-	// keep track of amount of damage last sustained
-	//
-	m_lastDamageAmount = flDamage;
-
 	if (pevAttacker)
 	{
 		float damage = flDamage;
 
-		if (bitsDamageType & DMG_BULLET)
+		if((bitsDamageType & DMG_BULLET) && !(bitsDamageType & DMG_NOFALLOFF))
 		{
 			float distanceFalloff = 1.0;
 			
@@ -465,6 +489,8 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		ALERT(at_console, "Projected damage: %f\nflDamage: %f\n", damage, flDamage);
 	}
 	
+	// keep track of amount of damage last sustained
+	m_lastDamageAmount = flDamage;
 
 	// Armor.
 	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN | DMG_CRIT)) == 0) // armor doesn't protect against fall, drown, or crit damage!
@@ -1707,13 +1733,15 @@ void CBasePlayer::Jump()
 		return;
 	}
 
-	if (!(pev->button & IN_JUMP) || (pev->oldbuttons & IN_JUMP)) // if (!(m_afButtonPressed & IN_JUMP))
+	if (!(pev->button & IN_JUMP) || (pev->oldbuttons & IN_JUMP))
 		return;
 
 	// if (pev->button & IN_DUCK)
 		// return;
 	// this breaks the prediction and allows for an infinite jump bug
 	// realistically being able to jump while duck only really affects stuff like rocket jumping/surfing
+	// plus tf2 doesnt allow this anyway so its accurate to source :PPP
+
 
 	// jump velocity is sqrt( height * gravity * 2)
 
@@ -2026,6 +2054,8 @@ void CBasePlayer::PreThink()
 	UpdateClientData();
 
 	CheckTimeBasedDamage();
+
+	CheckTeamFortressConditions();
 
 	CheckSuitUpdate();
 
@@ -2340,74 +2370,178 @@ void CBasePlayer::CheckTimeBasedDamage()
 	}
 }
 
-/*
-THE POWER SUIT
+void CBasePlayer::CheckTeamFortressConditions()
+{
+	// CONSTANT TFCOND's
+	// TFCONDS THAT ARE CONSTANTLY DOING/CHANGING STUFF WHEN ACTIVE
+	if (IsInCond(TF_COND_AIMING) || IsInCond(TF_COND_STUNNED))
+	{
+		SetResetMaxSpeed(0.3);
+		if (pev->bInDuck) // if in duck state, then just zero speed out
+		{
+			// ALERT(at_console, "zero'd aiming max speed");
+			pev->velocity[0] = pev->velocity[1] = 0.0;
+			SetResetMaxSpeed(0.001);
+		}
+	}
+	if (IsInCond(TF_COND_SPEED_BOOST) || IsInCond(TF_COND_HALLOWEEN_SPEED_BOOST))
+	{
+		float speed = GetClassMaxSpeed(m_iClass);
+		speed += V_min(speed * 0.4, 105.0);
+		g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
+		pev->maxspeed = speed;
+	}
+	if (IsInCond(TF_COND_BLASTJUMPING))
+	{
+		// if ur on the ground while rocket-jumping, then remove condition
+		if ((pev->flags & FL_ONGROUND)) //&& pev->groundentity)
+		{
+			RemoveCondition(TF_COND_BLASTJUMPING);
+		}
+	}
 
-The Suit provides 3 main functions: Protection, Notification and Augmentation. 
-Some functions are automatic, some require power. 
-The player gets the suit shortly after getting off the train in C1A0 and it stays
-with him for the entire game.
 
-Protection
+	// TIME BASED TFCOND's
+	// TFCONDS THAT ARE ON AN INTERVAL
+	// kept seperate for organization reasons
+	// this prevents these types of conditions from constantly triggering and being messy
+	// SOME OF THESE ARE HARDCODED!!! ( afterburn, bleeding )
+	if (IsInCond(TF_COND_BURNING))
+	{
+		if (fabs(gpGlobals->time - m_iTFConds[TF_COND_BURNING][3]) >= 0.5)
+		{
+			m_iTFConds[TF_COND_BURNING][3] = gpGlobals->time;
 
-	Heat/Cold
-		When the player enters a hot/cold area, the heating/cooling indicator on the suit 
-		will come on and the battery will drain while the player stays in the area. 
-		After the battery is dead, the player starts to take damage. 
-		This feature is built into the suit and is automatically engaged.
-	Radiation Syringe
-		This will cause the player to be immune from the effects of radiation for N seconds. Single use item.
-	Anti-Toxin Syringe
-		This will cure the player from being poisoned. Single use item.
-	Health
-		Small (1st aid kits, food, etc.)
-		Large (boxes on walls)
-	Armor
-		The armor works using energy to create a protective field that deflects a
-		percentage of damage projectile and explosive attacks. After the armor has been deployed,
-		it will attempt to recharge itself to full capacity with the energy reserves from the battery.
-		It takes the armor N seconds to fully charge. 
+			if (!IsInCond(TF_COND_AFTERBURN_IMMUNE)) // if immune then ignore
+			{
+				edict_t* index = INDEXENT(m_iTFConds[TF_COND_BURNING][1]);
+				if (index)
+				{
+					entvars_t* pointer = Instance(index)->pev;
 
-Notification (via the HUD)
+					TakeDamage(pointer, pointer, 4, DMG_SLOWBURN);
+				}
+			}
+		}
+	}
 
-x	Health
-x	Ammo  
-x	Automatic Health Care
-		Notifies the player when automatic healing has been engaged. 
-x	Geiger counter
-		Classic Geiger counter sound and status bar at top of HUD 
-		alerts player to dangerous levels of radiation. This is not visible when radiation levels are normal.
-x	Poison
-	Armor
-		Displays the current level of armor. 
+	if (IsInCond(TF_COND_BLEEDING))
+	{
+		if (fabs(gpGlobals->time - m_iTFConds[TF_COND_BLEEDING][3]) >= 0.5)
+		{
+			m_iTFConds[TF_COND_BLEEDING][3] = gpGlobals->time;
 
-Augmentation 
+			edict_t* index = INDEXENT(m_iTFConds[TF_COND_BLEEDING][1]);
+			if (index)
+			{
+				entvars_t* pointer = Instance(index)->pev;
 
-	Reanimation (w/adrenaline)
-		Causes the player to come back to life after he has been dead for 3 seconds. 
-		Will not work if player was gibbed. Single use.
-	Long Jump
-		Used by hitting the ??? key(s). Caused the player to further than normal.
-	SCUBA	
-		Used automatically after picked up and after player enters the water. 
-		Works for N seconds. Single use.	
+				TakeDamage(pointer, pointer, 4, DMG_SLASH);
+			}
+		}
+	}
+
+}
+
+void CBasePlayer::AddCondition(ETFCond eCond, float flDuration /* = PERMANENT_CONDITION */, CBaseEntity* pProvider /*= NULL */, float timeBetweenTrigger)
+{
+	// most logic converted from tf2 sdk
+
+	if (!(eCond > -1 && eCond < TF_COND_LAST))
+		return; // invalid condition bro o_0
 	
-Things powered by the battery
+	if (!IsAlive())
+		return;
 
-	Armor		
-		Uses N watts for every M units of damage.
-	Heat/Cool	
-		Uses N watts for every second in hot/cold area.
-	Long Jump	
-		Uses N watts for every jump.
-	Alien Cloak	
-		Uses N watts for each use. Each use lasts M seconds.
-	Alien Shield	
-		Augments armor. Reduces Armor drain by one half
- 
-*/
+	// sanity check to prevent servers from adding these conditions when they shouldn't
+	if ((eCond == TF_COND_COMPETITIVE_WINNER) || (eCond == TF_COND_COMPETITIVE_LOSER))
+	{
+		if (g_fGameOver)
+			return; // GAME OVER BRO!
+	}
 
-// if in range of radiation source, ping geiger counter
+	if (flDuration != PERMANENT_CONDITION)
+	{
+		// if our current condition is permanent or we're trying to set a new
+		// time that's less our current time remaining, use our current time instead
+		if ((m_iTFConds[eCond][0] == PERMANENT_CONDITION) ||
+			(flDuration < m_iTFConds[eCond][0]))
+		{
+			flDuration = m_iTFConds[eCond][0];
+		}
+	}
+	
+	if (flDuration != PERMANENT_CONDITION)
+		m_iTFConds[eCond][0] = gpGlobals->time + flDuration; // after the global time reaches this, then the condition is no longer active
+	else
+		m_iTFConds[eCond][0] = -1; // infinite
+
+	if(!pProvider)
+		pProvider = this;
+
+	m_iTFConds[eCond][1] = pProvider->entindex();
+
+	m_iTFConds[eCond][2] = timeBetweenTrigger;
+
+	m_iTFConds[eCond][3] = gpGlobals->time + timeBetweenTrigger;
+
+	// [x][0] = m_flExpireTime -- the time the condition runs out ( set this to -1 so it lasts forever! )
+	// [x][1] = m_pProvider -- who gave you the condition
+	// [x][2] = how often the condition gets triggered, if it is a non-constant condition
+	// this prevents these types of conditions from constantly triggering and causing unwanted shit
+	// SOME OF THESE ARE HARDCODED!!! ( afterburn, bleeding )
+	// [x][3] = the last time the non-constant condition triggered
+	// [x] = the condition itself
+	
+}
+
+void CBasePlayer::RemoveCondition(ETFCond eCond)
+{
+	// most logic from tf2 sdk
+
+	if (!(eCond > -1 && eCond < TF_COND_LAST))
+		return; // invalid condition bro o_0
+
+	if (!IsInCond(eCond))
+		return;
+
+	m_iTFConds[eCond][0] = gpGlobals->time - 1.0;
+	// forces the clear time to occur
+	// ex: condition runs until time 6
+	// current time is 3
+	// this forces the condition to run until the current time minus one, so it gets set to time 2
+	// since that time has passed, then IsInCond will return false
+	// THATS WHY IT'S IMPORTANT TO USE IsInCond!!!!!!!!!!
+	
+	if (m_iTFConds[eCond][0] == -1)
+		m_iTFConds[eCond][0] == 0;
+	// special case for infinite conditions
+	// this shouldnt happen unless you manage to give a player a condition and then remove that condition on tick 0
+	// that should literally be impossible
+	// HOWEVER, im not gonna risk it
+
+	m_iTFConds[eCond][1] = NULL;
+	m_iTFConds[eCond][2] = -1.0;
+	m_iTFConds[eCond][3] = -1.0;
+	// [x][0] = m_flExpireTime -- the time the condition runs out ( set this to -1 so it lasts forever! )
+	// [x][1] = m_pProvider -- who gave you the condition
+	// [x][2] = how often the condition gets triggered, if it is a non-constant condition
+	// this prevents these types of conditions from constantly triggering and causing unwanted shit
+	// SOME OF THESE ARE HARDCODED!!! ( afterburn, bleeding )
+	// [x][3] = the last time the non-constant condition triggered
+	// [x] = the condition itself
+}
+
+bool CBasePlayer::IsInCond(ETFCond eCond)
+{
+	if (m_iTFConds[eCond][0] == -1) // -1 is infinite
+		return true;
+	
+	if (m_iTFConds[eCond][0] > gpGlobals->time) // if time hasnt ended for the condition, then ur in the condition silly!!!
+		return true;
+
+	return false;
+}
 
 #define GEIGERDELAY 0.25
 
@@ -3066,42 +3200,25 @@ int GetClassMaxHealth(int iClass)
 	return 125;
 }
 
-float GetClassMaxSpeed(int iClass)
-{
-	float speed = 300.0; // base speed
-	// for some reason the values were all fucked up in the original version
-	// not too different though, so i just added base tf2 values
-	// i also left the variable above so unlocks will be easier
-	switch (iClass)
-	{
-		case CLASS_SCOUT: 
-			speed * 1.33;
-		case CLASS_HEAVY: 
-			speed * 0.77;
-		case CLASS_SOLDIER: 
-			speed * 0.8;
-		case CLASS_PYRO: 
-			speed * 1.0;
-		case CLASS_SNIPER: 
-			speed * 1.0;
-		case CLASS_MEDIC: 
-			speed * 1.07;
-		case CLASS_ENGINEER: 
-			speed * 1.0;
-		case CLASS_DEMOMAN: 
-			speed * 0.93;
-		case CLASS_SPY: 
-			speed * 1.07;
-	}
-	return speed;
-}
-
 void CBasePlayer::ResetMaxSpeed()
 {
 	float speed = GetClassMaxSpeed(m_iClass);
-
-	if (IsObserver())
+	
+	if (IsObserver() && !IsAlive())
 		speed = 1200.0;
+
+	g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
+	pev->maxspeed = speed; // just in case
+}
+
+void CBasePlayer::SetResetMaxSpeed(float percent)
+{
+	float speed = GetClassMaxSpeed(m_iClass);
+
+	if (IsObserver() && !IsAlive())
+		speed = 1200.0;
+
+	speed *= percent;
 
 	g_engfuncs.pfnSetClientMaxspeed(ENT(pev), speed);
 	pev->maxspeed = speed; // just in case
@@ -3109,6 +3226,13 @@ void CBasePlayer::ResetMaxSpeed()
 
 void CBasePlayer::SetPlayerModel()
 {
+	//if (this->IsFakeClient())
+	//{
+		//ALERT(at_console, "bot spawned");
+		//SET_MODEL(ENT(pev), "models/player.mdl");
+		//return;
+	//}
+
 	char* model;
 
 	switch (m_iClass)
@@ -3360,6 +3484,11 @@ void CBasePlayer::RenewItems()
 
 void CBasePlayer::SpawnClassWeapons()
 {
+	//if (this->IsFakeClient())
+	//{
+		///m_iClass = 0;
+	//}
+
 	switch( m_iClass )
 	{
 		default:
@@ -3402,8 +3531,9 @@ void CBasePlayer::SpawnClassWeapons()
 		}
 		case CLASS_HEAVY:
 		{
+			GiveNamedItem("weapon_minigun");
 			GiveNamedItem("weapon_shotgun");
-			GiveNamedItem("weapon_crowbar");
+			GiveNamedItem("weapon_fists");
 			ALERT(at_console, "Player spawned as Heavy!\n");
 			break;
 		}
@@ -3424,7 +3554,7 @@ void CBasePlayer::SpawnClassWeapons()
 		}
 		case CLASS_SNIPER:
 		{
-			GiveNamedItem("weapon_crossbow"); // stand-in for sniper rifle
+			GiveNamedItem("weapon_sniperrifle");
 			GiveNamedItem("weapon_mp5"); // stand-in for SMG
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Sniper!\n");

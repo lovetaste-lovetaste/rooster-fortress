@@ -164,6 +164,7 @@ void CRpgRocket::IgniteThink()
 
 	SetThink(&CRpgRocket::FollowThink);
 	pev->nextthink = gpGlobals->time + 0.1;
+	
 }
 
 

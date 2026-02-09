@@ -1989,6 +1989,8 @@ void TFClient_JoinTeam(edict_t* pEntity)
 
 		player->SetTeamNumber(TEAM_RED);
 		player->m_iTeam = TEAM_RED;
+		// UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s joined the RED team.\n",(!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
+
 
 		if (player->m_iClass != CLASS_UNKNOWN)
 		{
@@ -2017,6 +2019,8 @@ void TFClient_JoinTeam(edict_t* pEntity)
 
 		player->SetTeamNumber(TEAM_BLUE);
 		player->m_iTeam = TEAM_BLUE;
+
+		//UTIL_ClientPrintAll(HUD_PRINTNOTIFY, UTIL_VarArgs("%s joined the BLU team.\n",((!FStringNull(pev->netname) && STRING(pev->netname)[0] != 0) ? STRING(pev->netname) : "unconnected"));
 
 		CLIENT_PRINTF(player->edict(), print_center, "You switched to the BLU team.");
 

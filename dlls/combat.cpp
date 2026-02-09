@@ -1100,6 +1100,10 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 							// only happens when the soldier is both not on the ground and not fully underwater
 							// ALERT(at_console, "detected soldier rocket jump, reduced dmg!!!\n");
 							flAdjustedDamage *= 0.60;
+							if (!edictPlayer->IsInCond(TF_COND_BLASTJUMPING))
+							{
+								edictPlayer->AddCondition(TF_COND_BLASTJUMPING, PERMANENT_CONDITION, edictPlayer, -1);
+							}
 						}
 						else
 						{
@@ -1389,9 +1393,7 @@ void CBaseMonster::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector ve
 		switch (ptr->iHitgroup)
 		{
 		case HITGROUP_GENERIC:
-			break;
 		case HITGROUP_HEAD:
-			flDamage *= gSkillData.monHead;
 			break;
 		case HITGROUP_CHEST:
 			flDamage *= gSkillData.monChest;
@@ -1600,11 +1602,22 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 			
 			if (0 != iDamage)
 			{
-				if (iBulletType == BULLET_PLAYER_TF2)
+				if (iBulletType == BULLET_PLAYER_TF2 || iBulletType == BULLET_PLAYER_TF2_HEADSHOT)
 				{
 					int iCrit = 0; // full crits are 2 and above, mini-crits are 1
-
 					int bitsDamageType = DMG_BULLET;
+
+					if (iBulletType == BULLET_PLAYER_TF2_HEADSHOT)
+					{
+						// ALERT(at_console, "BULLET_PLAYER_TF2_HEADSHOT\n");
+
+						bitsDamageType |= DMG_NOFALLOFF;
+
+						if (tr.iHitgroup == HITGROUP_HEAD)
+						{
+							iCrit = 2;
+						}
+					}
 
 					if (iCrit >= 2)
 						bitsDamageType |= DMG_CRIT;

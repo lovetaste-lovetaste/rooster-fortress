@@ -16,7 +16,6 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 void EV_FireGlock1(event_args_t* args);
 void EV_FireGlock2(event_args_t* args);
 void EV_FireShotGunSingle(event_args_t* args);
-void EV_FireShotGunDouble(event_args_t* args);
 void EV_FireMP5(event_args_t* args);
 void EV_FireMP52(event_args_t* args);
 void EV_FirePython(event_args_t* args);
@@ -39,6 +38,10 @@ void EV_Bat(event_args_t* args);
 void EV_Revolver(event_args_t* args);
 void EV_Knife(event_args_t* args);
 void EV_GrenadeLauncher(event_args_t* args);
+void EV_Minigun(event_args_t* args);
+void EV_FireMinigun(event_args_t* args);
+void EV_MeleeWeapon(event_args_t* args);
+void EV_SniperRifle(event_args_t* args);
 
 void EV_TrainPitchAdjust(event_args_t* args);
 void EV_VehiclePitchAdjust(event_args_t* args);

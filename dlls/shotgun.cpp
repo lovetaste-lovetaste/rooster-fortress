@@ -48,6 +48,7 @@ void CShotgun::Precache()
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_soldier.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_pyro.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_engineer.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_shotgun_heavy.mdl");
 
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 
@@ -68,7 +69,6 @@ void CShotgun::Precache()
 	PRECACHE_SOUND("weapons/scock1.wav");	 // cock gun
 
 	m_usSingleFire = PRECACHE_EVENT(1, "events/shotgun1.sc");
-	m_usDoubleFire = PRECACHE_EVENT(1, "events/shotgun2.sc");
 }
 
 bool CShotgun::GetItemInfo(ItemInfo* p)
@@ -112,8 +112,8 @@ bool CShotgun::Deploy()
 		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_pyro.mdl";
 	else if (m_pPlayer->m_iClass == CLASS_ENGINEER)
 		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_engineer.mdl";
-	// else if (m_pPlayer->m_iClass == CLASS_HEAVY)
-		// classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_heavy.mdl";
+	else if (m_pPlayer->m_iClass == CLASS_HEAVY)
+		classViewmodel = "models/rooster_fortress/viewmodels/v_shotgun_heavy.mdl";
 	
 	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", SHOTGUN_DRAW, "shotgun", 3);
 }

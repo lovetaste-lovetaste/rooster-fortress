@@ -253,6 +253,8 @@ enum ETFCond
 
 #define CHAT_INTERVAL 1.0f
 
+#define PERMANENT_CONDITION -1 // this is for player conditions; an exception to last forever
+
 class CBasePlayer : public CBaseMonster
 {
 public:
@@ -306,7 +308,19 @@ public:
 
 	unsigned int m_afPhysicsFlags; // physics flags - set when 'normal' physics should be revisited or overriden
 	float m_fNextSuicideTime;	   // the time after which the player can next use the suicide command
-
+	
+	int m_iTFConds[TF_COND_LAST][5];
+	// table of tf2 conditions stuff to keep track of
+	// [x][0] = m_flExpireTime -- the time the condition runs out ( set this to -1 so it lasts forever! )
+	// [x][1] = m_pProvider -- who gave you the condition
+	// [x][2] = how often the condition gets triggered, if it is a non-constant condition
+	// this prevents these types of conditions from constantly triggering and causing unwanted shit
+	// SOME OF THESE ARE HARDCODED!!! ( afterburn, bleeding )
+	// [x][3] = the last time the non-constant condition triggered
+	// [x] = the condition itself
+	void AddCondition(ETFCond eCond, float flDuration /* = PERMANENT_CONDITION */, CBaseEntity* pProvider /*= NULL */, float timeBetweenTrigger = -1.0);
+	void RemoveCondition(ETFCond eCond);
+	bool IsInCond(ETFCond eCond);
 
 	// these are time-sensitive things that we keep track of
 	float m_flTimeStepSound;  // when the last stepping sound was made
@@ -386,6 +400,7 @@ public:
 	void SetPlayerModel();
 
 	void ResetMaxSpeed();
+	void SetResetMaxSpeed(float percent); // resets max speed based off of class, then multiplies it
 
 	void Spawn() override;
 	void Pain();
@@ -495,6 +510,7 @@ public:
 	void SetSuitUpdate(const char* name, bool fgroup, int iNoRepeat);
 	void UpdateGeigerCounter();
 	void CheckTimeBasedDamage();
+	void CheckTeamFortressConditions();
 
 	bool FBecomeProne() override;
 	void BarnacleVictimBitten(entvars_t* pevBarnacle) override;

@@ -16,9 +16,9 @@ feel free to help :)
     - Spy ( no cloak / disguise ) -- BASICALLY DONE
       - all hitscan, knife mechanic is not hard to do, mechanics reserved for l8r
       - client based icons ( crit icon ) due to backstabs forcing crits
-    - Heavy
+    - Heavy - BASICALLY DONE
       - TFConditions will appear, besides that hes easy to do
-    - Sniper
+    - Sniper - ALMOST DONE, DO SMG AND KUKRI
       - copy code from heavy minigun slowdown, headshot damage / zoom in / laser spot is already in hl ( magnum revolver / crossbow / rpg laser ), crit icon stuff is already done
     - Pyro
       - TFCondition and afterburn things

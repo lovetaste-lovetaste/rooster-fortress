@@ -347,6 +347,12 @@ void W_Precache()
 
 	UTIL_PrecacheOtherWeapon("weapon_grenadelauncher");
 
+	UTIL_PrecacheOtherWeapon("weapon_minigun");
+
+	UTIL_PrecacheOtherWeapon("weapon_fists");
+
+	UTIL_PrecacheOtherWeapon("weapon_sniperrifle");
+
 	if (g_pGameRules->IsDeathmatch())
 	{
 		UTIL_PrecacheOther("weaponbox"); // container for dropped deathmatch weapons
@@ -575,7 +581,7 @@ void CBasePlayerItem::DefaultTouch(CBaseEntity* pOther)
 	// if it's not a player, ignore
 	if (!pOther->IsPlayer())
 		return;
-
+	
 	if (IsPlayerBusting(pOther))
 		return;
 
@@ -761,7 +767,7 @@ void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body)
 	MESSAGE_END();
 }
 
-void CBasePlayerWeapon::SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int skiplocal)
+void CBasePlayerWeapon::SendWeaponAnimEx(int iAnim, int iBody, int skiplocal)
 {
 	m_pPlayer->pev->weaponanim = iAnim;
 
@@ -770,10 +776,9 @@ void CBasePlayerWeapon::SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int sk
 		return;
 #endif
 
-	MESSAGE_BEGIN(MSG_ONE, gmsgWeaponAnimEx, NULL, m_pPlayer->pev);
-	WRITE_BYTE(iAnim);
-	WRITE_BYTE(iBody);
-	WRITE_BYTE(iSkin);
+	MESSAGE_BEGIN(MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev);
+	WRITE_BYTE(iAnim);	   // sequence number
+	WRITE_BYTE(iBody);	   // weaponmodel bodygroup.
 	MESSAGE_END();
 }
 
@@ -882,10 +887,11 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
 	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
 	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
-	SendWeaponAnim(iAnim, body);
+
+	SendWeaponAnim(iAnim, UseDecrement() != false);
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 	m_flLastFireTime = 0.0;
 
 	return true;
@@ -905,7 +911,7 @@ bool CBasePlayerWeapon::GroupDeploy(char* szViewModel, char* szWeaponModel, int 
 	if (!iViewBody)
 		SendWeaponAnim(iViewAnim, UseDecrement() != false);
 	else
-		SendWeaponAnimEx(iViewAnim, iViewBody, iViewSkin, UseDecrement() != false);
+		SendWeaponAnimEx(iViewAnim, iViewBody, UseDecrement() != false);
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	m_pPlayer->SetAnimation(PLAYER_IDLE);

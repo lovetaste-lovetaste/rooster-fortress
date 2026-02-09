@@ -204,7 +204,7 @@ void Bot_Think(int client)
 
 	if (pBot->GetTeamNumber() == TEAM_UNASSIGNED)
 	{
-		pBot->SetTeamNumber((RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
+		pBot->SetTeamNumber(TEAM_BLUE); //(RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
 	}
 	else if (pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->m_iClass == CLASS_UNDEFINED)
 	{
@@ -424,7 +424,7 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 	g_BotData[client].Targets[0] = FindNearestEnemy(client, 0, 2048);
 	// this can be extended but 2048 is fine for now
 
-	if (!IsTargetVisible(client, g_BotData[client].Targets[0]))
+	// if (!IsTargetVisible(client, g_BotData[client].Targets[0]))
 		g_BotData[client].Targets[0] = NULL;
 	// this is probably not needed but sometimes the bot breaks without it
 
@@ -435,7 +435,7 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 			g_BotData[client].combatPercent = 100.0;
 		// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
 		
-		TF2_LookAtPos(client, vecAngles, g_BotData[client].Targets[0]->pev->origin, 0.8);
+		TF2_LookAtPos(client, vecAngles, g_BotData[client].Targets[0]->pev->origin, 0.05);
 
 		CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)pBot->m_pActiveItem;
 
@@ -543,14 +543,11 @@ void Bot_AliveMovementThink(int client, Vector* vecAngles, Vector* vecMove)
 			}
 			else
 			{
-				float distancefrom = (g_BotData[client].Targets[0]->pev->origin - pBot->pev->origin).Length();
-
 				if (random % 6 == 0)
 					vecMove->y = 500.0;
 				else if (random % 6 == 1)
 					vecMove->y = -500.0;
-				
-				if (distancefrom > 256.0)
+				else
 					vecMove->x = 500.0;
 
 				if (pBot->m_pActiveItem->m_iId == WEAPON_RPG || 
@@ -570,7 +567,7 @@ void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 
-	if (g_BotData[client].Targets[0] != NULL) // in combat
+	if (g_BotData[client].Targets[0] != NULL) // in commbat
 	{
 		switch (pBot->m_iClass)
 		{
@@ -584,7 +581,9 @@ void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 					}
 					else
 						pBot->SelectItem("weapon_bat");
+					
 				}
+
 				break;
 			}
 			case CLASS_SNIPER:
@@ -613,19 +612,6 @@ void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 				else
 				{
 					pBot->SelectItem("weapon_rpg");
-				}
-				break;
-			}
-			case CLASS_ENGINEER:
-			{
-				if (pBot->m_pActiveItem->GetWeaponPtr()->m_iClip <= 0 && !(pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN))
-				{
-					if (pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN)
-					{
-						pBot->SelectItem("weapon_pistol");
-					}
-					else
-						pBot->SelectItem("weapon_wrench");
 				}
 				break;
 			}

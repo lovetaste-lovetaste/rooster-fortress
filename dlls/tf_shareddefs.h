@@ -118,7 +118,7 @@ enum ETFCond
 	TF_COND_RUNE_SUPERNOVA = 111,
 	TF_COND_PLAGUE = 112,
 	TF_COND_KING_BUFFED = 113,
-	TF_COND_TEAM_GLOWS = 114, // used to show team glows to living players
+	TF_COND_TEAM_GLOWS = 114, // used to show team glows to living playzers
 	TF_COND_KNOCKED_INTO_AIR = 115,
 	TF_COND_COMPETITIVE_WINNER = 116,
 	TF_COND_COMPETITIVE_LOSER = 117,

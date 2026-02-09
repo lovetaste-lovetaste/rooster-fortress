@@ -182,7 +182,8 @@ typedef enum
 	BULLET_PLAYER_MP5,		// mp5
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_TF2, //
+	BULLET_PLAYER_TF2,			//BULLET_PLAYER_TF2, compatible with crits
+	BULLET_PLAYER_TF2_HEADSHOT, // for headshots ( sniper + misc )
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
 
 	BULLET_MONSTER_9MM,
@@ -342,7 +343,7 @@ public:
 
 	virtual void SendWeaponAnim(int iAnim, int body = 0);
 
-	void SendWeaponAnimEx(int iAnim, int iBody, int iSkin, int skiplocal);
+	void SendWeaponAnimEx(int iAnim, int iBody, int skiplocal);
 
 	void FindHullIntersection(const Vector& vecSrc, TraceResult& tr, const Vector& mins, const Vector& maxs, edict_t* pEntity);
 
@@ -770,7 +771,6 @@ public:
 	}
 
 private:
-	unsigned short m_usDoubleFire;
 	unsigned short m_usSingleFire;
 };
 
@@ -1575,4 +1575,166 @@ public:
 
 private:
 	unsigned short m_usKnife;
+};
+
+enum minigun_e
+{
+	MINIGUN_DRAW = 0,
+	MINIGUN_FIRE,
+	MINIGUN_IDLE,
+	MINIGUN_UNREV,
+	MINIGUN_IDLE_REVVED,
+	MINIGUN_REV
+};
+
+// from the tf2 sdk
+enum minigunstate_t
+{
+	// Firing states
+	MINIGUN_STATE_IDLE = 0,
+	MINIGUN_STATE_STARTSPINNING,
+	MINIGUN_STATE_FIRING,
+	MINIGUN_STATE_FIRING_CRIT,
+	MINIGUN_STATE_SPINNING,
+	MINIGUN_STATE_STOPSPINNING,
+	MINIGUN_STATE_DRYFIRE
+};
+
+class CMinigun : public CBasePlayerWeapon
+{
+public:
+	void Holster() override;
+	bool CanHolster() override;
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 2; }
+	bool GetItemInfo(ItemInfo* p) override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	
+	void ItemPostFrame() override;
+	
+	void MinigunFire(float flSpread, float flCycleTime);
+
+	void StartRevving(float revtime);
+	void StopRevving();
+	void IdleNonRevved();
+	void IdleRev();
+	// void DryRevved();
+	// void SharedAttack();
+	void DebugStater();
+	bool Deploy() override;
+	
+	void Reload() override;
+	void WeaponIdle() override;
+	int m_iWeaponState;
+	float m_flStartedWindUpAt;
+	float m_flStartedWindDownAt;
+	float m_flStartedFiringAt;
+	
+	
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	int m_iShell;
+
+
+	unsigned short m_usFireMinigun;
+};
+
+enum melee_e
+{
+	MELEE_DRAW,
+	MELEE_IDLE,
+	MELEE_REF,
+	MELEE_SWING_A,
+	MELEE_SWING_B,
+	MELEE_SWING_C
+};
+
+class CBasePlayerMelee : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+
+	int iItemSlot() override { return 1; }
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void EXPORT Swing();
+
+	void PrimaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	int MELEE_BODYHIT_VOLUME = 128;
+	int MELEE_WALLHIT_VOLUME = 512;
+
+	unsigned short m_usMeleeWeapon;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+};
+
+class CFists : public CBasePlayerMelee
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	bool GetItemInfo(ItemInfo* p) override;
+	bool Deploy() override;
+	void PrimaryAttack() override;
+};
+
+enum sniperrifle_e
+{
+	SNIPERRIFLE_DRAW,
+	SNIPERRIFLE_FIRE,
+	SNIPERRIFLE_IDLE	
+};
+
+class CSniperRifle : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 2; }
+	bool GetItemInfo(ItemInfo* p) override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void Reload() override;
+	void WeaponIdle() override;
+	void ItemPostFrame() override;
+
+	void HandleZooms();
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usSniperRifle;
 };
