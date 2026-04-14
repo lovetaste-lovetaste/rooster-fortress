@@ -19,7 +19,6 @@
 	{         \
 		a, #a \
 	}
-
 activity_map_t activity_map[] =
 	{
 		_A(ACT_IDLE),

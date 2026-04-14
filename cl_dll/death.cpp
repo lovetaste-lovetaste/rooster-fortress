@@ -39,7 +39,7 @@ struct DeathNoticeItem
 	float* VictimColor;
 };
 
-#define MAX_DEATHNOTICES 4
+#define MAX_DEATHNOTICES 16
 static int DEATHNOTICE_DISPLAY_TIME = 6;
 
 #define DEATHNOTICE_TOP 64

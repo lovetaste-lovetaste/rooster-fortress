@@ -1,4 +1,4 @@
-// Client side entity management functions
+﻿// Client side entity management functions
 
 #include <memory.h>
 
@@ -15,6 +15,10 @@
 #include "Exports.h"
 
 #include "particleman.h"
+
+// #include "kRenderFx.h" // render FX constants
+#include "const.h"
+
 extern IParticleMan* g_pParticleMan;
 
 void Game_AddObjects();
@@ -22,6 +26,15 @@ void Game_AddObjects();
 extern Vector v_origin;
 
 bool g_iAlive = true;
+
+static float PulseValue(float low, float high, float speed)
+{
+	float t = gEngfuncs.GetClientTime();
+	// sin() returns [-1, 1], remap to [0, 1], then to [low, high]
+	float normalized = (sinf(t * speed * 2.0f * M_PI) + 1.0f) * 0.5f;
+	return low + normalized * (high - low);
+}
+
 
 /*
 ========================
@@ -33,11 +46,39 @@ int DLLEXPORT HUD_AddEntity(int type, struct cl_entity_s* ent, const char* model
 {
 	//	RecClAddEntity(type, ent, modelname);
 
+	// pev->renderfx = kRenderFxGlowShell
+
+
 	switch (type)
 	{
 	case ET_NORMAL:
 		break;
 	case ET_PLAYER:
+	{
+		if (false)	// if (ubercharged)
+		{
+			// --- Glow Shell Setup ---
+			// kRenderFxGlowShell renders a scaled-up, tinted copy of the
+			// model additively on top, just like TF2's crit shell.
+			ent->curstate.renderfx = kRenderFxGlowShell;
+			float pulse = PulseValue(0.0f, 1.0f, 2.0f); // normalized 0–1
+
+			ent->curstate.rendercolor.r = 255;
+			ent->curstate.rendercolor.g = (byte)(pulse * 80.0f); // 0 → 80 green at peak
+			ent->curstate.rendercolor.b = (byte)(pulse * 30.0f); // 0 → 30 blue at peak
+			ent->curstate.renderamt = (byte)(20.0f + pulse * 60.0f);
+		}
+		else
+		{
+			// Always reset cleanly when not crit-boosted.
+			// If you DON'T reset, the glow will stick after the boost ends.
+			ent->curstate.renderfx = kRenderFxNone;
+			ent->curstate.rendercolor.r = 0;
+			ent->curstate.rendercolor.g = 0;
+			ent->curstate.rendercolor.b = 0;
+			ent->curstate.renderamt = 0;
+		}
+	}
 	case ET_BEAM:
 	case ET_TEMPENTITY:
 	case ET_FRAGMENTED:

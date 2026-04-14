@@ -17,6 +17,7 @@
 //
 #include "hud.h"
 #include "cl_util.h"
+#include "hud_killcam.h"
 
 #include "vgui_TeamFortressViewport.h"
 
@@ -46,6 +47,14 @@ void CHud::Think()
 
 	while (pList)
 	{
+		if (KillCam_IsActive() && pList->p != static_cast<CHudBase*>(&m_Killcam))
+		{
+			// Allow only: scoreboard, net graph, console — skip everything else
+		//	pList = pList->pNext;
+		//	continue;
+			break;
+		}
+
 		if ((pList->p->m_iFlags & HUD_ACTIVE) != 0)
 			pList->p->Think();
 		pList = pList->pNext;

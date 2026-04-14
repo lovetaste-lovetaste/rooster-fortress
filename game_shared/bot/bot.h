@@ -19,6 +19,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "player.h"
+#include "weapons.h"
 
 #include "bot_manager.h"
 #include "bot_util.h"
@@ -81,7 +82,7 @@ public:
 
 	unsigned int GetID( void ) const	{ return m_id; }	///< return bot's unique ID
 
-	virtual BOOL IsBot( void ) { return true; }	
+	virtual bool IsBot( void ) { return true; }	
 
 	virtual void SpawnBot( void ) = 0;
 	virtual void Upkeep( void ) = 0;						///< lightweight maintenance, invoked frequently
@@ -126,8 +127,8 @@ public:
 	bool IsActiveWeaponOutOfAmmo( void ) const;				///< return true if active weapon has no ammo at all
 	bool IsActiveWeaponReloading( void ) const;				///< is the weapon in the middle of a reload
 	bool IsActiveWeaponRecoilHigh( void ) const;			///< return true if active weapon's bullet spray has become large and inaccurate
-	CBasePlayerWeapon *GetActiveWeapon( void ) const;		///< return the weapon the bot is currently using
 	bool IsUsingScope( void ) const;						///< return true if looking thru weapon's scope
+	CBasePlayerWeapon* GetActiveWeapon(void) const;			///< return the weapon the bot is currently using
 
 
 	//------------------------------------------------------------------------------------
@@ -135,7 +136,7 @@ public:
 	//
 
 	/// invoked when injured by something (EXTEND)
-	virtual int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType )
+	virtual bool TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType )
 	{
 		return CBasePlayer::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 	}
@@ -179,7 +180,7 @@ public:
 	// Information query
 	//
 
-	bool IsEnemy( CBaseEntity *ent ) const;					///< returns TRUE if given entity is our enemy
+	bool IsEnemy( CBaseEntity *ent ) const;					///< returns true if given entity is our enemy
 	int GetEnemiesRemaining( void ) const;					///< return number of enemies left alive
 	int GetFriendsRemaining( void ) const;					///< return number of friends left alive
 
@@ -194,7 +195,7 @@ public:
 
 	void Spawn( void );
 	void BotThink( void );
-	bool IsNetClient( void ) const			{ return FALSE; }
+	bool IsNetClient( void ) const			{ return false; }
 	int Save( CSave &save )	const			{ return 0; }
 	int Restore( CRestore &restore ) const	{ return 0; }
 	virtual void Think( void ) { }
@@ -296,12 +297,7 @@ inline bool CBot::IsActiveWeaponReloading( void ) const
 //-----------------------------------------------------------------------------------------------------------
 inline bool CBot::IsActiveWeaponRecoilHigh( void ) const
 {
-	CBasePlayerWeapon *gun = GetActiveWeapon();
-	if (gun == NULL)
-		return false;
-
-	const float highRecoil = 0.4f;
-	return (gun->m_flAccuracy > highRecoil) ? true : false;
+	return false;	//  tf2 has no high recoil
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -355,7 +351,7 @@ inline bool CBot::IsPlayerFacingMe( CBasePlayer *other ) const
 inline bool CBot::IsPlayerLookingAtMe( CBasePlayer *other ) const
 {
 	Vector toOther = other->pev->origin - pev->origin;
-	toOther.NormalizeInPlace();
+	toOther.Normalize();
 
 	// compute the unit vector along our other player's
 	UTIL_MakeVectors( other->pev->v_angle + other->pev->punchangle );

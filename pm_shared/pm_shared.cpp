@@ -2563,6 +2563,10 @@ void PM_PreventMegaBunnyJumping()
 PM_Jump
 =============
 */
+
+#define JUMP_MIN_SPEED 268.3281572999747f
+// taken from tf2
+
 void PM_Jump()
 {
 	int i;
@@ -2687,16 +2691,16 @@ void PM_Jump()
 				pmove->velocity[i] = pmove->forward[i] * PLAYER_LONGJUMP_SPEED * 1.6;
 			}
 
-			pmove->velocity[2] = sqrt(2 * 800 * 56.0);
+			pmove->velocity[2] = JUMP_MIN_SPEED;
 		}
 		else
 		{
-			pmove->velocity[2] = sqrt(2 * 800 * 45.0);
+			pmove->velocity[2] = JUMP_MIN_SPEED;
 		}
 	}
 	else
 	{
-		pmove->velocity[2] = sqrt(2 * 800 * 45.0);
+		pmove->velocity[2] = JUMP_MIN_SPEED;
 	}
 
 	// Decay it for simulation

@@ -240,7 +240,7 @@ void CBasePlayer::WaterMove() {}
 bool CBasePlayer::IsOnLadder() { return false; }
 void CBasePlayer::PlayerDeathThink() {}
 void CBasePlayer::StartDeathCam() {}
-void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle) {}
+void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle, bool setWeapons) {}
 void CBasePlayer::PlayerUse() {}
 void CBasePlayer::Jump() {}
 void CBasePlayer::Duck() {}

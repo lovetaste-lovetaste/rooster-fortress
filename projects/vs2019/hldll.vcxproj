@@ -223,6 +223,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\wpn_revolver.cpp" />
     <ClCompile Include="..\..\dlls\wpn_scattergun.cpp" />
     <ClCompile Include="..\..\dlls\wpn_shovel.cpp" />
+    <ClCompile Include="..\..\dlls\wpn_smg.cpp" />
     <ClCompile Include="..\..\dlls\wpn_sniperrifle.cpp" />
     <ClCompile Include="..\..\dlls\wpn_wrench.cpp" />
     <ClCompile Include="..\..\dlls\xen.cpp" />
@@ -288,6 +289,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\nodes.h" />
     <ClInclude Include="..\..\dlls\plane.h" />
     <ClInclude Include="..\..\dlls\player.h" />
+    <ClInclude Include="..\..\dlls\player_cmodel_patch.h" />
     <ClInclude Include="..\..\dlls\saverestore.h" />
     <ClInclude Include="..\..\dlls\schedule.h" />
     <ClInclude Include="..\..\dlls\scripted.h" />
@@ -299,6 +301,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\talkmonster.h" />
     <ClInclude Include="..\..\dlls\teamplay_gamerules.h" />
     <ClInclude Include="..\..\dlls\tf_bot.h" />
+    <ClInclude Include="..\..\dlls\tf_bot_misc.h" />
     <ClInclude Include="..\..\dlls\tf_shareddefs.h" />
     <ClInclude Include="..\..\dlls\trains.h" />
     <ClInclude Include="..\..\dlls\UserMessages.h" />

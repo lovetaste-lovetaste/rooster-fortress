@@ -36,6 +36,9 @@
 #define MENU_CLASSHELP2 			7
 #define MENU_REPEATHELP 			8
 #define MENU_SPECHELP				9
+#define MENU_TEAM_SELECTION 12
+#define MENU_CLASS_SELECTION 13
+
 using namespace vgui;
 
 class Cursor;
@@ -51,6 +54,8 @@ class DragNDropPanel;
 class CTransparentPanel;
 class CClassMenuPanel;
 class CTeamMenuPanel;
+class CTeamSelectionMenu;
+class CClassSelectionMenu;
 class TeamFortressViewport;
 
 char* GetVGUITGAName(const char *pszName);
@@ -507,7 +512,11 @@ private:
 	void		 CreateClassMenu( void );
 	CMenuPanel*	 ShowClassMenu( void );
 	void		 CreateSpectatorMenu( void );
-	
+	void CreateTeamSelectionMenu();
+	CMenuPanel* ShowTeamSelectionMenu();
+	void CreateClassSelectionMenu();
+	CMenuPanel* ShowClassSelectionMenu();
+
 	// Scheme handler
 	CSchemeManager m_SchemeManager;
 
@@ -596,6 +605,7 @@ public:
 	bool MsgFunc_Feign(const char *pszName, int iSize, void *pbuf );
 	bool MsgFunc_Detpack(const char *pszName, int iSize, void *pbuf );
 	bool MsgFunc_VGUIMenu(const char *pszName, int iSize, void *pbuf );
+	bool MsgFunc_HideVGUIMenu();
 	bool MsgFunc_MOTD( const char *pszName, int iSize, void *pbuf );
 	bool MsgFunc_BuildSt( const char *pszName, int iSize, void *pbuf );
 	bool MsgFunc_RandomPC( const char *pszName, int iSize, void *pbuf );
@@ -622,6 +632,8 @@ public:
 	// VGUI Menus
 	CMenuPanel		*m_pCurrentMenu;
 	CTeamMenuPanel	*m_pTeamMenu;
+	CTeamSelectionMenu* m_pTeamSelectionMenu;
+	CClassSelectionMenu* m_pClassSelectionMenu;
 	int						m_StandardMenu;	// indexs in m_pCommandMenus
 	int						m_SpectatorOptionsMenu;
 	int						m_SpectatorCameraMenu;
@@ -1730,4 +1742,19 @@ public:
 		x += HealthWidth / 2;
 		FillRGBA(x, iYPos + 5, HealthWidth / 10, gHUD.m_iFontHeight, 255, 160, 0, a);
 	}
+};
+
+//=========================================================
+// Team / Class Selection Menu
+//=========================================================
+class CTeamSelectionMenu : public CMenuPanel
+{
+public:
+	CTeamSelectionMenu(int iTrans, int iRemoveMe, int x, int y, int wide, int tall);
+};
+
+class CClassSelectionMenu : public CMenuPanel
+{
+public:
+	CClassSelectionMenu(int iTrans, int iRemoveMe, int x, int y, int wide, int tall);
 };

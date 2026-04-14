@@ -182,7 +182,7 @@ typedef enum
 	BULLET_PLAYER_MP5,		// mp5
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_TF2,			//BULLET_PLAYER_TF2, compatible with crits
+	BULLET_PLAYER_TF2,			// BULLET_PLAYER_TF2, compatible with crits
 	BULLET_PLAYER_TF2_HEADSHOT, // for headshots ( sniper + misc )
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
 
@@ -426,6 +426,8 @@ inline DLL_GLOBAL short g_sModelIndexBloodSpray; // holds the sprite index for b
 
 inline DLL_GLOBAL short g_sModelIndexCriticalHit; // holds the index for the critical hit icon
 inline DLL_GLOBAL short g_sModelIndexMiniCritHit; // holds the index for the mini critical hit icon
+inline DLL_GLOBAL short g_sModelIndexPlayerOnFireFX; // holds the index for the flame effect on players when on fire
+
 
 extern void ClearMultiDamage();
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker);
@@ -460,6 +462,7 @@ inline MULTIDAMAGE gMultiDamage;
 
 #define WEAPON_ACTIVITY_VOLUME 64
 
+#define VECTOR_CONE_0DEGREES Vector(0.0f, 0.0f, 0.0f)
 #define VECTOR_CONE_1DEGREES Vector(0.00873, 0.00873, 0.00873)
 #define VECTOR_CONE_2DEGREES Vector(0.01745, 0.01745, 0.01745)
 #define VECTOR_CONE_3DEGREES Vector(0.02618, 0.02618, 0.02618)
@@ -1709,6 +1712,8 @@ enum sniperrifle_e
 	SNIPERRIFLE_IDLE	
 };
 
+class CSniperDot;
+
 class CSniperRifle : public CBasePlayerWeapon
 {
 public:
@@ -1723,8 +1728,21 @@ public:
 	void Reload() override;
 	void WeaponIdle() override;
 	void ItemPostFrame() override;
-
 	void HandleZooms();
+	void SendScopeMessage(bool bScoped);
+
+	void CreateDot();
+	void UpdateDot();
+	void DestroyDot();
+	CSniperDot* m_pSniperDot; // the world dot entity
+
+	bool m_bCurrentShotIsHeadshot;
+	float m_flChargedDamage;
+	float m_flChargePerSec;
+
+	int m_iLaserSprite;
+	bool m_bWasScoped; // tracks previous frame scope state for message delta
+	float m_flUnscopeTime;
 
 	bool UseDecrement() override
 	{
@@ -1737,4 +1755,43 @@ public:
 
 private:
 	unsigned short m_usSniperRifle;
+};
+
+enum smg_e
+{
+	SMG_DRAW = 0,
+	SMG_FIRE,
+	SMG_IDLE,
+	SMG_RELOAD
+};
+
+class CSmg : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 2; }
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	void GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim);
+	bool Deploy() override;
+	void Reload() override;
+	void WeaponIdle() override;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	int m_iShell;
+
+
+	unsigned short m_usFireSMG;
 };

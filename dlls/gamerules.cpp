@@ -152,26 +152,28 @@ bool CGameRules::CanHavePlayerItem(CBasePlayer* pPlayer, CBasePlayerItem* pWeapo
 	if (pPlayer->pev->deadflag != DEAD_NO)
 		return false;
 
-	if (pWeapon->pszAmmo1())
-	{
-		if (!CanHaveAmmo(pPlayer, pWeapon->pszAmmo1(), pWeapon->iMaxAmmo1()))
-		{
+	// Considering that you cant pick up tf2 weapons to use ( in the same way of half life 1 ), then this is commented out
+	// this might be changed to fit tf2's specific way of doing it. however, for now it's whatever
+	//if (pWeapon->pszAmmo1())
+	//{
+	//	if (!CanHaveAmmo(pPlayer, pWeapon->pszAmmo1(), pWeapon->iMaxAmmo1()))
+		//{
 			// we can't carry anymore ammo for this gun. We can only
 			// have the gun if we aren't already carrying one of this type
-			if (pPlayer->HasPlayerItem(pWeapon))
-			{
-				return false;
-			}
-		}
-	}
-	else
-	{
+			//if (pPlayer->HasPlayerItem(pWeapon))
+			//{
+			//	return false;
+			//}
+		//}
+	//}
+	//else
+	//{
 		// weapon doesn't use ammo, don't take another if you already have it.
 		if (pPlayer->HasPlayerItem(pWeapon))
 		{
 			return false;
 		}
-	}
+	//}
 
 	// note: will fall through to here if GetItemInfo doesn't fill the struct!
 	return true;

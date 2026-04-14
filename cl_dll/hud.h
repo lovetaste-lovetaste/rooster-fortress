@@ -481,6 +481,30 @@ private:
 //-----------------------------------------------------
 //
 
+class CHudSniperScope : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	bool Draw(float flTime) override;
+	int MsgFunc_SniperScope(const char* pszName, int iSize, void* pbuf);
+
+private:
+	bool m_bScoped;
+	int m_iCharge; // 0-100
+	HSPRITE m_hScopeSprite;
+	int m_iScopeSpriteFrame;
+	cvar_t* m_pCvarCrosshair;
+};
+
+class CHudKillCam : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	bool Draw(float flTime) override;
+	int MsgFunc_KillCam(const char* pszName, int iSize, void* pbuf);
+};
 
 class CHud
 {
@@ -506,6 +530,9 @@ public:
 	int m_iFOV;
 	bool m_Teamplay;
 	int m_iRes;
+	//
+	CHudSniperScope m_SniperScope;
+	CHudKillCam m_Killcam;
 	cvar_t* m_pCvarStealMouse;
 	cvar_t* m_pCvarDraw;
 

@@ -42,9 +42,6 @@ class CGrenade;
 class ActiveGrenade
 {
 public:
-	ActiveGrenade( int weaponID, CGrenade *grenadeEntity );
-
-	void OnEntityGone( void );								///< called when the grenade in the world goes away
 	bool IsValid( void ) const	;							///< return true if this grenade is valid
 	bool IsEntity( CGrenade *grenade ) const	{ return (grenade == m_entity) ? true : false; }
 	int GetID( void ) const										{ return m_id; }
@@ -71,7 +68,7 @@ public:
 	CBotManager();
 
 	virtual void ClientDisconnect( CBasePlayer * pPlayer ) = 0;
-	virtual BOOL ClientCommand( CBasePlayer * pPlayer, const char * pcmd ) = 0;
+	virtual bool ClientCommand( CBasePlayer * pPlayer, const char * pcmd ) = 0;
 
 	virtual void ServerActivate( void ) = 0;
 	virtual void ServerDeactivate( void ) = 0;
@@ -92,11 +89,6 @@ public:
 
 	virtual unsigned int GetPlayerPriority( CBasePlayer *player ) const = 0;	///< return priority of player (0 = max pri)
 	
-
-	void AddGrenade( int type, CGrenade *grenade );				///< add an active grenade to the bot's awareness
-	void RemoveGrenade( CGrenade *grenade );					///< the grenade entity in the world is going away
-	void ValidateActiveGrenades( void );						///< destroy any invalid active grenades
-	void DestroyAllGrenades( void );
 	bool IsLineBlockedBySmoke( const Vector *from, const Vector *to );	///< return true if line intersects smoke volume
 	bool IsInsideSmokeCloud( const Vector *pos );				///< return true if position is inside a smoke cloud
 

@@ -30,6 +30,8 @@
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
 
+// #include "hud_sniperscope.cpp"
+
 hud_player_info_t g_PlayerInfoList[MAX_PLAYERS_HUD + 1];	// player info from the engine
 extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1]; // additional player info sent directly to the client dll
 
@@ -395,6 +397,13 @@ int __MsgFunc_VGUIMenu(const char* pszName, int iSize, void* pbuf)
 	return 0;
 }
 
+int __MsgFunc_HideVGUI(const char* pszName, int iSize, void* pbuf)
+{
+	if (gViewPort)
+		return static_cast<int>(gViewPort->MsgFunc_HideVGUIMenu());
+	return 0;
+}
+
 int __MsgFunc_MOTD(const char* pszName, int iSize, void* pbuf)
 {
 	if (gViewPort)
@@ -472,6 +481,11 @@ int __MsgFunc_AllowSpec(const char* pszName, int iSize, void* pbuf)
 	return 0;
 }
 
+int __MsgFunc_KillCam(const char* pszName, int iSize, void* pbuf)
+{
+	return gHUD.m_Killcam.MsgFunc_KillCam(pszName, iSize, pbuf);
+};
+
 // This is called every time the DLL is loaded
 void CHud::Init()
 {
@@ -483,7 +497,7 @@ void CHud::Init()
 	HOOK_MESSAGE(SetFOV);
 	HOOK_MESSAGE(Concuss);
 	HOOK_MESSAGE(Weapons);
-
+	HOOK_MESSAGE(KillCam);
 	HOOK_MESSAGE(Hitsound);
 
 	// TFFree CommandMenu
@@ -512,6 +526,7 @@ void CHud::Init()
 
 	// VGUI Menus
 	HOOK_MESSAGE(VGUIMenu);
+	HOOK_MESSAGE(HideVGUI);
 
 	CVAR_CREATE("hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO); // controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE("hud_takesshots", "0", FCVAR_ARCHIVE);					   // controls whether or not to automatically take screenshots at the end of a round
@@ -522,7 +537,6 @@ void CHud::Init()
 	CVAR_CREATE("tf_dingalingaling_effect", "0", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	CVAR_CREATE("tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	// END Rooster Fortress / TF2 Cvars 
-	
 
 	m_iLogo = 0;
 	m_iFOV = 0;
@@ -570,6 +584,8 @@ void CHud::Init()
 	m_AmmoSecondary.Init();
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
+	m_SniperScope.Init();
+	m_Killcam.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -631,6 +647,8 @@ void CHud::VidInit()
 
 	m_hsprLogo = 0;
 	m_hsprCursor = 0;
+
+	m_SniperScope.VidInit();
 
 	if (ScreenWidth > 2560 && ScreenHeight > 1600)
 		m_iRes = 2560;

@@ -508,11 +508,11 @@ bool CBot::IsLocalPlayerWatchingMe( void ) const
 
 	int myIndex = const_cast<CBot *>(this)->entindex();
 
-	CBasePlayer *player = UTIL_GetLocalPlayer();
+	CBasePlayer* player = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(1));
 	if (player == NULL)
 		return false;
 
-	if (player->pev->flags & FL_SPECTATOR || player->m_iTeam == SPECTATOR)
+	if (player->pev->flags & FL_SPECTATOR || player->m_iTeam == TEAM_SPECTATOR)
 	{
 		if (player->pev->iuser2 == myIndex)
 		{
@@ -581,46 +581,3 @@ void CBot::PrintIfWatched( char *format, ... ) const
 		(*g_engfuncs.pfnServerPrint)( buffer );
 	}
 }
-
-//--------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------
-
-ActiveGrenade::ActiveGrenade( int weaponID, CGrenade *grenadeEntity )
-{
-	m_id = weaponID;
-	m_entity = grenadeEntity;
-	m_detonationPosition = grenadeEntity->pev->origin;
-	m_dieTimestamp = 0.0f;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-void ActiveGrenade::OnEntityGone( void )									///< called when the grenade in the world goes away
-{
-	if (m_id == WEAPON_SMOKEGRENADE)
-	{
-		// smoke lingers after grenade is gone
-		const float smokeLingerTime = 4.0f;
-		m_dieTimestamp = gpGlobals->time + smokeLingerTime;
-	}
-
-	m_entity = NULL;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-bool ActiveGrenade::IsValid( void ) const							///< return true if this grenade is valid
-{
-	if (m_entity)
-		return true;
-
-	if (gpGlobals->time > m_dieTimestamp)
-		return false;
-
-	return true;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-const Vector *ActiveGrenade::GetPosition( void ) const
-{ 
-	return &m_entity->pev->origin; 
-}
-

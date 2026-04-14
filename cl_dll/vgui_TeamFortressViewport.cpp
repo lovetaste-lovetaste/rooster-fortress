@@ -517,6 +517,8 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	m_iInitialized = false;
 	m_pTeamMenu = NULL;
 	m_pClassMenu = NULL;
+	m_pTeamSelectionMenu = NULL;
+	m_pClassSelectionMenu = NULL;
 	m_pScoreBoard = NULL;
 	m_pSpectatorPanel = NULL;
 	m_pCurrentMenu = NULL;
@@ -577,6 +579,8 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	// VGUI MENUS
 	CreateTeamMenu();
 	CreateClassMenu();
+	CreateTeamSelectionMenu();
+	CreateClassSelectionMenu();
 	CreateSpectatorMenu();
 	CreateScoreBoard();
 	// Init command menus
@@ -626,6 +630,16 @@ void TeamFortressViewport::Initialize()
 		// Spectator menu doesn't need initializing
 		m_pSpectatorPanel->setVisible(false);
 	}
+
+	gEngfuncs.pfnAddCommand("changeteam", []()
+		{
+    if ( gViewPort )
+        gViewPort->ShowVGUIMenu( MENU_TEAM_SELECTION ); });
+
+	gEngfuncs.pfnAddCommand("changeclass", []()
+		{
+    if ( gViewPort )
+        gViewPort->ShowVGUIMenu( MENU_CLASS_SELECTION ); });
 
 	// Make sure all menus are hidden
 	HideVGUIMenu();
@@ -1497,6 +1511,12 @@ void TeamFortressViewport::ShowVGUIMenu(int iMenu)
 	case MENU_CLASS:
 		pNewMenu = ShowClassMenu();
 		break;
+	case MENU_TEAM_SELECTION:
+		pNewMenu = ShowTeamSelectionMenu();
+		break;
+	case MENU_CLASS_SELECTION:
+		pNewMenu = ShowClassSelectionMenu();
+		break;
 
 	default:
 		break;
@@ -1595,6 +1615,48 @@ void TeamFortressViewport::CreateTeamMenu()
 	m_pTeamMenu = new CTeamMenuPanel(100, false, 0, 0, ScreenWidth, ScreenHeight);
 	m_pTeamMenu->setParent(this);
 	m_pTeamMenu->setVisible(false);
+}
+
+// alternate team menu made by me bcuz im fucking with the code and wanna remake it myself
+void TeamFortressViewport::CreateTeamSelectionMenu()
+{
+	m_pTeamSelectionMenu = new CTeamSelectionMenu(
+		100,   // transparency (100 = mostly opaque)
+		false, // iRemoveMe: don't auto-delete after use
+		0, 0,
+		ScreenWidth, ScreenHeight);
+	m_pTeamSelectionMenu->setParent(this);
+	m_pTeamSelectionMenu->setVisible(false);
+}
+
+CMenuPanel* TeamFortressViewport::ShowTeamSelectionMenu()
+{
+	// Respect demo playback — never show menus during demo
+	if (gEngfuncs.pDemoAPI->IsPlayingback())
+		return nullptr;
+
+	m_pTeamSelectionMenu->Reset();
+	return m_pTeamSelectionMenu;
+}
+
+void TeamFortressViewport::CreateClassSelectionMenu()
+{
+	m_pClassSelectionMenu = new CClassSelectionMenu(
+		100,
+		false,
+		0, 0,
+		ScreenWidth, ScreenHeight);
+	m_pClassSelectionMenu->setParent(this);
+	m_pClassSelectionMenu->setVisible(false);
+}
+
+CMenuPanel* TeamFortressViewport::ShowClassSelectionMenu()
+{
+	if (gEngfuncs.pDemoAPI->IsPlayingback())
+		return nullptr;
+
+	m_pClassSelectionMenu->Reset();
+	return m_pClassSelectionMenu;
 }
 
 //======================================================================================
@@ -1971,6 +2033,13 @@ bool TeamFortressViewport::MsgFunc_VGUIMenu(const char* pszName, int iSize, void
 
 	// Bring up the menu6
 	ShowVGUIMenu(iMenu);
+
+	return true;
+}
+
+bool TeamFortressViewport::MsgFunc_HideVGUIMenu(void)
+{
+	HideVGUIMenu();
 
 	return true;
 }

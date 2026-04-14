@@ -36,7 +36,6 @@ void LinkUserMessages()
 	gmsgBattery = REG_USER_MSG("Battery", 2);
 	gmsgTrain = REG_USER_MSG("Train", 1);
 	gmsgWeaponAnimEx = REG_USER_MSG("WpnAnimEx", 3);
-	//gmsgHudText = REG_USER_MSG( "HudTextPro", -1 );
 	gmsgHudText = REG_USER_MSG("HudText", -1); // we don't use the message but 3rd party addons may!
 	gmsgSayText = REG_USER_MSG("SayText", -1);
 	gmsgTextMsg = REG_USER_MSG("TextMsg", -1);
@@ -60,12 +59,16 @@ void LinkUserMessages()
 	gmsgShake = REG_USER_MSG("ScreenShake", sizeof(ScreenShake));
 	gmsgFade = REG_USER_MSG("ScreenFade", sizeof(ScreenFade));
 	gmsgAmmoX = REG_USER_MSG("AmmoX", 2);
+	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);
+	gmsgHideGUI = REG_USER_MSG("HideVGUI", -1);
 	gmsgTeamNames = REG_USER_MSG("TeamNames", -1);
 
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3);
 
 	gmsgWeapons = REG_USER_MSG("Weapons", 8);
-	// external int gmsgHitsound;
 	gmsgHitsound = REG_USER_MSG("Hitsound", -1);
+	gmsgSniperScope = REG_USER_MSG("SniperScope", 2); // byte: scoped state, byte: charge 0-100
+	//extern int gmsgKillCam;
+	gmsgKillCam = REG_USER_MSG("KillCam", 5);
 }

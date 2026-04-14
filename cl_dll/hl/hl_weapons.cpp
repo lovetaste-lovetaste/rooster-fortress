@@ -74,6 +74,7 @@ CKnife g_Knife;
 CGrenadelauncher g_GrenadeLauncher;
 CMinigun g_Minigun;
 CSniperRifle g_SniperRifle;
+CSmg g_Smg;
 
 /*
 ======================
@@ -497,6 +498,7 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_GrenadeLauncher, &player);
 	HUD_PrepEntity(&g_Minigun, &player);
 	HUD_PrepEntity(&g_SniperRifle, &player);
+	HUD_PrepEntity(&g_Smg, &player);
 }
 
 /*
@@ -654,6 +656,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	case WEAPON_SNIPERRIFLE:
 		pWeapon = &g_SniperRifle;
+		break;
+
+	case WEAPON_SMG:
+		pWeapon = &g_Smg;
 		break;
 	}
 

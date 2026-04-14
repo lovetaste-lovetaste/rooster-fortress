@@ -20,6 +20,8 @@ feel free to help :)
       - TFConditions will appear, besides that hes easy to do
     - Sniper - ALMOST DONE, DO SMG AND KUKRI
       - copy code from heavy minigun slowdown, headshot damage / zoom in / laser spot is already in hl ( magnum revolver / crossbow / rpg laser ), crit icon stuff is already done
+      - scope visuals look like shit, but the mechanic is basically done
+      - LOOK FOR THE KUKRI V_MODEL!_
     - Pyro
       - TFCondition and afterburn things
       - AIRBLAST SHIT X_X
@@ -42,6 +44,7 @@ feel free to help :)
     - Commands are done, but there is no menu for it!! only commands right now
   ### Team selection stuff<br/>
     - Commands are done, but there is no menu for it!! only commands right now
+    - in progress
   ### Gamemodes<br/>
     - Control Points
       - this is for compatibility with existing Chicken Fortress 3 maps

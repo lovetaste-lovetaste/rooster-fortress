@@ -199,7 +199,7 @@ void ClientKill(edict_t* pEntity)
 ===========
 ClientPutInServer
 
-called each time a player is spawned into the server
+called each time a player is spawned
 ============
 */
 void ClientPutInServer(edict_t* pEntity)
@@ -214,12 +214,12 @@ void ClientPutInServer(edict_t* pEntity)
 	CBaseEntity* pTarget = UTIL_FindEntityByClassname(NULL, "info_intermission");
 	if (pTarget != nullptr)
 	{
-		pPlayer->StartObserver(pTarget->pev->origin, pTarget->pev->angles, false);
+		pPlayer->StartObserver(pTarget->pev->origin, pTarget->pev->angles);
 	}
 	else
 	{
 		edict_t* pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot(pPlayer);
-		pPlayer->StartObserver(VARS(pentSpawnSpot)->origin, VARS(pentSpawnSpot)->angles, false);
+		pPlayer->StartObserver(VARS(pentSpawnSpot)->origin, VARS(pentSpawnSpot)->angles);
 	}
 	
 
@@ -233,19 +233,19 @@ void ClientPutInServer(edict_t* pEntity)
 	// pPlayer->Spawn();
 	// ALERT(at_console, "ClientPutInServer");
 
-//	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
-//	WRITE_BYTE(0);
-//	WRITE_BYTE(0XFF);
-//	WRITE_BYTE(0xFF);
-//	MESSAGE_END();
+	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
+	WRITE_BYTE(0);
+	WRITE_BYTE(0XFF);
+	WRITE_BYTE(0xFF);
+	MESSAGE_END();
+
 
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
 
-	// keep track of amount of damage last sustained
-	pPlayer->pev->iuser1 = 3; // disable any spec modes
-	pPlayer->pev->iuser2 = 0;
+//	pPlayer->pev->iuser1 = 1; // disable any spec modes
+//	pPlayer->pev->iuser2 = 0;
 }
 
 #include "voice_gamemgr.h"
@@ -1062,15 +1062,7 @@ void ClientPrecache()
 	// player gib sounds
 	PRECACHE_SOUND("common/bodysplat.wav");
 
-	// hud sounds
-
-	PRECACHE_SOUND("common/wpn_hudoff.wav");
-	PRECACHE_SOUND("common/wpn_hudon.wav");
-	PRECACHE_SOUND("common/wpn_moveselect.wav");
-	PRECACHE_SOUND("common/wpn_select.wav");
-	PRECACHE_SOUND("common/wpn_denyselect.wav");
-
-	// hl1 player pain sounds
+	// player pain sounds
 	PRECACHE_SOUND("player/pl_pain2.wav");
 	PRECACHE_SOUND("player/pl_pain4.wav");
 	PRECACHE_SOUND("player/pl_pain5.wav");
@@ -1082,7 +1074,7 @@ void ClientPrecache()
 
 	// new playermodels
 	// these are technically from TFC but with tf2 models
-	// EVENTUALLY I PLAN ON PORTING ANIMATIONS DIRECTLY FROM TF2
+	// EVENTUALLY I PLAN ON PORTING ANIMATIONS DIRECTLY FROM TF2, AS WELL AS WHATEVER AIMMATRIX LAYER SHIT SOURCE ENGINE USES!!
 	// thats later on though :)))
 
 	PRECACHE_MODEL("models/rooster_fortress/player/scout/scout.mdl");
@@ -1094,15 +1086,15 @@ void ClientPrecache()
 	PRECACHE_MODEL("models/rooster_fortress/player/medic/medic.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/player/sniper/sniper.mdl");
 	PRECACHE_MODEL("models/rooster_fortress/player/spy/spy.mdl");
-	
-	// tf2 player hurt sounds
-	PRECACHE_SOUND("rooster_fortress/player/pain1.wav");
-	PRECACHE_SOUND("rooster_fortress/player/pain2.wav");
-	PRECACHE_SOUND("rooster_fortress/player/pain3.wav");
-	PRECACHE_SOUND("rooster_fortress/player/pain4.wav");
-	PRECACHE_SOUND("rooster_fortress/player/pain5.wav");
-	PRECACHE_SOUND("rooster_fortress/player/pain6.wav");
-	
+
+	// hud sounds
+
+	PRECACHE_SOUND("common/wpn_hudoff.wav");
+	PRECACHE_SOUND("common/wpn_hudon.wav");
+	PRECACHE_SOUND("common/wpn_moveselect.wav");
+	PRECACHE_SOUND("common/wpn_select.wav");
+	PRECACHE_SOUND("common/wpn_denyselect.wav");
+
 	// tf2 misc noises START
 
 	PRECACHE_SOUND("rooster_fortress/hitsound/hitsound.wav");

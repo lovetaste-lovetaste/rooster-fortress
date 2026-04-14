@@ -1605,6 +1605,7 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 				if (iBulletType == BULLET_PLAYER_TF2 || iBulletType == BULLET_PLAYER_TF2_HEADSHOT)
 				{
 					int iCrit = 0; // full crits are 2 and above, mini-crits are 1
+					// todo: figure out a way to send this outwards from the weapons themselves instead of being calculated here
 					int bitsDamageType = DMG_BULLET;
 
 					if (iBulletType == BULLET_PLAYER_TF2_HEADSHOT)

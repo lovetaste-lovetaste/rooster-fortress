@@ -272,5 +272,9 @@ void CBasePlayer::Observer_SetMode(int iMode)
 	sprintf(modemsg, "#Spec_Mode%i", pev->iuser1);
 	ClientPrint(pev, HUD_PRINTCENTER, modemsg);
 
+	m_iClass = CLASS_UNDEFINED;
+	m_iTeam = TEAM_SPECTATOR;
+	// tf2 stuff
+
 	m_iObserverLastMode = iMode;
 }

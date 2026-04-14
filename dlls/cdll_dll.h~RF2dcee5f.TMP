@@ -75,7 +75,7 @@ enum WeaponId
 	WEAPON_MEDIGUN,
 	WEAPON_SNIPERRIFLE,
 	// WEAPON_SYRINGEGUN, // this replaces the crossbow
-	WEAPON_SMG,
+	WEAPON_SMG, 
 
 	WEAPON_SUIT = 31,
 	WEAPON_SAPPER,

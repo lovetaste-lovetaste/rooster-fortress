@@ -20,6 +20,8 @@
 #include "hltv.h"
 #include "Exports.h"
 
+#include "hud_killcam.h"
+
 int CL_IsThirdPerson();
 void CL_CameraOffset(float* ofs);
 
@@ -406,17 +408,19 @@ void V_CalcViewRoll(struct ref_params_s* pparams)
 	if (!viewentity)
 		return;
 
-	side = V_CalcRoll(viewentity->angles, pparams->simvel, cl_rollangle->value, cl_rollspeed->value);
+	// side = V_CalcRoll(viewentity->angles, pparams->simvel, cl_rollangle->value, cl_rollspeed->value);
 
-	pparams->viewangles[ROLL] += side;
+	// pparams->viewangles[ROLL] += side;
 
-	if (pparams->health <= 0 && (pparams->viewheight[2] != 0))
-	{
+//	if (pparams->health <= 0 && (pparams->viewheight[2] != 0))
+//	{
 		// only roll the view if the player is dead and the viewheight[2] is nonzero
 		// this is so deadcam in multiplayer will work.
-		pparams->viewangles[ROLL] = 80; // dead view angle
-		return;
-	}
+//		pparams->viewangles[ROLL] = 80; // dead view angle
+//		return;
+//	}
+//	killcam does this
+
 }
 
 
@@ -1624,11 +1628,89 @@ void V_CalcSpectatorRefdef(struct ref_params_s* pparams)
 		VectorCopy(v_origin, pparams->vieworg);
 }
 
-
+static float PulseValue(float low, float high, float speed)
+{
+	float t = gEngfuncs.GetClientTime();
+	float n = (sinf(t * speed * 2.0f * M_PI) + 1.0f) * 0.5f;
+	return low + n * (high - low);
+}
 
 void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams)
 {
 	//	RecClCalcRefdef(pparams);
+
+	if (KillCam_IsActive())
+	{
+		int attackerIdx = KillCam_GetAttackerIndex();
+		cl_entity_t* pAttacker = gEngfuncs.GetEntityByIndex(attackerIdx);
+
+		if (pAttacker != nullptr)
+		{
+			if (pAttacker->player == 0)
+			{
+				KillCam_Cancel();
+				// fall through to normal view this frame
+			}
+			else
+			{
+				Vector attackerOrigin(pAttacker->origin);
+				Vector attackerAngles(pAttacker->angles);
+
+				// FIX: declare as Vector, not float.
+				// FIX: pass by value — no & operator. This matches the SDK's
+				//      AngleVectors(Vector, Vector, Vector, Vector) signature used
+				//      everywhere else in view.cpp (e.g. line 222).
+				Vector forward, right, up;
+				AngleVectors(attackerAngles, forward, right, up);
+
+				// FIX: vector arithmetic, not per-component float arithmetic.
+				//      forward and up are Vectors; the * and + operators work
+				//      component-wise across all three axes at once.
+				Vector camOrigin = attackerOrigin - forward * 90.f + up * 30.f;
+
+				// Clip camera against world geometry
+				{
+					pmtrace_t tr;
+					gEngfuncs.pEventAPI->EV_SetTraceHull(0);
+					gEngfuncs.pEventAPI->EV_PlayerTrace(
+						attackerOrigin + Vector(0, 0, 28.f),
+						camOrigin,
+						PM_WORLD_ONLY,
+						attackerIdx,
+						&tr);
+					if (tr.fraction < 1.0f)
+						camOrigin = tr.endpos + tr.plane.normal * 4.f;
+				}
+
+				// Aim camera at attacker's eye
+				Vector lookTarget = attackerOrigin + Vector(0, 0, 28.f);
+				Vector toTarget = lookTarget - camOrigin;
+				float len = toTarget.Length();
+				Vector camAngles;
+				if (len > 0.1f)
+				{
+					toTarget = toTarget / len;
+					VectorAngles(toTarget, camAngles);
+				}
+				else
+				{
+					camAngles = attackerAngles;
+				}
+
+				pparams->vieworg[0] = camOrigin[0];
+				pparams->vieworg[1] = camOrigin[1];
+				pparams->vieworg[2] = camOrigin[2];
+				pparams->viewangles[0] = camAngles[0];
+				pparams->viewangles[1] = camAngles[1];
+				pparams->viewangles[2] = camAngles[2];
+				pparams->viewangles[ROLL] = 0.f;
+				pparams->onlyClientDraw = 0;
+
+				V_CalcViewRoll(pparams);
+				return;
+			}
+		}
+	}
 
 	// intermission / finale rendering
 	if (0 != pparams->intermission)
@@ -1644,24 +1726,39 @@ void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams)
 		V_CalcNormalRefdef(pparams);
 	}
 
-	/*
-// Example of how to overlay the whole screen with red at 50 % alpha
-#define SF_TEST
-#if defined SF_TEST
+	cl_entity_t* vm = gEngfuncs.GetViewModel();
+	if (vm)
 	{
-		screenfade_t sf;
-		gEngfuncs.pfnGetScreenFade( &sf );
+		if (false)
+		{
+			float pulse = PulseValue(0.0f, 1.0f, 2.0f);
+			
+			vm->curstate.renderfx = kRenderFxGlowShell;
+			vm->curstate.rendercolor.r = 255;
+			vm->curstate.rendercolor.g = (byte)(pulse * 80.0f);
+			vm->curstate.rendercolor.b = (byte)(pulse * 30.0f);
+			vm->curstate.renderamt = (byte)(20.0f + pulse * 10.0f);
 
-		sf.fader = 255;
-		sf.fadeg = 0;
-		sf.fadeb = 0;
-		sf.fadealpha = 128;
-		sf.fadeFlags = FFADE_STAYOUT | FFADE_OUT;
+			screenfade_t sf;
+			gEngfuncs.pfnGetScreenFade(&sf);
 
-		gEngfuncs.pfnSetScreenFade( &sf );
+			sf.fader = 255;
+			sf.fadeg = (byte)(pulse * 80.0f);
+			sf.fadeb = (byte)(pulse * 30.0f);
+			sf.fadealpha = 128;
+			sf.fadeFlags = FFADE_STAYOUT | FFADE_OUT;
+
+			gEngfuncs.pfnSetScreenFade(&sf);
+		}
+		else
+		{
+			vm->curstate.renderfx = kRenderFxNone;
+			vm->curstate.rendercolor.r = 0;
+			vm->curstate.rendercolor.g = 0;
+			vm->curstate.rendercolor.b = 0;
+			vm->curstate.renderamt = 0;
+		}
 	}
-#endif
-*/
 }
 
 /*

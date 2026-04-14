@@ -17,6 +17,7 @@
 //
 
 #include "hud.h"
+#include "hud_killcam.h"
 #include "cl_util.h"
 #include "parsemsg.h"
 #include "r_efx.h"
@@ -53,6 +54,7 @@ bool CHud::MsgFunc_ResetHUD(const char* pszName, int iSize, void* pbuf)
 	// reset concussion effect
 	m_iConcussionEffect = 0;
 
+	KillCam_Cancel();
 	return true;
 }
 

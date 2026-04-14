@@ -30,16 +30,14 @@
 #include "gamerules.h"
 #include "bot_util.h"
 
-/// @todo Abstract hostages and cs-bots out of here
-#include "cs_bot.h"
-#include "cs_bot_manager.h"
-#include "hostage.h"
-
 #include "nav.h"
 #include "nav_node.h"
 #include "nav_area.h"
 
 #include "pm_shared.h" // for OBS_ROAMING
+
+NavAreaList TheNavAreaList;
+CNavAreaGrid TheNavAreaGrid;
 
 extern void HintMessageToAllPlayers( const char *message );
 

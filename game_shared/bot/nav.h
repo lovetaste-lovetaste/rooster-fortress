@@ -7,6 +7,9 @@
 
 #pragma warning( disable : 4530 )					// STL uses exceptions, but we are not compiling with them - ignore warning
 
+extern NavAreaList TheNavAreaList;
+extern CNavAreaGrid TheNavAreaGrid;
+
 const float GenerationStepSize = 25.0f;		// (30) was 20, but bots can't fit always fit
 const float StepHeight = 18.0f;						///< if delta Z is greater than this, we have to jump to get up
 const float JumpHeight = 41.8f;						///< if delta Z is less than this, we can jump up on it
@@ -27,6 +30,7 @@ const float HalfHumanHeight = 36.0f;
 const float HumanHeight = 72.0f;
 
 #define NAV_MAGIC_NUMBER 0xFEEDFACE				///< to help identify nav files
+// LOL feedface
 
 /**
  * A place is a named group of navigation areas
@@ -344,7 +348,7 @@ inline bool IsWalkableTraceLineClear( Vector &from, Vector &to, unsigned int fla
 
 			// start from just beyond where we hit to avoid infinite loops
 			Vector dir = to - from;
-			dir.NormalizeInPlace();
+			dir.Normalize();
 			useFrom = result.vecEndPos + 5.0f * dir;
 		}
 		else

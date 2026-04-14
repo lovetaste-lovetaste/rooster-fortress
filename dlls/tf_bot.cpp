@@ -22,6 +22,7 @@
   the logic from this bot is taken from my live tf2 bot
   you can get a link to the sourcemod plugin here:
   https://github.com/lovetaste-lovetaste/lovelybots
+  this will, however, be rewritten
 */
 
 #include <algorithm>
@@ -55,7 +56,6 @@
 // CODE GRABBED FROM THE TF2SDK
 
 static float g_LastBotUpdateTime[34];
-// static CBaseEntity* enemy[40];
 extern cvar_t bot_difficulty;
 
 BotData g_BotData[TF_MAXPLAYERS];
@@ -204,6 +204,7 @@ void Bot_Think(int client)
 
 	if (pBot->GetTeamNumber() == TEAM_UNASSIGNED)
 	{
+		pBot->m_JoinMenuState = JOINMENUSTATE_YES;
 		pBot->SetTeamNumber((RANDOM_LONG(0, 1) ? TEAM_RED : TEAM_BLUE));
 	}
 	else if (pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->m_iClass == CLASS_UNDEFINED)
@@ -212,39 +213,56 @@ void Bot_Think(int client)
 
 		int chosenBotClass = CLASS_UNKNOWN;
 
-		switch (RANDOM_LONG(1, 6))
+		switch (RANDOM_LONG(1, 7))
 		{
 			case 1:
 			{
-				chosenBotClass = CLASS_SOLDIER;
+				chosenBotClass = CLASS_SCOUT;
 				break;
 			}
 			case 2:
 			{
-				chosenBotClass = CLASS_ENGINEER;
+				chosenBotClass = CLASS_SOLDIER;
 				break;
 			}
+		//	case 3:
+		//	{
+		//		chosenBotClass = CLASS_PYRO;
+		//		break;
+		//	}
 			case 3:
-			{
-				chosenBotClass = CLASS_SPY;
-				break;
-			}
-			case 4:
 			{
 				chosenBotClass = CLASS_DEMOMAN;
 				break;
 			}
-			case 5:
+			case 4:
 			{
 				chosenBotClass = CLASS_HEAVY;
 				break;
 			}
+			case 5:
+			{
+				chosenBotClass = CLASS_ENGINEER;
+				break;
+			}
+		//	case 7:
+		//	{
+		//		chosenBotClass = CLASS_MEDIC;
+		//		break;
+		//	}
 			case 6:
 			{
-				chosenBotClass = CLASS_SOLDIER;
+				chosenBotClass = CLASS_SNIPER;
+				break;
+			}
+			case 7:
+			{
+				chosenBotClass = CLASS_SPY;
 				break;
 			}
 		}
+
+		// chosenBotClass = CLASS_SOLDIER;
 
 		// this forces a spawn on the bot's class, and is specific for bots due to them not being networked n shit
 		// probably a better way to do this but as of right now its fine
@@ -252,35 +270,6 @@ void Bot_Think(int client)
 		pBot->Spawn();
 		Bot_Start(client);
 	}
-	
-	g_BotData[client].altTabbedTimer -= frametime;
-	if (g_BotData[client].altTabbedTimer < 0.0)
-		g_BotData[client].altTabbedTimer = 0.0;
-	g_BotData[client].noMouseTimer -= frametime;
-	if (g_BotData[client].noMouseTimer < 0.0)
-		g_BotData[client].noMouseTimer = 0.0;
-
-	g_BotData[client].combatPercent -= 1.0;
-	if (g_BotData[client].combatPercent < 0.0)
-		g_BotData[client].combatPercent = 0.0;
-	if (g_BotData[client].combatPercent > 100.0)
-		g_BotData[client].combatPercent = 100.0;
-
-	if (g_BotData[client].Ego < 0)
-		g_BotData[client].Ego = 0;
-
-	if (g_BotData[client].altTabbedTimer > 0.0)
-	{
-		pBot->pev->button = 0;
-		return;
-	}
-
-	g_BotData[client].Paranoia -= 1;
-
-	if (g_BotData[client].Paranoia < 10)
-		g_BotData[client].Paranoia = 10;
-	if (g_BotData[client].Paranoia > 100)
-		g_BotData[client].Paranoia = 100;
 
 	if (pBot->IsAlive())
 	{
@@ -315,99 +304,12 @@ void Bot_Start(int client)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 	int customDifficulty = CVAR_GET_FLOAT("tf_bot_difficulty");
-
-	if (customDifficulty == -1)
-	{
-		// averages the difficulties of the bots on the servers in order to keep the average player around the same skill
-		int averageDiff = 0;
-		int amount = 0;
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			if (!isTempBot(i) || i == client)
-				continue;
-			averageDiff += g_BotData[client].Difficulty[0];
-			amount += 1;
-		}
-		averageDiff /= (amount > 0 ? amount : 1);
-		// raw average difficulty of all bots in the server
-
-		averageDiff = (5 + averageDiff) / 2;
-		// puts it against 5 so its closer to the middle difficulty
-		// ex. averageDiff is 10 -> this averages it against 5 -> averageDiff is 7
-		// ex. averageDiff is 0 -> this averages it against 5 -> averageDiff is 2
-		// ex. averageDiff is 2 -> this averages it against 5 -> averageDiff is 3
-
-		g_BotData[client].Difficulty[0] = RANDOM_LONG(averageDiff - 1, averageDiff + 1);
-	}
-	else if (customDifficulty > 0)
-	{
-		g_BotData[client].Difficulty[0] = customDifficulty;
-	}
-
-	if (g_BotData[client].Difficulty[0] < 0)
-		g_BotData[client].Difficulty[0] = 0;
-
-	bool setClassMainDiff = false;
-
-	for (int i = 1; i < 10; i++)
-	{
-		g_BotData[client].Difficulty[i] = g_BotData[client].Difficulty[0];
-		// fallback bcuz sometimes the setClassMainDiff causes a class difficulty to be skipped
-
-		g_BotData[client].Difficulty[i] += RANDOM_LONG(-1, 1);
-		// random small increase for variety
-
-		if ((RANDOM_LONG(0, 9) == 0 || i == 9) && !setClassMainDiff)
-		{
-			// sets the class that the bot is the best at
-			// the increase is based off the base difficulty
-			// noobs are usually not as good at other classes, so their main is still bad ( diff 1 bot is diff 2 on their main class )
-			// average players usually grind their main, so their main can be noticably better ( diff 5 bot is diff 10 on their main class )
-			// good players also do this, but since they are already good, it usually leads to diminishing returns due to them already being good, so not that big of a difference ( diff 10 sniper is already cracked, so they are also cracked at the game in general, so they will be diff 10 everywhere else )
-
-			g_BotData[client].Difficulty[i] = g_BotData[client].Difficulty[0] + RANDOM_LONG(0, g_BotData[client].Difficulty[0]);
-			setClassMainDiff = true;
-		}
-
-		if (g_BotData[client].Difficulty[i] > 10)
-			g_BotData[client].Difficulty[i] = 10;
-		if (g_BotData[client].Difficulty[i] < 0)
-			g_BotData[client].Difficulty[i] = 0;
-		// clamps difficulty
-		// normally it wouldnt cause any issues to have bots higher than 10 diff
-		// However, a lot of the math can cause certain diff-based to either be equivalent to diff 9 OR just not work
-		// same with diffs below 0
-	}
-	// difficulty setting
+	// tf_bot_difficulty will be used in the future
 
 	g_BotData[client].BaseReactionTime = RANDOM_FLOAT(0.175, 0.25);
 	g_BotData[client].BaseReactionTime += ((RANDOM_LONG(0, 1) == 0) ? 0.0152 : 0.0303);
 	// reaction time setting + stimulating lag
-
-	for (int i = 0; i < 6; i++)
-	{
-		g_BotData[client].personalLevel[i] = LEVEL_NONE;
-	}	
-	g_BotData[client].personalLevel[0] = LEVEL_4;
-	g_BotData[client].personalLevel[1] = LEVEL_3_4;
-	g_BotData[client].personalLevel[2] = LEVEL_2;
-	if (pBot->m_iClass == CLASS_SPY)
-		g_BotData[client].personalLevel[2] = LEVEL_3_4;
-	// movement level setting
-	// this is kinda subjective
-	// as of right now, i do not know how to access the fire rate of the individual weapon
-	// due to this, i just kinda use stereotypical levels based on the weapon
-	// sorry....
-
-	g_BotData[client].combatPercent = 50.0;
-	g_BotData[client].altTabbedTimer = 0.0;
-	g_BotData[client].noMouseTimer = 0.0;
-	g_BotData[client].pyroSpycheckTimer = 0;
-	g_BotData[client].spyBackstabTimer = 0;
 	g_BotData[client].LastTimeReacted = gpGlobals->time;
-	g_BotData[client].Ego = RANDOM_LONG(0, 50);
-	g_BotData[client].Paranoia = RANDOM_LONG(10, g_BotData[client].Difficulty[0] * 9);
-	g_BotData[client].MechanicalSkill = RANDOM_LONG(g_BotData[client].Difficulty[0] * 9, 100);
 }
 
 
@@ -418,9 +320,6 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 {
 	auto pBot = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(client));
 
-	if (g_BotData[client].RecentDamageTaken[1] + 2.0 < GetGameTime())
-		g_BotData[client].RecentDamageTaken[0] = 0.0;
-
 	g_BotData[client].Targets[0] = FindNearestEnemy(client, 0, 2048);
 	// this can be extended but 2048 is fine for now
 
@@ -429,13 +328,8 @@ void Bot_AliveThink(int client, Vector* vecAngles, Vector* vecMove)
 	// this is probably not needed but sometimes the bot breaks without it
 
 	if (g_BotData[client].Targets[0] != NULL)
-	{
-		g_BotData[client].combatPercent += (2 * g_BotData[client].Difficulty[0]) + 5;
-		if (g_BotData[client].combatPercent > 100.0)
-			g_BotData[client].combatPercent = 100.0;
-		// ALERT(at_console, "Botthink: updated and tried to aim at valid target!\n");
-		
-		TF2_LookAtPos(client, vecAngles, g_BotData[client].Targets[0]->pev->origin, 0.8);
+	{	
+		TF2_LookAtPos(client, vecAngles, g_BotData[client].Targets[0]->pev->origin, 0.99);
 
 		CBasePlayerWeapon* pWeapon = (CBasePlayerWeapon*)pBot->m_pActiveItem;
 
@@ -572,36 +466,63 @@ void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 
 	if (g_BotData[client].Targets[0] != NULL) // in combat
 	{
+		float distancefrom = (g_BotData[client].Targets[0]->pev->origin - pBot->pev->origin).Length();
 		switch (pBot->m_iClass)
 		{
 			case CLASS_SCOUT:
 			{
-				if (pBot->m_pActiveItem->GetWeaponPtr()->m_iClip <= 0 && !(pBot->m_pActiveItem->m_iId == WEAPON_BAT))
+				if (distancefrom <= 75.0)
 				{
-					if (pBot->m_pActiveItem->m_iId == WEAPON_SCATTERGUN)
-					{
-						pBot->SelectItem("weapon_pistol");
-					}
-					else
-						pBot->SelectItem("weapon_bat");
+					pBot->SelectItem("weapon_bat");
+				}
+				else if (distancefrom <= 275.0)
+				{
+					pBot->SelectItem("weapon_scattergun");
+				}
+				else
+				{
+					pBot->SelectItem("weapon_glock");
+				}
+				break;
+			}
+			case CLASS_HEAVY:
+			{
+				if (distancefrom <= 75.0)
+				{
+					pBot->SelectItem("weapon_fists");
+				}
+				else if (distancefrom <= 275.0)
+				{
+					pBot->SelectItem("weapon_minigun");
+				}
+				else
+				{
+					pBot->SelectItem("weapon_shotgun");
 				}
 				break;
 			}
 			case CLASS_SNIPER:
 			{
-				if (pBot->m_pActiveItem->m_iId == WEAPON_SNIPERRIFLE)
+				if (distancefrom <= 275.0)
 				{
-					if ((pBot->m_pActiveItem->GetWeaponPtr()->m_flNextPrimaryAttack - gpGlobals->time <= 0.0) && !pBot->IsInCond(TF_COND_AIMING))
+					pBot->SelectItem("weapon_smg");
+				}
+				else
+				{
+					if (pBot->m_pActiveItem->m_iId == WEAPON_SNIPERRIFLE)
 					{
-						pBot->pev->button |= IN_ATTACK2;
+						if ((pBot->m_pActiveItem->GetWeaponPtr()->m_flNextPrimaryAttack - gpGlobals->time <= 0.0) && !pBot->IsInCond(TF_COND_AIMING))
+						{
+							pBot->pev->button |= IN_ATTACK2;
+						}
 					}
+					else
+						pBot->SelectItem("weapon_sniperrifle");
 				}
 				break;
 			}
 			case CLASS_SOLDIER:
 			{
-				float distancefrom = (g_BotData[client].Targets[0]->pev->origin - pBot->pev->origin).Length();
-
 				if (distancefrom <= 75.0)
 				{
 					pBot->SelectItem("weapon_shovel");
@@ -618,14 +539,29 @@ void Bot_AliveWeaponThink(int client, Vector* vecAngles, Vector* vecMove)
 			}
 			case CLASS_ENGINEER:
 			{
-				if (pBot->m_pActiveItem->GetWeaponPtr()->m_iClip <= 0 && !(pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN))
+				if (distancefrom <= 75.0)
 				{
-					if (pBot->m_pActiveItem->m_iId == WEAPON_SHOTGUN)
-					{
-						pBot->SelectItem("weapon_pistol");
-					}
-					else
-						pBot->SelectItem("weapon_wrench");
+					pBot->SelectItem("weapon_wrench");
+				}
+				else if (distancefrom <= 275.0)
+				{
+					pBot->SelectItem("weapon_shotgun");
+				}
+				else
+				{
+					pBot->SelectItem("weapon_glock");
+				}
+				break;
+			}
+			case CLASS_SPY:
+			{
+				if (distancefrom <= 75.0)
+				{
+					pBot->SelectItem("weapon_knife");
+				}
+				else if (distancefrom <= 275.0)
+				{
+					pBot->SelectItem("weapon_revolver");
 				}
 				break;
 			}
@@ -674,15 +610,9 @@ CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
 	{
 		pEntity = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(edict));
 
-		if (pEntity == NULL)
+		if (!pEntity || pEntity == NULL || !pEntity->pev)
 			continue;
-		if (!pEntity)
-			continue;
-		// DOUBLE CHECK BCUZ THIS ENGINE IS STUPID
 
-		if (!pEntity->pev)
-			continue;
-		
 		// Skip non-living entities
 		if (!pEntity->IsAlive())
 		{
@@ -711,33 +641,20 @@ CBaseEntity* FindNearestEnemy(int client, int mode, float MAXRANGE = 4096.0)
 
 		if (!IsTargetVisible(client, pEntity))
 		{
-			g_BotData[client].AwarenessOfClient[edict] -= ((0 - (0.4 * g_BotData[client].Difficulty[0])) + 5);
-
-			if (g_BotData[client].DisregardTimer[edict] == -2.0)
-				g_BotData[client].DisregardTimer[edict] = RANDOM_FLOAT(100, 200);
-
+			g_BotData[client].AwarenessOfClient[edict] -= 10.0;
 			continue;
 		}
 
 		if (angleCoordsToFaceCoords(player->pev->v_angle, player->pev->origin, edictPlayer->pev->origin, true) <= 70.0)
 		{
-			g_BotData[client].AwarenessOfClient[edict] += 10 * g_BotData[client].Difficulty[0];
+			g_BotData[client].AwarenessOfClient[edict] += 10;
 		}
 		else
 		{
-			g_BotData[client].AwarenessOfClient[edict] -= ((0 - (0.4 * g_BotData[client].Difficulty[0])) + 5);
+			g_BotData[client].AwarenessOfClient[edict] -= 10;
 		}
 
-		if (g_BotData[client].DisregardTimer[edict] > 0.0)
-			g_BotData[client].DisregardTimer[edict] -= 1.0;
-
-		if (g_BotData[client].DisregardTimer[edict] > 0.0 || g_BotData[client].DisregardTimer[edict] == -1.0 || g_BotData[client].DisregardTimer[edict] == -2.0 || g_BotData[client].DisregardTimer[edict] == -3.0 || g_BotData[client].DisregardTimer[edict] == -4.0)
-			continue;
-		// if the bot was ignoring them, then disregard
-		// ignore the several or thingys here
-		// the normal way didnt want to work sometimes
-
-		if (g_BotData[client].AwarenessOfClient[edict] < (((0 - 0.8) * g_BotData[client].combatPercent) + 90))
+		if (g_BotData[client].AwarenessOfClient[edict] < 75.0)
 			continue;
 		// if the bot still isnt aware, then the target is ignored
 

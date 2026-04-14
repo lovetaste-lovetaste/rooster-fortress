@@ -38,7 +38,7 @@ bool UTIL_IsNameTaken( const char *name, bool ignoreHumans )
 		if (FStrEq( STRING( player->pev->netname ), "" ))
 			continue;
 
-		if (player->IsPlayer() && (((CBasePlayer *)player)->IsBot() == TRUE))
+		if (player->IsPlayer() && (((CBasePlayer*)player)->IsFakeClient() == true))
 		{
 			// bots can have prefixes so we need to check the name
 			// against the profile name instead.
@@ -110,10 +110,10 @@ int UTIL_ActivePlayersInGame( void )
 		CBasePlayer *player = static_cast<CBasePlayer *>( entity );
 
 		// ignore spectators
-		if (player->m_iTeam != TERRORIST && player->m_iTeam != CT)
+		if (player->m_iTeam != TEAM_RED && player->m_iTeam != TEAM_BLUE)
 			continue;
 
-		if (player->m_iJoiningState != JOINED)
+		if (player->m_JoinMenuState == JOINMENUSTATE_NO)
 			continue;
 
 		iCount++;
@@ -144,13 +144,13 @@ int UTIL_HumansInGame( bool ignoreSpectators )
 
 		CBasePlayer *player = static_cast<CBasePlayer *>( entity );
 
-		if (player->IsBot())
+		if (player->IsFakeClient())
 			continue;
 
-		if (ignoreSpectators && player->m_iTeam != TERRORIST && player->m_iTeam != CT)
+		if (ignoreSpectators && player->m_iTeam != TEAM_RED && player->m_iTeam != TEAM_BLUE)
 			continue;
 
-		if (ignoreSpectators && player->m_iJoiningState != JOINED)
+		if (ignoreSpectators && player->m_iTeam == TEAM_UNASSIGNED)
 			continue;
 
 		iCount++;
@@ -190,7 +190,7 @@ int UTIL_HumansOnTeam( int teamID, bool isAlive )
 
 		CBasePlayer *player = static_cast<CBasePlayer *>( entity );
 
-		if (player->IsBot())
+		if (player->IsFakeClient())
 			continue;
 
 		if (player->m_iTeam != teamID)
@@ -224,7 +224,7 @@ int UTIL_BotsInGame( void )
 		if ( FStrEq( STRING( pPlayer->pev->netname ), "" ) )
 			continue;
 
-		if ( !pPlayer->IsBot() )
+		if ( !pPlayer->IsFakeClient() )
 			continue;
 
 		iCount++;
@@ -237,7 +237,7 @@ int UTIL_BotsInGame( void )
 /**
  * Kick a bot from the given team. If no bot exists on the team, return false.
  */
-bool UTIL_KickBotFromTeam( TeamName kickTeam )
+bool UTIL_KickBotFromTeam( int kickTeam )
 {
 	int i;
 
@@ -256,7 +256,7 @@ bool UTIL_KickBotFromTeam( TeamName kickTeam )
 		if (FStrEq( name, "" ))
 			continue;
 
-		if (!player->IsBot())
+		if (!player->IsFakeClient())
 			continue;	
 
 		if (!player->IsAlive() && player->m_iTeam == kickTeam)
@@ -283,7 +283,7 @@ bool UTIL_KickBotFromTeam( TeamName kickTeam )
 		if (FStrEq( name, "" ))
 			continue;
 
-		if (!player->IsBot())
+		if (!player->IsFakeClient())
 			continue;	
 
 		if (player->m_iTeam == kickTeam)
@@ -458,7 +458,7 @@ bool UTIL_IsVisibleToTeam( const Vector &spot, int team, float maxRange )
 		if (player->m_iTeam != team)
 			continue;
 
-		if (maxRange > 0.0f && (spot - player->Center()).IsLengthGreaterThan( maxRange ))
+		if (maxRange > 0.0f && (spot - player->Center()).Length2D() > (maxRange))
 			continue;
 
 		TraceResult result;
@@ -475,7 +475,7 @@ bool UTIL_IsVisibleToTeam( const Vector &spot, int team, float maxRange )
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Return the local player
- */
+
 CBasePlayer *UTIL_GetLocalPlayer( void )
 {
 	if ( IS_DEDICATED_SERVER() )
@@ -483,8 +483,7 @@ CBasePlayer *UTIL_GetLocalPlayer( void )
 		return NULL;
 	}
 	return static_cast<CBasePlayer *>( UTIL_PlayerByIndex( 1 ) );
-}
-
+} */
 
 //------------------------------------------------------------------------------------------------------------
 // Some types of entities have no origin set, so we use this instead.
@@ -607,56 +606,6 @@ void BotPrecache( void )
 
 	/// @todo This is for the Career mode UI - move it somewhere sane
 	PRECACHE_SOUND( "events/task_complete.wav" );
-
-#ifdef TERRORSTRIKE
-	/// @todo Zombie mode experiment
-	PRECACHE_SOUND( "zombie/attack1.wav" );
-	PRECACHE_SOUND( "zombie/attack2.wav" );
-	PRECACHE_SOUND( "zombie/attack3.wav" );
-	PRECACHE_SOUND( "zombie/attack4.wav" );
-	PRECACHE_SOUND( "zombie/attack5.wav" );
-	PRECACHE_SOUND( "zombie/bark1.wav" );
-	PRECACHE_SOUND( "zombie/bark2.wav" );
-	PRECACHE_SOUND( "zombie/bark3.wav" );
-	PRECACHE_SOUND( "zombie/bark4.wav" );
-	PRECACHE_SOUND( "zombie/bark5.wav" );
-	PRECACHE_SOUND( "zombie/bark6.wav" );
-	PRECACHE_SOUND( "zombie/bark7.wav" );
-	PRECACHE_SOUND( "zombie/breathing1.wav" );
-	PRECACHE_SOUND( "zombie/breathing2.wav" );
-	PRECACHE_SOUND( "zombie/breathing3.wav" );
-	PRECACHE_SOUND( "zombie/breathing4.wav" );
-	PRECACHE_SOUND( "zombie/groan1.wav" );
-	PRECACHE_SOUND( "zombie/groan2.wav" );
-	PRECACHE_SOUND( "zombie/groan3.wav" );
-	PRECACHE_SOUND( "zombie/hiss1.wav" );
-	PRECACHE_SOUND( "zombie/hiss2.wav" );
-	PRECACHE_SOUND( "zombie/hiss3.wav" );
-	PRECACHE_SOUND( "ambience/the_horror2.wav" );
-	PRECACHE_SOUND( "scientist/scream20.wav" );
-	PRECACHE_SOUND( "zombie/human_hurt1.wav" );
-	PRECACHE_SOUND( "zombie/human_hurt2.wav" );
-	PRECACHE_SOUND( "zombie/human_hurt3.wav" );
-	PRECACHE_SOUND( "zombie/human_hurt4.wav" );
-	PRECACHE_SOUND( "zombie/shout_reloading1.wav" );
-	PRECACHE_SOUND( "zombie/shout_reloading2.wav" );
-	PRECACHE_SOUND( "zombie/shout_reloading3.wav" );
-	PRECACHE_SOUND( "zombie/deep_heartbeat.wav" );
-	PRECACHE_SOUND( "zombie/deep_heartbeat_fast.wav" );
-	PRECACHE_SOUND( "zombie/deep_heartbeat_very_fast.wav" );
-	PRECACHE_SOUND( "zombie/deep_heartbeat_stopping.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step1.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step2.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step3.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step4.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step5.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step6.wav" );
-	PRECACHE_SOUND( "zombie/zombie_step7.wav" );
-	PRECACHE_SOUND( "zombie/fear1.wav" );
-	PRECACHE_SOUND( "zombie/fear2.wav" );
-	PRECACHE_SOUND( "zombie/fear3.wav" );
-	PRECACHE_SOUND( "zombie/fear4.wav" );
-#endif // TERRORSTRIKE
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -708,62 +657,7 @@ bool IsGameEventAudible( GameEventType event, CBaseEntity *entity, CBaseEntity *
 			if (player->m_pActiveItem == NULL)
 				return false;
 
-			switch( player->m_pActiveItem->m_iId )
-			{
-				// silent "firing"
-				case WEAPON_HEGRENADE:
-				case WEAPON_SMOKEGRENADE:
-				case WEAPON_FLASHBANG:
-				case WEAPON_SHIELDGUN:
-				case WEAPON_C4:
-					return false;
-
-				// quiet
-				case WEAPON_KNIFE:
-				case WEAPON_TMP:
-					*range = ShortRange;
-					break;
-
-				// M4A1 - check for silencer
-				case WEAPON_M4A1:
-					{
-						CBasePlayerWeapon *pWeapon = static_cast<CBasePlayerWeapon *>(player->m_pActiveItem);
-						if ( pWeapon->m_iWeaponState & WPNSTATE_M4A1_SILENCER_ON )
-						{
-							*range = ShortRange;
-						}
-						else
-						{
-							*range = NormalRange;
-						}
-					}
-					break;
-
-				// USP - check for silencer
-				case WEAPON_USP:
-					{
-						CBasePlayerWeapon *pWeapon = static_cast<CBasePlayerWeapon *>(player->m_pActiveItem);
-						if ( pWeapon->m_iWeaponState & WPNSTATE_USP_SILENCER_ON )
-						{
-							*range = ShortRange;
-						}
-						else
-						{
-							*range = NormalRange;
-						}
-					}
-					break;
-
-				// loud
-				case WEAPON_AWP:
-					*range = 99999.0f;
-					break;
-
-				// normal
-				default:
-					*range = NormalRange;
-					break;
-			}
+			*range = NormalRange;
 
 			*priority = PRIORITY_HIGH;
 			*isHostile = true;

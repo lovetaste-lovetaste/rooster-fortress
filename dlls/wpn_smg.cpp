@@ -20,28 +20,26 @@
 #include "weapons.h"
 #include "player.h"
 
-LINK_ENTITY_TO_CLASS(weapon_glock, CGlock);
-LINK_ENTITY_TO_CLASS(weapon_pistol, CGlock);
-LINK_ENTITY_TO_CLASS(weapon_9mmhandgun, CGlock);
+LINK_ENTITY_TO_CLASS(weapon_smg, CSmg);
+LINK_ENTITY_TO_CLASS(weapon_submachinegun, CSmg);
 
-void CGlock::Spawn()
+void CSmg::Spawn()
 {
-	pev->classname = MAKE_STRING("weapon_9mmhandgun"); // hack to allow for old names
+	pev->classname = MAKE_STRING("weapon_smg"); // hack to allow for old names
 	Precache();
-	m_iId = WEAPON_GLOCK;
+	m_iId = WEAPON_SMG;
 	SET_MODEL(ENT(pev), "models/rooster_fortress/wp_group_rf.mdl");
-	pev->sequence = 5;
-	pev->body = 15;
+	pev->sequence = 19;
+	pev->body = 54;
 
-	m_iDefaultAmmo = GLOCK_MAX_CLIP + GLOCK_DEFAULT_GIVE;
+	m_iDefaultAmmo = SMG_MAX_CLIP + SMG_MAX_CARRY;
 
 	FallInit(); // get ready to fall down.
 }
 
-void CGlock::Precache()
+void CSmg::Precache()
 {
-	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_scout.mdl");
-	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_pistol_engineer.mdl");
+	PRECACHE_MODEL("models/rooster_fortress/viewmodels/v_smg.mdl");
 
 	PRECACHE_MODEL("models/rooster_fortress/wp_group_rf.mdl");
 
@@ -50,55 +48,47 @@ void CGlock::Precache()
 	PRECACHE_SOUND("items/9mmclip1.wav");
 	PRECACHE_SOUND("items/9mmclip2.wav");
 
-	PRECACHE_SOUND("weapons/pl_gun1.wav"); //silenced handgun
-	PRECACHE_SOUND("weapons/pl_gun2.wav"); //silenced handgun
-	PRECACHE_SOUND("weapons/pl_gun3.wav"); //handgun
+	PRECACHE_SOUND("chicken_fortress_3/smg_shoot"); //silenced handgun
 
-	m_usFireGlock1 = PRECACHE_EVENT(1, "events/glock1.sc");
-	m_usFireGlock2 = PRECACHE_EVENT(1, "events/glock2.sc");
+	m_usFireSMG = PRECACHE_EVENT(1, "events/smg.sc");
 }
 
-bool CGlock::GetItemInfo(ItemInfo* p)
+bool CSmg::GetItemInfo(ItemInfo* p)
 {
 	p->pszName = STRING(pev->classname);
 	p->pszAmmo1 = "9mm";
-	p->iMaxAmmo1 = _9MM_MAX_CARRY;
+	p->iMaxAmmo1 = SMG_MAX_CARRY;
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
-	p->iMaxClip = GLOCK_MAX_CLIP;
+	p->iMaxClip = SMG_MAX_CLIP;
 	p->iSlot = 1;
 	p->iPosition = 0;
 	p->iFlags = 0;
-	p->iId = m_iId = WEAPON_GLOCK;
+	p->iId = m_iId = WEAPON_SMG;
 	p->iWeight = GLOCK_WEIGHT;
 
 	return true;
 }
 
-bool CGlock::Deploy()
+bool CSmg::Deploy()
 {
-	const char* classViewmodel = "models/rooster_fortress/viewmodels/v_pistol_scout.mdl"; // defaults to scout viewmodel
-
-	if (m_pPlayer->m_iClass == CLASS_ENGINEER)
-	{
-		classViewmodel = "models/rooster_fortress/viewmodels/v_pistol_engineer.mdl";
-	}
+	const char* classViewmodel = "models/rooster_fortress/viewmodels/v_smg.mdl"; // smg
 
 
 	return DefaultDeploy(classViewmodel, "models/rooster_fortress/wp_group_rf.mdl", GLOCK_DRAW, "onehanded", 15);
 }
 
-void CGlock::SecondaryAttack()
+void CSmg::SecondaryAttack()
 {
-	CGlock::PrimaryAttack(); // too lazy to check for different stuff so this should do it fine
+	CSmg::PrimaryAttack(); // too lazy to check for different stuff so this should do it fine
 }
 
-void CGlock::PrimaryAttack()
+void CSmg::PrimaryAttack()
 {
-	GlockFire(0.1, 0.15, false);
+	GlockFire(0.01, 0.105, false);
 }
 
-void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
+void CSmg::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 {
 	if (m_iClip <= 0)
 	{
@@ -148,9 +138,9 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 	}
 
 	Vector vecDir;
-	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_TF2, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_TF2, 0, 8, m_pPlayer->pev, m_pPlayer->random_seed);
 
-	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, (m_iClip == 0) ? 1 : 0, 0);
+	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usFireSMG, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, (m_iClip == 0) ? 1 : 0, 0);
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(flCycleTime);
 
@@ -162,12 +152,12 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 }
 
 
-void CGlock::Reload()
+void CSmg::Reload()
 {
 	if (m_pPlayer->ammo_9mm <= 0)
 		return;
 
-	bool iResult = DefaultReload(17, GLOCK_RELOAD, 1.5);
+	bool iResult = DefaultReload(17, SMG_RELOAD, 1.1);
 	if (iResult)
 	{
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
@@ -176,7 +166,7 @@ void CGlock::Reload()
 
 
 
-void CGlock::WeaponIdle()
+void CSmg::WeaponIdle()
 {
 	ResetEmptySound();
 
@@ -205,7 +195,7 @@ void CGlock::WeaponIdle()
 
 
 
-class CGlockAmmo : public CBasePlayerAmmo
+class CSmgAmmo : public CBasePlayerAmmo
 {
 	void Spawn() override
 	{
@@ -228,5 +218,4 @@ class CGlockAmmo : public CBasePlayerAmmo
 		return false;
 	}
 };
-LINK_ENTITY_TO_CLASS(ammo_glockclip, CGlockAmmo);
-LINK_ENTITY_TO_CLASS(ammo_9mmclip, CGlockAmmo);
+LINK_ENTITY_TO_CLASS(ammo_smgclip, CSmgAmmo);

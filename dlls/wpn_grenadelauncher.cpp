@@ -32,11 +32,6 @@ LINK_ENTITY_TO_CLASS(tf2_grenade, CTF2Grenade);
 
 CTF2Grenade::~CTF2Grenade()
 {
-	if (m_hLauncher)
-	{
-		// my launcher is still around, tell it I'm dead.
-		static_cast<CGrenadelauncher*>(static_cast<CBaseEntity*>(m_hLauncher))->m_cActiveRockets--;
-	}
 }
 
 //=========================================================

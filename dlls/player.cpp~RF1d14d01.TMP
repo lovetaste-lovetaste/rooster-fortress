@@ -150,58 +150,18 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 
 LINK_ENTITY_TO_CLASS(player, CBasePlayer);
 
-void CBasePlayer ::ShowVGUIMenu(int iMenuID)
-{
-	MESSAGE_BEGIN(MSG_ONE, gmsgVGUIMenu, NULL, pev);
-	WRITE_BYTE(iMenuID);
-	MESSAGE_END();
-}
-
-void CBasePlayer ::HideVGUIMenu()
-{
-	MESSAGE_BEGIN(MSG_ONE, gmsgHideGUI, NULL, pev);
-	WRITE_BYTE(0);
-	MESSAGE_END();
-}
-
 void CBasePlayer::Pain()
 {
-	int flRndSound; //sound randomizer
-	flRndSound = RANDOM_LONG(1, 6);
-	
-	switch (flRndSound)
-	{
-		case 1:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain1.wav", 1, ATTN_NORM);
-			break;
-		}
-		case 2:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain2.wav", 1, ATTN_NORM);
-			break;
-		}
-		case 3:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain3.wav", 1, ATTN_NORM);
-			break;
-		}
-		case 4:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain4.wav", 1, ATTN_NORM);
-			break;
-		}
-		case 5:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain5.wav", 1, ATTN_NORM);
-			break;
-		}
-		case 6:
-		{
-			EMIT_SOUND(ENT(pev), CHAN_VOICE, "rooster_fortress/player/pain6.wav", 1, ATTN_NORM);
-			break;
-		}
-	}
+	float flRndSound; //sound randomizer
+
+	flRndSound = RANDOM_FLOAT(0, 1);
+
+	if (flRndSound <= 0.33)
+		EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM);
+	else if (flRndSound <= 0.66)
+		EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM);
+	else
+		EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM);
 }
 
 /* 
@@ -438,9 +398,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	if (!IsAlive())
 		return false;
 
-	if (IsInCond(TF_COND_INVULNERABLE))
-		return false;	// if ubercharged, then do not take dmg
-
 	CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
 
 	if ((this != GetClassPtr((CBasePlayer*)(pevAttacker))) && ((GetClassPtr((CBasePlayer*)(pevAttacker))->m_iTeam == this->m_iTeam) || (GetClassPtr((CBasePlayer*)(pevInflictor))->m_iTeam == this->m_iTeam)))
@@ -450,7 +407,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		// ALERT(at_console, "Teammate cancel damage in TakeDamage\n");
 		return false;
 	}
-
 
 	if (!g_pGameRules->FPlayerCanTakeDamage(this, pAttacker))
 	{
@@ -464,7 +420,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 		if((bitsDamageType & DMG_BULLET) && !(bitsDamageType & DMG_NOFALLOFF))
 		{
-			// damage falloff
 			float distanceFalloff = 1.0;
 			
 			float flDist = (pevAttacker->origin - this->pev->origin).Length2D();
@@ -524,7 +479,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 			WRITE_COORD(this->pev->origin.x);
 			WRITE_COORD(this->pev->origin.y);
 			WRITE_COORD(this->pev->origin.z + 20.0);
-			WRITE_SHORT(g_sModelIndexMiniCritHit);	// g_sModelIndexPlayerOnFireFX fire fx
+			WRITE_SHORT(g_sModelIndexMiniCritHit);
 			WRITE_BYTE(3); // size
 			WRITE_BYTE(1); // fps
 			MESSAGE_END();
@@ -987,37 +942,8 @@ void CBasePlayer::RemoveAllItems(bool removeSuit)
  * ENTITY_METHOD(PlayerDie)
  */
 
-extern int gmsgKillCam;
-
 void CBasePlayer::Killed(entvars_t* pevAttacker, int iGib)
 {
-	m_hLastKiller = CBaseEntity::Instance(pevAttacker);
-	m_flDeathTime = gpGlobals->time;
-	
-	// --- Killcam: record who killed us and notify the client ---
-	if (pevAttacker != nullptr)
-	{
-		CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
-
-		// Only send killcam if the attacker is a different player
-		if (pAttacker && pAttacker->IsPlayer() && pAttacker != this)
-		{
-			m_hLastKiller = pAttacker;
-			m_flDeathTime = gpGlobals->time;
-
-			// Find the entity index of the attacker
-			// ENTINDEX works on CBaseEntity's edict
-			int iAttackerIndex = ENTINDEX(pAttacker->edict());
-
-			// Send to this (dying) player only
-			MESSAGE_BEGIN(MSG_ONE, gmsgKillCam, nullptr, edict());
-			WRITE_BYTE(iAttackerIndex); // 1 byte: entity index of killer
-			WRITE_FLOAT(5.0f);			// 4 bytes: how many seconds to show
-			MESSAGE_END();
-		}
-	}
-	// --- end killcam ---
-
 	CSound* pSound;
 
 	// Holster weapon immediately, to allow it to cleanup
@@ -1598,7 +1524,7 @@ void CBasePlayer::StartDeathCam()
 	pev->modelindex = 0;
 }
 
-void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle, bool setWeapons)
+void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 {
 	// clear any clientside entities attached to this player
 	MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, pev->origin);
@@ -1619,15 +1545,12 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle, bool se
 	// clear out the suit message cache so we don't keep chattering
 	SetSuitUpdate(NULL, false, 0);
 
-	if (setWeapons)
-	{
-		// Tell Ammo Hud that the player is dead
-		MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
-		WRITE_BYTE(0);
-		WRITE_BYTE(0XFF);
-		WRITE_BYTE(0xFF);
-		MESSAGE_END();
-	}
+	// Tell Ammo Hud that the player is dead
+	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
+	WRITE_BYTE(0);
+	WRITE_BYTE(0XFF);
+	WRITE_BYTE(0xFF);
+	MESSAGE_END();
 
 	// reset FOV
 	m_iFOV = m_iClientFOV = 0;
@@ -2073,12 +1996,6 @@ void CBasePlayer::UpdateStatusBar()
 
 void CBasePlayer::PreThink()
 {
-	if (m_JoinMenuState == JOINMENUSTATE_NO)
-	{
-		ShowVGUIMenu(12);
-		m_JoinMenuState = JOINMENUSTATE_YES;
-	}
-
 	int buttonsChanged = (m_afButtonLast ^ pev->button); // These buttons have changed this frame
 
 	// Debounced button codes for pressed/released
@@ -3175,7 +3092,7 @@ edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer)
 
 	const char* spawnType = "info_player_deathmatch";
 
-	for (int count = 0; count < 3; count++)
+	for (int i = 0; i > 0; i++)
 	{
 		if (NULL == g_pLastSpawn)
 		{
@@ -3198,25 +3115,6 @@ edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer)
 
 		if (FNullEnt(pSpot))
 		{
-			switch (count)
-			{
-				default:
-				case 2:
-				{
-					spawnType = "info_player_deathmatch";
-					break;
-				}
-				case 1:
-				{
-					spawnType = "info_player_start";
-					break;
-				}
-				case 0:
-				{
-					spawnType = "info_player_teamspawn"; // this is for tfc map entities ( idk if this truly works anyway )
-					break;
-				}
-			}
 
 		}
 	}
@@ -3254,7 +3152,7 @@ edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer)
 		{
 			// if ent is a client, kill em (unless they are ourselves)
 			if (ent->IsPlayer() && !(ent->edict() == player))
-				ent->TakeDamage(CWorld::World->pev, CWorld::World->pev, 500, DMG_ALWAYSGIB); // force telefrag
+				ent->TakeDamage(CWorld::World->pev, CWorld::World->pev, 666, DMG_ALWAYSGIB); // force telefrag
 		}
 		goto ReturnSpot;
 	}
@@ -3503,7 +3401,7 @@ void CBasePlayer::Spawn()
 	else
 		UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
 
-	// pev->view_ofs = VEC_VIEW;
+	pev->view_ofs = VEC_VIEW;
 	Precache();
 	m_HackedGunPos = Vector(0, 32, 0);
 
@@ -3533,15 +3431,6 @@ void CBasePlayer::Spawn()
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn(this);
-
-	m_fKnownItem = false;
-	m_ClientWeaponBits = 0;
-
-	// Reset ammo "last sent" so all current ammo values get pushed to client
-	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
-	{
-		m_rgAmmoLast[i] = -1; // Use -1 so any real value (including 0) triggers a send
-	}
 
 	pev->iuser1 = 0; // disable any spec modes
 	pev->iuser2 = 0;
@@ -3665,7 +3554,7 @@ void CBasePlayer::SpawnClassWeapons()
 		case CLASS_SNIPER:
 		{
 			GiveNamedItem("weapon_sniperrifle");
-			GiveNamedItem("weapon_smg");
+			GiveNamedItem("weapon_mp5"); // stand-in for SMG
 			GiveNamedItem("weapon_crowbar");
 			ALERT(at_console, "Player spawned as Sniper!\n");
 			break;

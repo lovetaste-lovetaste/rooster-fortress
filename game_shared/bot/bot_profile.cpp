@@ -39,7 +39,6 @@ BotProfileManager *TheBotProfiles = NULL;
 	#include "gamerules.h"
 	#include "player.h"
 	#include "client.h"
-	#include "cmd.h"
 	#include "pm_shared.h"
 	#include "bot.h"
 	#include "bot_util.h"
@@ -64,51 +63,17 @@ static const char * GetDecoratedSkinName( const char *name, const char *filename
 //--------------------------------------------------------------------------------------------------------------
 const char* BotProfile::GetWeaponPreferenceAsString( int i ) const
 {
-	if ( i < 0 || i >= m_weaponPreferenceCount )
-		return NULL;
-
-	return WeaponIDToAlias( m_weaponPreference[ i ] );
+	return NULL;
 }
 
-
-//--------------------------------------------------------------------------------------------------------------
-/**
- * Return true if this profile has a primary weapon preference
- */
 bool BotProfile::HasPrimaryPreference( void ) const
 {
-	for( int i=0; i<m_weaponPreferenceCount; ++i )
-	{
-		int weaponClass = AliasToWeaponClass( WeaponIDToAlias( m_weaponPreference[i] ) );
-		
-		if (weaponClass == WEAPONCLASS_SUBMACHINEGUN ||
-				weaponClass == WEAPONCLASS_SHOTGUN ||
-				weaponClass == WEAPONCLASS_MACHINEGUN ||
-				weaponClass == WEAPONCLASS_RIFLE ||
-				weaponClass == WEAPONCLASS_SNIPERRIFLE)
-			return true;
-	}
-
 	return false;
 }
-
-//--------------------------------------------------------------------------------------------------------------
-/**
- * Return true if this profile has a pistol weapon preference
- */
 bool BotProfile::HasPistolPreference( void ) const
 {
-	for( int i=0; i<m_weaponPreferenceCount; ++i )
-		if (AliasToWeaponClass( WeaponIDToAlias( m_weaponPreference[i] ) ) == WEAPONCLASS_PISTOL)
-			return true;
-
 	return false;
 }
-
-//--------------------------------------------------------------------------------------------------------------
-/**
- * Return true if this profile is valid for the specified team
- */
 bool BotProfile::IsValidForTeam( BotProfileTeamType team ) const
 {
 	return ( team == BOT_TEAM_ANY || m_teams == BOT_TEAM_ANY || team == m_teams );
@@ -142,10 +107,6 @@ void BotProfileManager::Init( const char *filename, unsigned int *checksum )
 
 	if (dataFile == NULL)
 	{
-		if ( UTIL_IsGame( "czero" ) )
-		{
-			CONSOLE_ECHO( "WARNING: Cannot access bot profile database '%s'\n", filename );
-		}
 		return;
 	}
 
@@ -440,13 +401,6 @@ void BotProfileManager::Init( const char *filename, unsigned int *checksum )
 				if (!stricmp( token, "none" ))
 				{
 					profile->m_weaponPreferenceCount = 0;
-				}
-				else
-				{
-					if (profile->m_weaponPreferenceCount < BotProfile::MAX_WEAPON_PREFS)
-					{
-						profile->m_weaponPreference[ profile->m_weaponPreferenceCount++ ] = AliasToWeaponID( token );
-					}
 				}
 			}
 			else if (!stricmp( "ReactionTime", attributeName ))

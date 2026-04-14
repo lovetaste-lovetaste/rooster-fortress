@@ -42,6 +42,7 @@ void EV_Minigun(event_args_t* args);
 void EV_FireMinigun(event_args_t* args);
 void EV_MeleeWeapon(event_args_t* args);
 void EV_SniperRifle(event_args_t* args);
+void EV_Smg(event_args_t* args);
 
 void EV_TrainPitchAdjust(event_args_t* args);
 void EV_VehiclePitchAdjust(event_args_t* args);

@@ -50,12 +50,17 @@ inline int gmsgSetFOV = 0;
 inline int gmsgShowMenu = 0;
 inline int gmsgGeigerRange = 0;
 inline int gmsgTeamNames = 0;
+inline int gmsgVGUIMenu = 0;
+inline int gmsgHideGUI = 0;
+inline int gmsgWeapons = 0;
 
 inline int gmsgStatusText = 0;
 inline int gmsgStatusValue = 0;
 
-inline int gmsgWeapons = 0;
-
+// rooster fortress stuff
+// inline int gmsgWeapons = 0;
 inline int gmsgHitsound = 0;
+inline int gmsgSniperScope = 0;
+inline int gmsgKillCam = 0;
 
 void LinkUserMessages();

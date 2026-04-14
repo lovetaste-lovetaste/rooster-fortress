@@ -251,6 +251,9 @@ enum ETFCond
 // these 2 are never really used due to them being community nicknames
 // however, they are there for those who want them
 
+#define JOINMENUSTATE_YES 1
+#define JOINMENUSTATE_NO 0
+
 #define CHAT_INTERVAL 1.0f
 
 #define PERMANENT_CONDITION -1 // this is for player conditions; an exception to last forever
@@ -270,6 +273,9 @@ public:
 	int m_iObserverLastMode; // last used observer mode
 	bool IsObserver() { return 0 != pev->iuser1; }
 
+	void ShowVGUIMenu(int iMenuID);
+	void HideVGUIMenu();
+
 	int random_seed; // See that is shared between client & server for shared weapons code
 
 	int m_iTeam;
@@ -281,6 +287,7 @@ public:
 	int m_iExtraJumpCurrent;
 	int m_iExtraJumpMax;
 	bool m_bMultiJump;
+	int m_JoinMenuState;
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
 	int m_iTargetVolume;	// ideal sound volume.
 	int m_iWeaponVolume;	// how loud the player's weapon is right now.
@@ -389,6 +396,8 @@ public:
 	bool m_fOnTarget;
 	int m_iDeaths;
 	float m_flRespawnTimer; // used in PlayerDeathThink() to make sure players can always respawn
+	EHANDLE m_hLastKiller;	// set on death
+	float m_flDeathTime;	// when we died
 
 	int m_lastx, m_lasty; // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
@@ -473,7 +482,7 @@ public:
 	void CheatImpulseCommands(int iImpulse);
 
 	void StartDeathCam();
-	void StartObserver(Vector vecPosition, Vector vecViewAngle);
+	void StartObserver(Vector vecPosition, Vector vecViewAngle, bool setWeapons=true);
 
 	void AddPoints(int score, bool bAllowNegativeScore) override;
 	void AddPointsToTeam(int score, bool bAllowNegativeScore) override;

@@ -96,8 +96,8 @@ extern void		UTIL_DrawBeamFromEnt( int iIndex, Vector vecEnd, int iLifetime, byt
 extern void		UTIL_DrawBeamPoints( Vector vecStart, Vector vecEnd, int iLifetime, byte bRed, byte bGreen, byte bBlue );
 extern CBasePlayer *UTIL_GetClosestPlayer( const Vector *pos, float *distance = NULL );
 extern CBasePlayer *UTIL_GetClosestPlayer( const Vector *pos, int team, float *distance = NULL );
-extern CBasePlayer *UTIL_GetLocalPlayer( void );
-extern bool UTIL_KickBotFromTeam( TeamName kickTeam ); ///< kick a bot from the given team. If no bot exists on the team, return false.
+//extern CBasePlayer *UTIL_GetLocalPlayer( void );
+extern bool UTIL_KickBotFromTeam( int kickTeam ); ///< kick a bot from the given team. If no bot exists on the team, return false.
 
 extern bool UTIL_IsVisibleToTeam( const Vector &spot, int team, float maxRange = -1.0f ); ///< return true if anyone on the given team can see the given spot
 

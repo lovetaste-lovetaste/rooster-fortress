@@ -234,19 +234,19 @@ bool CKnife::IsBehindAndFacingTarget(CBaseEntity* pTarget)
 	// Get a vector from owner origin to target origin
 	Vector vecToTarget;
 	vecToTarget = pTarget->pev->origin - m_pPlayer->pev->origin;
-	vecToTarget.z = 0.0f;
+	vecToTarget.z = 0.0;
 	vecToTarget = vecToTarget.Normalize();
 
 	// Get owner forward view vector
 	Vector vecOwnerForward;
 	AngleVectors(m_pPlayer->pev->v_angle, &vecOwnerForward, NULL, NULL);
-	vecOwnerForward.z = 0.0f;
+	vecOwnerForward.z = 0.0;
 	vecOwnerForward = vecOwnerForward.Normalize();
 
 	// Get target forward view vector
 	Vector vecTargetForward;
 	AngleVectors(pTarget->pev->v_angle, &vecTargetForward, NULL, NULL);
-	vecTargetForward.z = 0.0f;
+	vecTargetForward.z = 0.0;
 	vecTargetForward = vecTargetForward.Normalize();
 
 	// Make sure owner is behind, facing and aiming at target's back
@@ -254,7 +254,7 @@ bool CKnife::IsBehindAndFacingTarget(CBaseEntity* pTarget)
 	float flPosVsOwnerViewDot = DotProduct(vecToTarget, vecOwnerForward);	// Facing?
 	float flViewAnglesDot = DotProduct(vecTargetForward, vecOwnerForward);	// Facestab?
 	
-	ALERT(at_console, "Success? %i PosDot: %3.2f FacingDot: %3.2f AnglesDot: %3.2f\n", ((flPosVsTargetViewDot > 0.0 && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3) ? 1 : 0 ), flPosVsTargetViewDot, flPosVsOwnerViewDot, flViewAnglesDot);
+	// ALERT(at_console, "Success? %i PosDot: %3.2f FacingDot: %3.2f AnglesDot: %3.2f\n", ((flPosVsTargetViewDot > 0.0 && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3) ? 1 : 0 ), flPosVsTargetViewDot, flPosVsOwnerViewDot, flViewAnglesDot);
 
 	return (flPosVsTargetViewDot > 0.0 && flPosVsOwnerViewDot > 0.5 && flViewAnglesDot > -0.3);
 }
